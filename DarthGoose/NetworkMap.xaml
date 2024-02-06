@@ -1,0 +1,17 @@
+﻿<Page x:Class="DarthGoose.NetworkMap"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+      xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+      xmlns:local="clr-namespace:DarthGoose"
+      mc:Ignorable="d" 
+      d:DesignHeight="450" d:DesignWidth="800"
+      Title="NetworkMap">
+    <Grid Margin="0,0,0,0" Background="#FF0E0D0D">
+        <ToolBar HorizontalAlignment="Center" Height="33" VerticalAlignment="Top" Width="800" Background="Black">
+                <Button Content="File" Foreground="White" Margin="5,0"/>
+                <Button Content="Insert" Foreground="White" Margin="5,0"/>
+                <Button Content="Goose Support" Foreground="White" Margin="5,0"/>
+            </ToolBar>
+    </Grid>
+</Page>
