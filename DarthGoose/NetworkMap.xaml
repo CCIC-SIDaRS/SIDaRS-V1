@@ -8,10 +8,19 @@
       d:DesignHeight="450" d:DesignWidth="800"
       Title="NetworkMap">
     <Grid Margin="0,0,0,0" Background="#FF0E0D0D">
-        <ToolBar HorizontalAlignment="Center" Height="33" VerticalAlignment="Top" Width="800" Background="Black">
-                <Button Content="File" Foreground="White" Margin="5,0"/>
-                <Button Content="Insert" Foreground="White" Margin="5,0"/>
-                <Button Content="Goose Support" Foreground="White" Margin="5,0"/>
-            </ToolBar>
+        <DockPanel>
+            <Menu Height="19" DockPanel.Dock="Top" VerticalAlignment="Top">
+                <MenuItem Header="File">
+                </MenuItem>
+                <MenuItem Header="Insert">
+                    <MenuItem Header="Network Device" />
+                </MenuItem>
+                <MenuItem Header="Settings">
+                    <MenuItem Header="Preferences" />
+                </MenuItem>
+                <MenuItem Header="Goose Support">
+                </MenuItem>
+            </Menu>
+        </DockPanel>
     </Grid>
 </Page>
