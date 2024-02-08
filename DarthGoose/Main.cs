@@ -28,11 +28,11 @@ namespace FrontEnd
         private void SetupNetworkMap()
         {
             _networkMap.GooseSupport.Click += new RoutedEventHandler(GetGooseSupport);
+            _mainWindow.MainFrame.Navigate(_networkMap);
         }
 
         private void OnLoginEnter(object sender, RoutedEventArgs e)
         {
-            _mainWindow.MainFrame.Navigate(_networkMap);
             _loginPage = null;
             SetupNetworkMap();
         }
