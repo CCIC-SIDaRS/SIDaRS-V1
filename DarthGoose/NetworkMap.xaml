@@ -9,7 +9,7 @@
       Title="NetworkMap">
     <Grid Margin="0,0,0,0" Background="#FF0E0D0D" Name="NetworkGrid">
         <DockPanel>
-            <Menu Height="19" DockPanel.Dock="Top" VerticalAlignment="Top">
+            <Menu x:Name="TopMenu" Height="19" DockPanel.Dock="Top" VerticalAlignment="Top">
                 <MenuItem Header="File">
                     <MenuItem Header="Save"/>
                     <MenuItem Header="Load"/>
@@ -26,7 +26,6 @@
                     <MenuItem Header="Preferences" />
                 </MenuItem>
                 <MenuItem Header="Goose Support">
-                    <MenuItem Header="Release the Goose Helper"/>
                 </MenuItem>
             </Menu>
         </DockPanel>
