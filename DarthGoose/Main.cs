@@ -27,7 +27,6 @@ namespace FrontEnd
         private void OnLoginEnter(object sender, RoutedEventArgs e)
         {
             _mainWindow.MainFrame.Navigate(_networkMap);
-            _mainWindow.Close();
         }
     }
 }
