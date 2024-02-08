@@ -7,18 +7,26 @@
       mc:Ignorable="d" 
       d:DesignHeight="450" d:DesignWidth="800"
       Title="NetworkMap">
-    <Grid Margin="0,0,0,0" Background="#FF0E0D0D">
+    <Grid Margin="0,0,0,0" Background="#FF0E0D0D" Name="NetworkGrid">
         <DockPanel>
             <Menu Height="19" DockPanel.Dock="Top" VerticalAlignment="Top">
                 <MenuItem Header="File">
+                    <MenuItem Header="Save"/>
+                    <MenuItem Header="Load"/>
                 </MenuItem>
                 <MenuItem Header="Insert">
-                    <MenuItem Header="Network Device" />
+                    <MenuItem Header="Router" Click="InsertRouterClick"/>
+                    <MenuItem Header="Firewall"/>
+                    <MenuItem Header="Switch"/>
+                    <MenuItem Header="Server"/>
+                    <MenuItem Header="Hub"/>
+                    <MenuItem Header="End Point"/>
                 </MenuItem>
                 <MenuItem Header="Settings">
                     <MenuItem Header="Preferences" />
                 </MenuItem>
                 <MenuItem Header="Goose Support">
+                    <MenuItem Header="Release the Goose Helper"/>
                 </MenuItem>
             </Menu>
         </DockPanel>
