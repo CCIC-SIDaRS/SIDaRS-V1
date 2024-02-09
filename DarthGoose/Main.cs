@@ -10,6 +10,7 @@ using System.Diagnostics;
 using System.Windows.Controls;
 using System.Windows.Media.Imaging;
 using System.Windows.Input;
+using System.IO;
 
 namespace FrontEnd
 {
@@ -18,14 +19,22 @@ namespace FrontEnd
         private MainWindow _mainWindow;
         private LoginPage _loginPage = new();
         private NetworkMap _networkMap = new();
+        private Point _windowSize;
         public FrontEndManager(MainWindow window)
         {
             _mainWindow = window;
             _mainWindow.MainFrame.NavigationUIVisibility = NavigationUIVisibility.Hidden;
             _mainWindow.MainFrame.Navigate(_loginPage);
+            _windowSize = new Point(_mainWindow.Width, _mainWindow.Height);
+            _mainWindow.SizeChanged += OnWindowSizeChanged;
 
             _loginPage.LoginButton.Click += new RoutedEventHandler(OnLoginEnter);
             _loginPage.LoginButton.IsDefault = true;
+        }
+
+        private void OnWindowSizeChanged(object sender, SizeChangedEventArgs e)
+        {
+            _windowSize = new Point(e.NewSize.Width, e.NewSize.Height);
         }
 
         private void SetupNetworkMap()
@@ -64,22 +73,22 @@ namespace FrontEnd
             switch (deviceType.Name)
             {
                 case "InsertRouter":
-                    bitMap.UriSource = new Uri(@"C:\Users\skier\Documents\Code\SIDaRS\SIDaRS-Frontend\DarthGoose\Images\Router.png");
+                    bitMap.UriSource = new Uri(Path.Combine(Directory.GetCurrentDirectory(), @"Images\Router.png"));
                     break;
                 case "InsertSwitch":
-                    bitMap.UriSource = new Uri(@"C:\Users\skier\Documents\Code\SIDaRS\SIDaRS-Frontend\DarthGoose\Images\Switch.png");
+                    bitMap.UriSource = new Uri(Path.Combine(Directory.GetCurrentDirectory(), @"Images\Switch.png"));
                     break;
                 case "InsertHub":
-                    bitMap.UriSource = new Uri(@"C:\Users\skier\Documents\Code\SIDaRS\SIDaRS-Frontend\DarthGoose\Images\Switch.png");
+                    bitMap.UriSource = new Uri(Path.Combine(Directory.GetCurrentDirectory(), @"Images\Switch.png"));
                     break;
                 case "InsertFirewall":
-                    bitMap.UriSource = new Uri(@"C:\Users\skier\Documents\Code\SIDaRS\SIDaRS-Frontend\DarthGoose\Images\Firewall.png");
+                    bitMap.UriSource = new Uri(Path.Combine(Directory.GetCurrentDirectory(), @"Images\Firewall.png"));
                     break;
                 case "InsertServer":
-                    bitMap.UriSource = new Uri(@"C:\Users\skier\Documents\Code\SIDaRS\SIDaRS-Frontend\DarthGoose\Images\Server.png");
+                    bitMap.UriSource = new Uri(Path.Combine(Directory.GetCurrentDirectory(), @"Images\Server.png"));
                     break;
                 case "InsertEndPoint":
-                    bitMap.UriSource = new Uri(@"C:\Users\skier\Documents\Code\SIDaRS\SIDaRS-Frontend\DarthGoose\Images\Endpoint.png");
+                    bitMap.UriSource = new Uri(Path.Combine(Directory.GetCurrentDirectory(), @"Images\Endpoint.png"));
                     break;
             }
             // bitMap.UriSource = new Uri(@"C:\Users\skier\Documents\Code\SIDaRS\SIDaRS-Frontend\DarthGoose\Images\Router.png");
@@ -113,8 +122,7 @@ namespace FrontEnd
                 Point newPoint = Mouse.GetPosition(_networkMap.MainCanvas);
                 double left = Canvas.GetLeft(draggedRectangle) + (newPoint.X - startPoint.X);
                 double top = Canvas.GetTop(draggedRectangle) + (newPoint.Y - startPoint.Y);
-                Debug.WriteLine(_networkMap.MainCanvas.Width);
-                if ((left + draggedRectangle.Width) < _networkMap.MainCanvas.Width && (top + draggedRectangle.Height) < _networkMap.MainCanvas.Height)
+                if ((left + draggedRectangle.Width) < _windowSize.X && (top + draggedRectangle.Height) < _windowSize.Y)
                 {
                     Canvas.SetLeft(draggedRectangle, left);
                     Canvas.SetTop(draggedRectangle, top);
