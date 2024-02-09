@@ -7,6 +7,9 @@ using System.Threading.Tasks;
 using System.Windows.Navigation;
 using System.Windows;
 using System.Diagnostics;
+using System.Windows.Controls;
+using System.Windows.Media.Imaging;
+using System.Windows.Input;
 
 namespace FrontEnd
 {
@@ -28,6 +31,12 @@ namespace FrontEnd
         private void SetupNetworkMap()
         {
             _networkMap.GooseSupport.Click += new RoutedEventHandler(GetGooseSupport);
+            _networkMap.InsertRouter.Click += new RoutedEventHandler(InsertDeviceClick);
+            _networkMap.InsertFirewall.Click += new RoutedEventHandler(InsertDeviceClick);
+            _networkMap.InsertHub.Click += new RoutedEventHandler(InsertDeviceClick);
+            _networkMap.InsertSwitch.Click += new RoutedEventHandler(InsertDeviceClick);
+            _networkMap.InsertEndPoint.Click += new RoutedEventHandler(InsertDeviceClick);
+            _networkMap.InsertServer.Click += new RoutedEventHandler(InsertDeviceClick);
             _mainWindow.MainFrame.Navigate(_networkMap);
         }
 
@@ -45,6 +54,78 @@ namespace FrontEnd
                 FileName = "https://uploads.dailydot.com/2019/10/Untitled_Goose_Game_Honk.jpeg",
                 UseShellExecute = true
             });
+        }
+
+        private void InsertDeviceClick(object sender, RoutedEventArgs e)
+        {
+            MenuItem deviceType = (MenuItem)sender;
+            BitmapImage bitMap = new BitmapImage();
+            bitMap.BeginInit();
+            switch (deviceType.Name)
+            {
+                case "InsertRouter":
+                    bitMap.UriSource = new Uri(@"C:\Users\skier\Documents\Code\SIDaRS\SIDaRS-Frontend\DarthGoose\Images\Router.png");
+                    break;
+                case "InsertSwitch":
+                    bitMap.UriSource = new Uri(@"C:\Users\skier\Documents\Code\SIDaRS\SIDaRS-Frontend\DarthGoose\Images\Switch.png");
+                    break;
+                case "InsertHub":
+                    bitMap.UriSource = new Uri(@"C:\Users\skier\Documents\Code\SIDaRS\SIDaRS-Frontend\DarthGoose\Images\Switch.png");
+                    break;
+                case "InsertFirewall":
+                    bitMap.UriSource = new Uri(@"C:\Users\skier\Documents\Code\SIDaRS\SIDaRS-Frontend\DarthGoose\Images\Firewall.png");
+                    break;
+                case "InsertServer":
+                    bitMap.UriSource = new Uri(@"C:\Users\skier\Documents\Code\SIDaRS\SIDaRS-Frontend\DarthGoose\Images\Server.png");
+                    break;
+                case "InsertEndPoint":
+                    bitMap.UriSource = new Uri(@"C:\Users\skier\Documents\Code\SIDaRS\SIDaRS-Frontend\DarthGoose\Images\Endpoint.png");
+                    break;
+            }
+            // bitMap.UriSource = new Uri(@"C:\Users\skier\Documents\Code\SIDaRS\SIDaRS-Frontend\DarthGoose\Images\Router.png");
+            bitMap.EndInit();
+            Image image = new Image();
+            image.Source = bitMap;
+            image.Width = 100;
+            image.Height = 100;
+            image.MouseDown += DeviceMouseDown;
+            image.MouseMove += DeviceMouseMove;
+            image.MouseUp += DeviceMouseUp;
+            Canvas.SetLeft(image, 20);
+            Canvas.SetTop(image, 20);
+            _networkMap.MainCanvas.Children.Add(image);
+
+        }
+
+        private bool drag;
+        private Point startPoint;
+        private void DeviceMouseDown(object sender, MouseButtonEventArgs e)
+        {
+            drag = true;
+            startPoint = Mouse.GetPosition(_networkMap.MainCanvas);
+        }
+
+        private void DeviceMouseMove(object sender, MouseEventArgs e)
+        {
+            if (drag)
+            {
+                Image draggedRectangle = (Image)sender;
+                Point newPoint = Mouse.GetPosition(_networkMap.MainCanvas);
+                double left = Canvas.GetLeft(draggedRectangle) + (newPoint.X - startPoint.X);
+                double top = Canvas.GetTop(draggedRectangle) + (newPoint.Y - startPoint.Y);
+                Debug.WriteLine(_networkMap.MainCanvas.Width);
+                if ((left + draggedRectangle.Width) < _networkMap.MainCanvas.Width && (top + draggedRectangle.Height) < _networkMap.MainCanvas.Height)
+                {
+                    Canvas.SetLeft(draggedRectangle, left);
+                    Canvas.SetTop(draggedRectangle, top);
+                    startPoint = newPoint;
+                }
+            }
+        }
+
+        private void DeviceMouseUp(object sender, MouseButtonEventArgs e)
+        {
+            drag = false;
         }
     }
 }

@@ -15,12 +15,12 @@
                     <MenuItem Header="Load"/>
                 </MenuItem>
                 <MenuItem Header="Insert">
-                    <MenuItem Header="Router" Click="InsertRouterClick" x:Name="InsertRouter"/>
-                    <MenuItem Header="Firewall" Click="InsertRouterClick" x:Name="InsertFirewall"/>
-                    <MenuItem Header="Switch" Click="InsertRouterClick" x:Name="InsertSwitch"/>
-                    <MenuItem Header="Server" Click="InsertRouterClick" x:Name="InsertServer"/>
-                    <MenuItem Header="Hub" Click="InsertRouterClick" x:Name="InsertHub"/>
-                    <MenuItem Header="End Point" Click="InsertRouterClick" x:Name="InsertEndPoint"/>
+                    <MenuItem Header="Router" x:Name="InsertRouter"/>
+                    <MenuItem Header="Firewall" x:Name="InsertFirewall"/>
+                    <MenuItem Header="Switch" x:Name="InsertSwitch"/>
+                    <MenuItem Header="Server" x:Name="InsertServer"/>
+                    <MenuItem Header="Hub" x:Name="InsertHub"/>
+                    <MenuItem Header="End Point" x:Name="InsertEndPoint"/>
                 </MenuItem>
                 <MenuItem Header="Settings">
                     <MenuItem Header="Preferences" />
