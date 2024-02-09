@@ -30,9 +30,31 @@ namespace DarthGoose
         }
         private void InsertRouterClick(object sender, RoutedEventArgs e)
         {
+            MenuItem deviceType = (MenuItem)sender;
             BitmapImage bitMap = new BitmapImage();
             bitMap.BeginInit();
-            bitMap.UriSource = new Uri(@"C:\Users\skier\Documents\Code\SIDaRS\SIDaRS-Frontend\DarthGoose\Images\Router.png");
+            switch(deviceType.Name)
+            {
+                case "InsertRouter":
+                    bitMap.UriSource = new Uri(@"C:\Users\skier\Documents\Code\SIDaRS\SIDaRS-Frontend\DarthGoose\Images\Router.png");
+                    break;
+                case "InsertSwitch":
+                    bitMap.UriSource = new Uri(@"C:\Users\skier\Documents\Code\SIDaRS\SIDaRS-Frontend\DarthGoose\Images\Switch.png");
+                    break;
+                case "InsertHub":
+                    bitMap.UriSource = new Uri(@"C:\Users\skier\Documents\Code\SIDaRS\SIDaRS-Frontend\DarthGoose\Images\Switch.png");
+                    break;
+                case "InsertFirewall":
+                    bitMap.UriSource = new Uri(@"C:\Users\skier\Documents\Code\SIDaRS\SIDaRS-Frontend\DarthGoose\Images\Firewall.png");
+                    break;
+                case "InsertServer":
+                    bitMap.UriSource = new Uri(@"C:\Users\skier\Documents\Code\SIDaRS\SIDaRS-Frontend\DarthGoose\Images\Server.png");
+                    break;
+                case "InsertEndPoint":
+                    bitMap.UriSource = new Uri(@"C:\Users\skier\Documents\Code\SIDaRS\SIDaRS-Frontend\DarthGoose\Images\Endpoint.png");
+                    break;
+            }
+            // bitMap.UriSource = new Uri(@"C:\Users\skier\Documents\Code\SIDaRS\SIDaRS-Frontend\DarthGoose\Images\Router.png");
             bitMap.EndInit();
             Image image = new Image();
             image.Source = bitMap;
