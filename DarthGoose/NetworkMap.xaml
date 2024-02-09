@@ -16,18 +16,19 @@
                 </MenuItem>
                 <MenuItem Header="Insert">
                     <MenuItem Header="Router" Click="InsertRouterClick"/>
-                    <MenuItem Header="Firewall"/>
-                    <MenuItem Header="Switch"/>
-                    <MenuItem Header="Server"/>
-                    <MenuItem Header="Hub"/>
-                    <MenuItem Header="End Point"/>
+                    <MenuItem Header="Firewall" Click="InsertRouterClick"/>
+                    <MenuItem Header="Switch" Click="InsertRouterClick"/>
+                    <MenuItem Header="Server" Click="InsertRouterClick"/>
+                    <MenuItem Header="Hub" Click="InsertRouterClick"/>
+                    <MenuItem Header="End Point" Click="InsertRouterClick"/>
                 </MenuItem>
                 <MenuItem Header="Settings">
                     <MenuItem Header="Preferences" />
                 </MenuItem>
-                <MenuItem Header="Goose Support">
+                <MenuItem Header="Goose Support" x:Name="GooseSupport">
                 </MenuItem>
             </Menu>
         </DockPanel>
+        <Canvas x:Name="MainCanvas"/>
     </Grid>
 </Page>

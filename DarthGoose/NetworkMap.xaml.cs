@@ -22,53 +22,57 @@ namespace DarthGoose
     /// </summary>
     public partial class NetworkMap : Page
     {
-        private bool _drag;
-        private Point _startPoint;
+        bool drag;
+        Point startPoint;
         public NetworkMap()
         {
             InitializeComponent();
         }
         private void InsertRouterClick(object sender, RoutedEventArgs e)
         {
-            Rectangle blueRectangle = new Rectangle();
-            blueRectangle.Height = 100;
-            blueRectangle.Width = 200;
-            SolidColorBrush blueBrush = new SolidColorBrush();
-            blueBrush.Color = Colors.Blue;
-            SolidColorBrush blackBrush = new SolidColorBrush();
-            blackBrush.Color = Colors.Black;
-            blueRectangle.StrokeThickness = 4;
-            blueRectangle.Stroke = blackBrush;
-            blueRectangle.Fill = blueBrush;
-            blueRectangle.MouseDown += DeviceMouseDown;
-            blueRectangle.MouseUp += DeviceMouseUp;
-            blueRectangle.MouseMove += DeviceMouseMove;
-            NetworkGrid.Children.Add(blueRectangle);
+            BitmapImage bitMap = new BitmapImage();
+            bitMap.BeginInit();
+            bitMap.UriSource = new Uri(@"C:\Users\skier\Documents\Code\SIDaRS\SIDaRS-Frontend\DarthGoose\Images\Router.png");
+            bitMap.EndInit();
+            Image image = new Image();
+            image.Source = bitMap;
+            image.Width = 100;
+            image.Height = 100;
+            image.MouseDown += DeviceMouseDown;
+            image.MouseMove += DeviceMouseMove;
+            image.MouseUp += DeviceMouseUp;
+            Canvas.SetLeft(image, 20);
+            Canvas.SetTop(image, 20);
+            MainCanvas.Children.Add(image);
+            
         }
-        private void DeviceMouseDown(object sender, MouseEventArgs e)
+        private void DeviceMouseDown(object sender, MouseButtonEventArgs e)
         {
-            _drag = true;
-            _startPoint = Mouse.GetPosition(this);
+            drag = true;
+            startPoint = Mouse.GetPosition(MainCanvas);
         }
-        private void DeviceMouseUp(object sender, MouseEventArgs e)
-        {
-            if (_drag)
-            {
-                Debug.WriteLine("Dragging");
-                Rectangle draggedRectangle = (Rectangle)sender;
-                Point nextPoint = Mouse.GetPosition(this);
-                double left = Canvas.GetLeft(draggedRectangle);
-                double top = Canvas.GetTop(draggedRectangle);
-                Canvas.SetLeft(draggedRectangle, left + (nextPoint.X - _startPoint.X));
-                Canvas.SetTop(draggedRectangle, top + (nextPoint.Y - _startPoint.Y));
 
-                _startPoint = nextPoint;
-            }
-
-        }
         private void DeviceMouseMove(object sender, MouseEventArgs e)
         {
-            _drag = false;
+            if (drag)
+            {
+                Image draggedRectangle = (Image)sender;
+                Point newPoint = Mouse.GetPosition(MainCanvas);
+                double left = Canvas.GetLeft(draggedRectangle) + (newPoint.X - startPoint.X);
+                double top = Canvas.GetTop(draggedRectangle) + (newPoint.Y - startPoint.Y);
+                Debug.WriteLine(MainCanvas.Width);
+                if ((left + draggedRectangle.Width) < MainCanvas.Width && (top + draggedRectangle.Height) < MainCanvas.Height)
+                {
+                    Canvas.SetLeft(draggedRectangle, left);
+                    Canvas.SetTop(draggedRectangle, top);
+                    startPoint = newPoint;
+                }
+            }
+        }
+
+        private void DeviceMouseUp(object sender, MouseButtonEventArgs e)
+        {
+            drag = false;
         }
     }
 }
