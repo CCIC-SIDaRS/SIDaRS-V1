@@ -21,6 +21,7 @@
                     <MenuItem Header="Server" x:Name="InsertServer"/>
                     <MenuItem Header="Hub" x:Name="InsertHub"/>
                     <MenuItem Header="End Point" x:Name="InsertEndPoint"/>
+                    <MenuItem Header="Connection" x:Name="InsertConnection"/>
                 </MenuItem>
                 <MenuItem Header="Settings">
                     <MenuItem Header="Preferences" />
