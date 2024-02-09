@@ -79,7 +79,7 @@ namespace FrontEnd
                     bitMap.UriSource = new Uri(Path.Combine(Directory.GetCurrentDirectory(), @"Images\Switch.png"));
                     break;
                 case "InsertHub":
-                    bitMap.UriSource = new Uri(Path.Combine(Directory.GetCurrentDirectory(), @"Images\Switch.png"));
+                    bitMap.UriSource = new Uri(Path.Combine(Directory.GetCurrentDirectory(), @"Images\Hub.png"));
                     break;
                 case "InsertFirewall":
                     bitMap.UriSource = new Uri(Path.Combine(Directory.GetCurrentDirectory(), @"Images\Firewall.png"));
@@ -122,7 +122,7 @@ namespace FrontEnd
                 Point newPoint = Mouse.GetPosition(_networkMap.MainCanvas);
                 double left = Canvas.GetLeft(draggedRectangle) + (newPoint.X - startPoint.X);
                 double top = Canvas.GetTop(draggedRectangle) + (newPoint.Y - startPoint.Y);
-                if ((left + draggedRectangle.Width) < _windowSize.X && (top + draggedRectangle.Height) < _windowSize.Y)
+                if ((left + draggedRectangle.Width) < _windowSize.X && left > 0 && (top + draggedRectangle.Height) < _windowSize.Y && top >= _networkMap.TopMenu.Height)
                 {
                     Canvas.SetLeft(draggedRectangle, left);
                     Canvas.SetTop(draggedRectangle, top);
