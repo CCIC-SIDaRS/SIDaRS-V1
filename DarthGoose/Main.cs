@@ -133,9 +133,9 @@ namespace FrontEnd
                     Canvas.SetLeft(draggedRectangle, left);
                     Canvas.SetTop(draggedRectangle, top);
                     startPoint = newPoint;
-                    if (_devices[draggedRectangle].connections.Count > 0)
+                    for (int i = 0; i < _devices[draggedRectangle].connections.Count; i++)
                     {
-                        drawConnection(new List<Image>() { draggedRectangle, _devices[draggedRectangle].connections[0] }, _devices[draggedRectangle].cables[0]);
+                        drawConnection(new List<Image>() { draggedRectangle, _devices[draggedRectangle].connections[i] }, _devices[draggedRectangle].cables[i]);
                     }
                 }
             }
@@ -159,11 +159,13 @@ namespace FrontEnd
         private void AddToPendingConnections(object sender, MouseButtonEventArgs e)
         {
             devicesToBeConnected.Add((Image)sender);
+            Debug.WriteLine("Adding something");
             if (devicesToBeConnected.Count() == 2)
             {
                 _devices[devicesToBeConnected[0]].connections.Add(devicesToBeConnected[1]);
                 _devices[devicesToBeConnected[1]].connections.Add(devicesToBeConnected[0]);
                 drawConnection(devicesToBeConnected);
+                devicesToBeConnected.Clear();
                 exitConnectionMode();
             }
         }
