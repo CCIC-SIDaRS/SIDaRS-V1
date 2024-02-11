@@ -96,7 +96,6 @@ namespace FrontEnd
                     bitMap.UriSource = new Uri(System.IO.Path.Combine(Directory.GetCurrentDirectory(), @"Images\Endpoint.png"));
                     break;
             }
-            // bitMap.UriSource = new Uri(@"C:\Users\skier\Documents\Code\SIDaRS\SIDaRS-Frontend\DarthGoose\Images\Router.png");
             bitMap.EndInit();
             Image image = new Image();
             image.Source = bitMap;
@@ -159,7 +158,6 @@ namespace FrontEnd
         private void AddToPendingConnections(object sender, MouseButtonEventArgs e)
         {
             devicesToBeConnected.Add((Image)sender);
-            Debug.WriteLine("Adding something");
             if (devicesToBeConnected.Count() == 2)
             {
                 _devices[devicesToBeConnected[0]].connections.Add(devicesToBeConnected[1]);
@@ -179,7 +177,7 @@ namespace FrontEnd
                 Thickness thickness = new Thickness(101, -11, 362, 250);
                 line.Margin = thickness;
                 line.Visibility = System.Windows.Visibility.Visible;
-                line.StrokeThickness = 4;
+                line.StrokeThickness = 2;
                 line.Stroke = System.Windows.Media.Brushes.White;
             }else
             {
