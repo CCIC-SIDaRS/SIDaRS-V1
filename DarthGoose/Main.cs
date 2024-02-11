@@ -13,6 +13,7 @@ using System.Windows.Input;
 using System.IO;
 using System.Windows.Shapes;
 using Microsoft.VisualBasic;
+using System.Security.Policy;
 
 namespace FrontEnd
 {
@@ -22,8 +23,7 @@ namespace FrontEnd
         private LoginPage _loginPage = new();
         private NetworkMap _networkMap = new();
         private Point _windowSize;
-        private List<Image> _devices = new();
-        private Dictionary<string, List<Image[]>> _connections = new();
+        private Dictionary<Image, Device> _devices = new();
         public FrontEndManager(MainWindow window)
         {
             _mainWindow = window;
@@ -108,7 +108,7 @@ namespace FrontEnd
             Canvas.SetLeft(image, 20);
             Canvas.SetTop(image, 20);
             _networkMap.MainCanvas.Children.Add(image);
-            _devices.Add(image);
+            _devices[image] = new Device(image, new List<Image>(), new List<Line>());
 
         }
 
@@ -133,6 +133,10 @@ namespace FrontEnd
                     Canvas.SetLeft(draggedRectangle, left);
                     Canvas.SetTop(draggedRectangle, top);
                     startPoint = newPoint;
+                    if (_devices[draggedRectangle].connections.Count > 0)
+                    {
+                        drawConnection(new List<Image>() { draggedRectangle, _devices[draggedRectangle].connections[0] }, _devices[draggedRectangle].cables[0]);
+                    }
                 }
             }
         }
@@ -144,11 +148,11 @@ namespace FrontEnd
         private List<Image> devicesToBeConnected = new();
         private void OnInsertConnection(object sender, RoutedEventArgs e)
         {
-            foreach(Image device in _devices)
+            foreach(KeyValuePair<Image, Device> device in _devices)
             {
-                device.MouseDown -= DeviceMouseDown;
-                device.MouseUp -= DeviceMouseUp;
-                device.MouseDown += AddToPendingConnections;
+                device.Value.image.MouseDown -= DeviceMouseDown;
+                device.Value.image.MouseUp -= DeviceMouseUp;
+                device.Value.image.MouseDown += AddToPendingConnections;
             }
         }
 
@@ -157,25 +161,35 @@ namespace FrontEnd
             devicesToBeConnected.Add((Image)sender);
             if (devicesToBeConnected.Count() == 2)
             {
+                _devices[devicesToBeConnected[0]].connections.Add(devicesToBeConnected[1]);
+                _devices[devicesToBeConnected[1]].connections.Add(devicesToBeConnected[0]);
                 drawConnection(devicesToBeConnected);
                 exitConnectionMode();
             }
         }
 
-        private void drawConnection(List<Image> connectedDevices)
+        private void drawConnection(List<Image> connectedDevices, Line existingConnection = null)
         {
+            Line line;
+            if (existingConnection == null)
+            {
+                line = new Line();
+                Thickness thickness = new Thickness(101, -11, 362, 250);
+                line.Margin = thickness;
+                line.Visibility = System.Windows.Visibility.Visible;
+                line.StrokeThickness = 4;
+                line.Stroke = System.Windows.Media.Brushes.White;
+            }else
+            {
+                line = existingConnection;
+            }
             Image device1 = connectedDevices[0];
             Image device2 = connectedDevices[1];
             Point dev1Location = new Point(Canvas.GetLeft(device1), Canvas.GetTop(device1));
             Point dev2Location = new Point(Canvas.GetLeft(device2), Canvas.GetTop(device2));
             bool above = (dev1Location.Y < dev2Location.Y);
             bool left = (dev1Location.X < dev2Location.X);
-            Line line = new Line();
-            Thickness thickness = new Thickness(101, -11, 362, 250);
-            line.Margin = thickness;
-            line.Visibility = System.Windows.Visibility.Visible;
-            line.StrokeThickness = 4;
-            line.Stroke = System.Windows.Media.Brushes.White;
+            
             if (left && above)
             {
                 line.X1 = dev1Location.X; // + device1.Width;
@@ -201,16 +215,33 @@ namespace FrontEnd
                 line.Y1 = dev1Location.Y;
                 line.Y2 = dev2Location.Y + device2.Height;
             }
-            _networkMap.MainCanvas.Children.Add(line);
+            if (existingConnection == null)
+            {
+                _networkMap.MainCanvas.Children.Add(line);
+                _devices[device1].cables.Add(line);
+                _devices[device2].cables.Add(line);
+            }
         }
         private void exitConnectionMode()
         {
-            foreach (Image device in _devices)
+            foreach (KeyValuePair<Image,Device> device in _devices)
             {
-                device.MouseDown -= AddToPendingConnections;
-                device.MouseUp += DeviceMouseUp;
-                device.MouseDown += DeviceMouseDown;
+                device.Value.image.MouseDown -= AddToPendingConnections;
+                device.Value.image.MouseUp += DeviceMouseUp;
+                device.Value.image.MouseDown += DeviceMouseDown;
             }
+        }
+    }
+    class Device
+    {
+        public Image image { get; set; }
+        public List<Image> connections { get; set; }
+        public List<Line> cables { get; set; }
+        public Device (Image image, List<Image> connections, List<Line> cables)
+        {
+            this.image = image;
+            this.connections = connections;
+            this.cables = cables;
         }
     }
 }
