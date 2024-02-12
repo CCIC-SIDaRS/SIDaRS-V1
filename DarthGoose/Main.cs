@@ -12,11 +12,13 @@ using System.Windows.Media.Imaging;
 using System.Windows.Input;
 using System.IO;
 using System.Windows.Shapes;
-using Microsoft.VisualBasic;
+using System.ComponentModel;
+using System.Text.RegularExpressions;
 using System.Security.Policy;
+using System.Runtime.InteropServices;
 
 namespace FrontEnd
-{
+{ 
     public class FrontEndManager
     {
         private MainWindow _mainWindow;
@@ -31,6 +33,7 @@ namespace FrontEnd
             _mainWindow.MainFrame.Navigate(_loginPage);
             _windowSize = new Point(_mainWindow.Width, _mainWindow.Height);
             _mainWindow.SizeChanged += OnWindowSizeChanged;
+            _mainWindow.Closing += new CancelEventHandler(MainWindowClosing);
 
             _loginPage.LoginButton.Click += new RoutedEventHandler(OnLoginEnter);
             _loginPage.LoginButton.IsDefault = true;
@@ -39,6 +42,11 @@ namespace FrontEnd
         private void OnWindowSizeChanged(object sender, SizeChangedEventArgs e)
         {
             _windowSize = new Point(e.NewSize.Width, e.NewSize.Height);
+        }
+
+        private void MainWindowClosing(object sender, CancelEventArgs e)
+        {
+            App.Current.Shutdown();
         }
 
         private void SetupNetworkMap()
@@ -115,8 +123,14 @@ namespace FrontEnd
         private Point startPoint;
         private void DeviceMouseDown(object sender, MouseButtonEventArgs e)
         {
-            drag = true;
-            startPoint = Mouse.GetPosition(_networkMap.MainCanvas);
+            if (e.ClickCount < 2)
+            {
+                drag = true;
+                startPoint = Mouse.GetPosition(_networkMap.MainCanvas);
+            } else
+            {
+                _devices[(Image)sender].deviceMenu.Show();
+            }
         }
 
         private void DeviceMouseMove(object sender, MouseEventArgs e)
@@ -179,7 +193,8 @@ namespace FrontEnd
                 line.Visibility = System.Windows.Visibility.Visible;
                 line.StrokeThickness = 2;
                 line.Stroke = System.Windows.Media.Brushes.White;
-            }else
+            }
+            else
             {
                 line = existingConnection;
             }
@@ -187,37 +202,16 @@ namespace FrontEnd
             Image device2 = connectedDevices[1];
             Point dev1Location = new Point(Canvas.GetLeft(device1), Canvas.GetTop(device1));
             Point dev2Location = new Point(Canvas.GetLeft(device2), Canvas.GetTop(device2));
-            bool above = (dev1Location.Y < dev2Location.Y);
-            bool left = (dev1Location.X < dev2Location.X);
-            
-            if (left && above)
-            {
-                line.X1 = dev1Location.X; // + device1.Width;
-                line.X2 = dev2Location.X - device2.Width;
-                line.Y1 = dev1Location.Y + device1.Height;
-                line.Y2 = dev2Location.Y;
-            }else if (above && !left)
-            {
-                line.X1 = dev1Location.X - device1.Width;
-                line.X2 = dev2Location.X;
-                line.Y1 = dev1Location.Y + device1.Height;
-                line.Y2 = dev2Location.Y;
-            }else if (!above && left)
-            {
-                line.X1 = dev1Location.X;
-                line.X2 = dev2Location.X - device2.Width;
-                line.Y1 = dev1Location.Y;
-                line.Y2 = dev2Location.Y + device2.Height;
-            }else if (!above && !left)
-            {
-                line.X1 = dev1Location.X - device1.Width;
-                line.X2 = dev2Location.X;
-                line.Y1 = dev1Location.Y;
-                line.Y2 = dev2Location.Y + device2.Height;
-            }
+
+            line.X1 = dev1Location.X - (device1.Width / 2);
+            line.Y1 = dev1Location.Y + (device1.Height / 2);
+
+            line.X2 = dev2Location.X - (device2.Width / 2);
+            line.Y2 = dev2Location.Y + (device2.Height / 2);
+
             if (existingConnection == null)
             {
-                _networkMap.MainCanvas.Children.Add(line);
+                _networkMap.ConnectionCanvas.Children.Add(line);
                 _devices[device1].cables.Add(line);
                 _devices[device2].cables.Add(line);
             }
@@ -231,17 +225,190 @@ namespace FrontEnd
                 device.Value.image.MouseDown += DeviceMouseDown;
             }
         }
+        
     }
     class Device
     {
         public Image image { get; set; }
         public List<Image> connections { get; set; }
         public List<Line> cables { get; set; }
+        public DeviceDetails deviceMenu { get; set; }
+        private bool shiftDown { get; set; }
+
+        private static Dictionary<Key, string> keyboard = new Dictionary<Key, string>
+        {
+            {Key.A, "a"},
+            {Key.B, "b"},
+            {Key.C, "c"},
+            {Key.D, "d"},
+            {Key.E, "e"},
+            {Key.F, "f"},
+            {Key.G, "g"},
+            {Key.H, "h"},
+            {Key.I, "i"},
+            {Key.J, "j"},
+            {Key.K, "k"},
+            {Key.L, "l"},
+            {Key.M, "m"},
+            {Key.N, "n"},
+            {Key.O, "o"},
+            {Key.P, "p"},
+            {Key.Q, "q"},
+            {Key.R, "r"},
+            {Key.S, "s"},
+            {Key.T, "t"},
+            {Key.U, "u"},
+            {Key.V, "v"},
+            {Key.W, "w"},
+            {Key.X, "x"},
+            {Key.Y, "y"},
+            {Key.Z, "z"},
+            {Key.D0, "0"},
+            {Key.D1, "1"},
+            {Key.D2, "2"},
+            {Key.D3, "3"},
+            {Key.D4, "4"},
+            {Key.D5, "5"},
+            {Key.D6, "6"},
+            {Key.D7, "7"},
+            {Key.D8, "8"},
+            {Key.D9, "9"},
+            {Key.NumPad0, "0"},
+            {Key.NumPad1, "1"},
+            {Key.NumPad2, "2"},
+            {Key.NumPad3, "3"},
+            {Key.NumPad4, "4"},
+            {Key.NumPad5, "5"},
+            {Key.NumPad6, "6"},
+            {Key.NumPad7, "7"},
+            {Key.NumPad8, "8"},
+            {Key.NumPad9, "9"},
+            {Key.OemTilde, "`"},
+            {Key.OemMinus, "-"},
+            {Key.OemPlus, "="},
+            {Key.OemOpenBrackets, "["},
+            {Key.OemCloseBrackets, "]"},
+            {Key.OemPipe, "\\"},
+            {Key.OemSemicolon, ";"},
+            {Key.OemQuotes, "'"},
+            {Key.OemComma, ","},
+            {Key.OemPeriod, "."},
+            {Key.OemQuestion, "/"},
+            {Key.Space, " "}
+            // Add more key-value pairs for other keys as needed
+        };
+        private static Dictionary<Key, string> shiftedKeyboard = new Dictionary<Key, string>
+    {
+        {Key.A, "A"},
+        {Key.B, "B"},
+        {Key.C, "C"},
+        {Key.D, "D"},
+        {Key.E, "E"},
+        {Key.F, "F"},
+        {Key.G, "G"},
+        {Key.H, "H"},
+        {Key.I, "I"},
+        {Key.J, "J"},
+        {Key.K, "K"},
+        {Key.L, "L"},
+        {Key.M, "M"},
+        {Key.N, "N"},
+        {Key.O, "O"},
+        {Key.P, "P"},
+        {Key.Q, "Q"},
+        {Key.R, "R"},
+        {Key.S, "S"},
+        {Key.T, "T"},
+        {Key.U, "U"},
+        {Key.V, "V"},
+        {Key.W, "W"},
+        {Key.X, "X"},
+        {Key.Y, "Y"},
+        {Key.Z, "Z"},
+        {Key.D0, ")"},
+        {Key.D1, "!"},
+        {Key.D2, "@"},
+        {Key.D3, "#"},
+        {Key.D4, "$"},
+        {Key.D5, "%"},
+        {Key.D6, "^"},
+        {Key.D7, "&"},
+        {Key.D8, "*"},
+        {Key.D9, "("},
+        {Key.NumPad0, "0"},
+        {Key.NumPad1, "1"},
+        {Key.NumPad2, "2"},
+        {Key.NumPad3, "3"},
+        {Key.NumPad4, "4"},
+        {Key.NumPad5, "5"},
+        {Key.NumPad6, "6"},
+        {Key.NumPad7, "7"},
+        {Key.NumPad8, "8"},
+        {Key.NumPad9, "9"},
+        {Key.OemTilde, "~"},
+        {Key.OemMinus, "_"},
+        {Key.OemPlus, "+"},
+        {Key.OemOpenBrackets, "{"},
+        {Key.OemCloseBrackets, "}"},
+        {Key.OemPipe, "|"},
+        {Key.OemSemicolon, ":"},
+        {Key.OemQuotes, "\""},
+        {Key.OemComma, "<"},
+        {Key.OemPeriod, ">"},
+        {Key.OemQuestion, "?"},
+        {Key.Space, " "},
+        // Add more key-value pairs for other keys as needed
+    };
         public Device (Image image, List<Image> connections, List<Line> cables)
         {
             this.image = image;
             this.connections = connections;
             this.cables = cables;
+            this.deviceMenu = new DeviceDetails();
+            deviceMenu.Closing += new CancelEventHandler(OnClosing);
+            deviceMenu.KeyDown += KeyDown;
+            deviceMenu.KeyUp += KeyUp;
+        }
+        
+        private void OnClosing(object s, CancelEventArgs e)
+        {
+            Window sender = (Window) s;
+            e.Cancel = true;
+            sender.Hide();
+        }
+        private void KeyDown(object sender, KeyEventArgs e)
+        {
+            bool foundKey = false;
+            string key = "";
+
+            try
+            {
+                if (shiftDown) { 
+                    key = shiftedKeyboard[e.Key];
+                } else
+                {
+                    key = keyboard[e.Key];
+                }
+                foundKey = true;
+            } catch (KeyNotFoundException) { }
+
+            if (foundKey)
+            {
+                deviceMenu.TerminalTextBox.Text += key;
+            } else if(e.Key == Key.Back && deviceMenu.TerminalTextBox.Text.Length > 0)
+            {
+                deviceMenu.TerminalTextBox.Text = deviceMenu.TerminalTextBox.Text.Substring(0, deviceMenu.TerminalTextBox.Text.Length - 1);
+            } else if (e.Key == Key.LeftShift || e.Key == Key.RightShift)
+            {
+                shiftDown = true;
+            }
+        }
+        private void KeyUp(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.LeftShift || e.Key == Key.RightShift)
+            {
+                shiftDown = false;
+            }
         }
     }
 }

@@ -18,7 +18,7 @@ namespace DarthGoose
     /// <summary>
     /// Interaction logic for DeviceDetails.xaml
     /// </summary>
-    public partial class DeviceDetails : Page
+    public partial class DeviceDetails : Window
     {
         public DeviceDetails()
         {

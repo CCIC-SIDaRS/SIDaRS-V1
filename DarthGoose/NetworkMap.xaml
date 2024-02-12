@@ -30,6 +30,7 @@
                 </MenuItem>
             </Menu>
         </DockPanel>
-        <Canvas x:Name="MainCanvas"/>
+        <Canvas x:Name="MainCanvas" Panel.ZIndex="1"/>
+        <Canvas x:Name="ConnectionCanvas"/>
     </Grid>
 </Page>

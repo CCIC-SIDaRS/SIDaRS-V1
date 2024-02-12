@@ -1,4 +1,4 @@
-﻿<Page x:Class="DarthGoose.DeviceDetails"
+﻿<Window x:Class="DarthGoose.DeviceDetails"
       xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
       xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
       xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
@@ -10,16 +10,20 @@
 
     <Grid>
         <TabControl>
-            <TabItem Header="Statistics">
-                <Grid Background="#FFE5E5E5"/>
+            <TabItem x:Name="Statistics" Header="Statistics">
+                <Grid Background="#FFE5E5E5">
+                </Grid>
             </TabItem>
-            <TabItem Header="Settings">
-                <Grid Background="#FFE5E5E5"/>
+            <TabItem x:Name="Settings" Header="Settings">
+                <Grid Background="#FFE5E5E5">
+                </Grid>
             </TabItem>
-            <TabItem Header="SSH Terminal">
-                <Grid Background="#FFE5E5E5"/>
+            <TabItem x:Name="SshTerminal" Header="SSH Terminal">
+                <Grid Background="#FFE5E5E5">
+                    <TextBlock x:Name="TerminalTextBox" TextWrapping="Wrap" Background="Black" Foreground="GreenYellow"/>
+                </Grid>
             </TabItem>
         </TabControl>
 
     </Grid>
-</Page>
+</Window>
