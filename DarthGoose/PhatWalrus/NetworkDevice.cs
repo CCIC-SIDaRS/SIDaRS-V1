@@ -26,11 +26,8 @@ namespace NetworkDeviceManager
         private string assetsDir { get; set; }
         private TerminalManager.ReadCallback readCallback { get; set; }
         public string uid { get; private set; }
-        public DeviceDetails deviceMenu { get; set; }
-        public Image image { get; private set; }
-        public List<Line> cables { get; set; }
 
-        public NetworkDevice(string name, string v4address, int[] uiLocation, List<NetworkDevice> connections, Credentials credentials, string assetsDir, TerminalManager.ReadCallback readCallback, Image image, List<Line> cables, string uid = null)
+        public NetworkDevice(string name, string v4address, int[] uiLocation, List<NetworkDevice> connections, Credentials credentials, string assetsDir, TerminalManager.ReadCallback readCallback, string uid = null)
         {
             this.name = name;
             this.v4address = v4address;
@@ -39,8 +36,6 @@ namespace NetworkDeviceManager
             this.credentials = credentials;
             this.assetsDir = assetsDir;
             this.readCallback = readCallback;
-            this.image = image;
-            this.cables = cables;
             if (uid != null)
             {
                 this.uid = uid;
