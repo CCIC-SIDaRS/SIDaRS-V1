@@ -1,11 +1,7 @@
-﻿using System;
-using System.IO;
-using System.Reflection;
-using System.Runtime.Serialization;
+﻿/*using System.IO;
 using System.Text.Json;
-using System.Text.Json.Serialization.Metadata;
-using CredentialManager;
-using NetworkDeviceManager;
+using Backend.CredentialManager;
+using Backend.NetworkDeviceManager;
 
 
 namespace SaveManager
@@ -46,7 +42,7 @@ namespace SaveManager
                 List<NetworkDevice> thisConnections = new();
                 foreach (NetworkDevice device in tempDevices)
                 {
-                    if (uids.Contains(device.uid))
+                    if (uids.Contains(device.name))
                     {
                         thisConnections.Add(device);
                     }
@@ -56,4 +52,4 @@ namespace SaveManager
             networkDevices = tempDevices.ToArray();
         }
      }
-}
+}*/

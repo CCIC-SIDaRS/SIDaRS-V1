@@ -1,0 +1,275 @@
+﻿using System.ComponentModel;
+using System.Windows.Input;
+using System.Windows.Shapes;
+using System.Windows;
+using System.Windows.Controls;
+using Backend.NetworkDeviceManager;
+using Backend.CredentialManager;
+
+namespace DarthGoose.Frontend
+{
+    class UIDevice
+    {
+        public Image image { get; set; }
+        public List<Image> connections { get; set; }
+        public List<Line> cables { get; set; }
+        public DeviceDetails deviceMenu { get; set; }
+        public string uid { get; private set; }
+
+        private bool _shiftDown { get; set; }
+        private bool _drag;
+        private Point _startPoint;
+
+        private static Dictionary<Key, string> _keyboard = new Dictionary<Key, string>
+        {
+            {Key.A, "a"},
+            {Key.B, "b"},
+            {Key.C, "c"},
+            {Key.D, "d"},
+            {Key.E, "e"},
+            {Key.F, "f"},
+            {Key.G, "g"},
+            {Key.H, "h"},
+            {Key.I, "i"},
+            {Key.J, "j"},
+            {Key.K, "k"},
+            {Key.L, "l"},
+            {Key.M, "m"},
+            {Key.N, "n"},
+            {Key.O, "o"},
+            {Key.P, "p"},
+            {Key.Q, "q"},
+            {Key.R, "r"},
+            {Key.S, "s"},
+            {Key.T, "t"},
+            {Key.U, "u"},
+            {Key.V, "v"},
+            {Key.W, "w"},
+            {Key.X, "x"},
+            {Key.Y, "y"},
+            {Key.Z, "z"},
+            {Key.D0, "0"},
+            {Key.D1, "1"},
+            {Key.D2, "2"},
+            {Key.D3, "3"},
+            {Key.D4, "4"},
+            {Key.D5, "5"},
+            {Key.D6, "6"},
+            {Key.D7, "7"},
+            {Key.D8, "8"},
+            {Key.D9, "9"},
+            {Key.NumPad0, "0"},
+            {Key.NumPad1, "1"},
+            {Key.NumPad2, "2"},
+            {Key.NumPad3, "3"},
+            {Key.NumPad4, "4"},
+            {Key.NumPad5, "5"},
+            {Key.NumPad6, "6"},
+            {Key.NumPad7, "7"},
+            {Key.NumPad8, "8"},
+            {Key.NumPad9, "9"},
+            {Key.OemTilde, "`"},
+            {Key.OemMinus, "-"},
+            {Key.OemPlus, "="},
+            {Key.OemOpenBrackets, "["},
+            {Key.OemCloseBrackets, "]"},
+            {Key.OemPipe, "\\"},
+            {Key.OemSemicolon, ";"},
+            {Key.OemQuotes, "'"},
+            {Key.OemComma, ","},
+            {Key.OemPeriod, "."},
+            {Key.OemQuestion, "/"},
+            {Key.Space, " "}
+        };
+        private static Dictionary<Key, string> _shiftedKeyboard = new Dictionary<Key, string>
+        {
+            {Key.A, "A"},
+            {Key.B, "B"},
+            {Key.C, "C"},
+            {Key.D, "D"},
+            {Key.E, "E"},
+            {Key.F, "F"},
+            {Key.G, "G"},
+            {Key.H, "H"},
+            {Key.I, "I"},
+            {Key.J, "J"},
+            {Key.K, "K"},
+            {Key.L, "L"},
+            {Key.M, "M"},
+            {Key.N, "N"},
+            {Key.O, "O"},
+            {Key.P, "P"},
+            {Key.Q, "Q"},
+            {Key.R, "R"},
+            {Key.S, "S"},
+            {Key.T, "T"},
+            {Key.U, "U"},
+            {Key.V, "V"},
+            {Key.W, "W"},
+            {Key.X, "X"},
+            {Key.Y, "Y"},
+            {Key.Z, "Z"},
+            {Key.D0, ")"},
+            {Key.D1, "!"},
+            {Key.D2, "@"},
+            {Key.D3, "#"},
+            {Key.D4, "$"},
+            {Key.D5, "%"},
+            {Key.D6, "^"},
+            {Key.D7, "&"},
+            {Key.D8, "*"},
+            {Key.D9, "("},
+            {Key.NumPad0, "0"},
+            {Key.NumPad1, "1"},
+            {Key.NumPad2, "2"},
+            {Key.NumPad3, "3"},
+            {Key.NumPad4, "4"},
+            {Key.NumPad5, "5"},
+            {Key.NumPad6, "6"},
+            {Key.NumPad7, "7"},
+            {Key.NumPad8, "8"},
+            {Key.NumPad9, "9"},
+            {Key.OemTilde, "~"},
+            {Key.OemMinus, "_"},
+            {Key.OemPlus, "+"},
+            {Key.OemOpenBrackets, "{"},
+            {Key.OemCloseBrackets, "}"},
+            {Key.OemPipe, "|"},
+            {Key.OemSemicolon, ":"},
+            {Key.OemQuotes, "\""},
+            {Key.OemComma, "<"},
+            {Key.OemPeriod, ">"},
+            {Key.OemQuestion, "?"},
+            {Key.Space, " "},
+        };
+
+        public UIDevice(Image image, List<Image> connections, List<Line> cables)
+        {
+            this.image = image;
+            this.connections = connections;
+            this.cables = cables;
+            this.deviceMenu = new DeviceDetails();
+            this.uid = DateTime.Now.ToString() + "-" + this.GetHashCode().ToString();
+
+            image.MouseDown += DeviceMouseDown;
+            image.MouseMove += DeviceMouseMove;
+            image.MouseUp += DeviceMouseUp;
+
+            deviceMenu.Closing += new CancelEventHandler(OnClosing);
+            deviceMenu.KeyDown += KeyDown;
+            deviceMenu.KeyUp += KeyUp;
+        }
+
+        private void DeviceMouseDown(object sender, MouseButtonEventArgs e)
+        {
+            if (FrontendManager.connecting)
+            {
+                FrontendManager.AddToPendingConnections(this.image);
+            }
+            if (e.ClickCount < 2)
+            {
+                _drag = true;
+                _startPoint = Mouse.GetPosition(FrontendManager.networkMap.MainCanvas);
+            }
+            else
+            {
+                this.deviceMenu.Show();
+            }
+        }
+
+        private void DeviceMouseMove(object sender, MouseEventArgs e)
+        {
+            if (_drag)
+            {
+                Image draggedRectangle = (Image)sender;
+                Point newPoint = Mouse.GetPosition(FrontendManager.networkMap.MainCanvas);
+                double left = Canvas.GetLeft(draggedRectangle) + (newPoint.X - _startPoint.X);
+                double top = Canvas.GetTop(draggedRectangle) + (newPoint.Y - _startPoint.Y);
+                if (left + draggedRectangle.Width < FrontendManager.windowSize.X && left > 0 && top + draggedRectangle.Height < FrontendManager.windowSize.Y && top >= FrontendManager.networkMap.TopMenu.Height)
+                {
+                    Canvas.SetLeft(draggedRectangle, left);
+                    Canvas.SetTop(draggedRectangle, top);
+                    _startPoint = newPoint;
+                    for (int i = 0; i < this.connections.Count; i++)
+                    {
+                        FrontendManager.drawConnection(new List<Image>() { draggedRectangle, this.connections[i] }, this.cables[i]);
+                    }
+                }
+            }
+        }
+
+        private void DeviceMouseUp(object sender, MouseButtonEventArgs e)
+        {
+            _drag = false;
+        }
+
+        private void OnClosing(object s, CancelEventArgs e)
+        {
+            Window sender = (Window)s;
+            e.Cancel = true;
+            sender.Hide();
+        }
+
+        private void KeyDown(object sender, KeyEventArgs e)
+        {
+            bool foundKey = false;
+            string key = "";
+
+            try
+            {
+                if (_shiftDown)
+                {
+                    key = _shiftedKeyboard[e.Key];
+                }
+                else
+                {
+                    key = _keyboard[e.Key];
+                }
+                foundKey = true;
+            }
+            catch (KeyNotFoundException) { }
+
+            if (foundKey)
+            {
+                deviceMenu.TerminalTextBox.Text += key;
+            }
+            else if (e.Key == Key.Back && deviceMenu.TerminalTextBox.Text.Length > 0)
+            {
+                deviceMenu.TerminalTextBox.Text = deviceMenu.TerminalTextBox.Text.Substring(0, deviceMenu.TerminalTextBox.Text.Length - 1);
+            }
+            else if (e.Key == Key.LeftShift || e.Key == Key.RightShift)
+            {
+                _shiftDown = true;
+            }
+        }
+
+        private void KeyUp(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.LeftShift || e.Key == Key.RightShift)
+            {
+                _shiftDown = false;
+            }
+        }
+
+        protected void ReadCallback(string input)
+        {
+            deviceMenu.TerminalTextBox.Text += input;
+        }
+    }
+    class EndpointDevice : UIDevice
+    {
+        public EndpointDevice(Image image, List<Image> connections, List<Line> cables) : base(image, connections, cables)
+        {
+            
+        }
+    }
+
+    class UINetDevice : UIDevice
+    {
+        private NetworkDevice _networkDevice { get; set; } 
+        public UINetDevice(Image image, List<Image> connections, List<Line> cables, string name, string v4Address, Credentials credentials, string assetsDir) : base(image, connections, cables)
+        {
+            _networkDevice = new NetworkDevice(name, v4Address, credentials, assetsDir, base.ReadCallback);
+        }
+    }
+}

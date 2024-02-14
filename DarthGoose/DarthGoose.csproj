@@ -14,4 +14,20 @@
 		</Content>
 	</ItemGroup>
 
+	<ItemGroup>
+	  <Content Remove="Images\DALLE_2024-01-19_13.30.14_-_Design_a_company_logo_inspired_by_the_whimsical_scene_of_a_goose_riding_on_the_back_of_a_walrus_charging_into_battle_with_a_knife._The_logo_should_be.png" />
+	  <Content Remove="Images\SIDaRS" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <None Remove="Images\DALLE_2024-01-19_13.30.14_-_Design_a_company_logo_inspired_by_the_whimsical_scene_of_a_goose_riding_on_the_back_of_a_walrus_charging_into_battle_with_a_knife._The_logo_should_be.png" />
+	  <None Remove="Images\SIDaRS" />
+	  <None Remove="NewFile1.txt" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <PackageReference Include="SshNet" Version="1.0.0" />
+	  <PackageReference Include="System.Management" Version="8.0.0" />
+	</ItemGroup>
+
 </Project>

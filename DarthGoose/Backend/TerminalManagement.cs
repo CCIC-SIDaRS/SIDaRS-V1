@@ -1,14 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net;
-using System.Text;
-using System.Text.Json;
-using System.Threading.Tasks;
-using CredentialManager;
+﻿using System.Text.Json;
+using System.IO;
+using Backend.CredentialManager;
 using SSHBackend;
 
-namespace NetworkDeviceManager
+namespace Backend.NetworkDeviceManager
 {
     enum ManagementProtocol 
     {
@@ -20,40 +15,40 @@ namespace NetworkDeviceManager
     class TerminalManager
     {
         public delegate void ReadCallback(string output);
-        private string assetsDir { get; set; }
-        private Dictionary<string, object> catalystCommands { get; set; }
-        private string v4address { get; set; }
-        private ManagementProtocol protocol { get; set; }
-        private Credentials credentials { get; set; }
-        private SSHManager? sshManager { get; set; }
-        private ReadCallback readCallback { get; set; }
+        private string _assetsDir { get; set; }
+        private Dictionary<string, object> _catalystCommands { get; set; }
+        private string _v4address { get; set; }
+        private ManagementProtocol _protocol { get; set; }
+        private Credentials _credentials { get; set; }
+        private SSHManager? _sshManager { get; set; }
+        private ReadCallback _readCallback { get; set; }
 
         public TerminalManager(string assetsDir, string v4address, ManagementProtocol protocol, Credentials credentials, ReadCallback readCallback) 
         {
-            this.assetsDir = assetsDir;
-            this.catalystCommands = JsonSerializer.Deserialize<Dictionary<string, object>>(File.ReadAllText(this.assetsDir + @"\CiscoCommandTree.json")) ?? new Dictionary<string, object>();
-            this.v4address = v4address;
-            this.credentials = credentials;
-            this.readCallback = readCallback;
+            this._assetsDir = assetsDir;
+            this._catalystCommands = JsonSerializer.Deserialize<Dictionary<string, object>>(File.ReadAllText(this._assetsDir + @"\CiscoCommandTree.json")) ?? new Dictionary<string, object>();
+            this._v4address = v4address;
+            this._credentials = credentials;
+            this._readCallback = readCallback;
 
             if (protocol == ManagementProtocol.SSH)
             {
-                sshManager = new SSHManager(this.v4address, this.credentials, this.readCallback);
-                sshManager.Connect();
-                var task = new Task(() => { sshManager.ExecuteExecChannel("show version"); });
+                _sshManager = new SSHManager(this._v4address, this._credentials, this._readCallback);
+                _sshManager.Connect();
+                var task = new Task(() => { _sshManager.ExecuteExecChannel("show version"); });
 
                 readCallback("Attempting SSH (Exec)...");
 
                 if (task.Wait(TimeSpan.FromSeconds(5)))
                 {
-                    this.protocol = ManagementProtocol.SSH;
+                    this._protocol = ManagementProtocol.SSH;
                 } else
                 {
                     readCallback("SSH (Exec) unavailable\nAttempting SSHNoExec...");
-                    this.protocol = ManagementProtocol.SSHNoExe;
-                    sshManager.sshType = ManagementProtocol.SSHNoExe;
+                    this._protocol = ManagementProtocol.SSHNoExe;
+                    _sshManager.sshType = ManagementProtocol.SSHNoExe;
                 }
-                sshManager.Disconnect();
+                _sshManager.Disconnect();
             }
         }
 
@@ -63,7 +58,7 @@ namespace NetworkDeviceManager
 
             if (currentCommand.Length > 1)
             {
-                Dictionary<string, object> currentCommandDictionary = catalystCommands;
+                Dictionary<string, object> currentCommandDictionary = _catalystCommands;
                 try
                 {
                     for (int i = 0; i <= currentCommand.Length - 2; i++)
@@ -84,7 +79,7 @@ namespace NetworkDeviceManager
             }
             else
             {
-                matchingValues = catalystCommands.Keys
+                matchingValues = _catalystCommands.Keys
                                     .Where(x => x.StartsWith(currentCommand[0]));
             }
 
@@ -93,17 +88,17 @@ namespace NetworkDeviceManager
 
         public void SendCommand(string command)
         {
-            if ((int) protocol <= 1)
+            if ((int) _protocol <= 1)
             {
-                if (protocol == ManagementProtocol.SSH)
+                if (_protocol == ManagementProtocol.SSH)
                 {
-                    sshManager.ExecuteExecChannel(command);
-                }else if (protocol == ManagementProtocol.SSHNoExe)
+                    _sshManager.ExecuteExecChannel(command);
+                }else if (_protocol == ManagementProtocol.SSHNoExe)
                 {
-                    sshManager.ExecuteShellStream(command);
+                    _sshManager.ExecuteShellStream(command);
                 }else
                 {
-                    this.readCallback("Failed to send SSH command.");
+                    this._readCallback("Failed to send SSH command.");
                 }
             } else
             {
@@ -112,9 +107,9 @@ namespace NetworkDeviceManager
         }
         public void Connect()
         {
-            if ((int) protocol <= 1)
+            if ((int) _protocol <= 1)
             {
-                sshManager.Connect();
+                _sshManager.Connect();
             }else
             {
                 throw new Exception("FU");
@@ -122,9 +117,9 @@ namespace NetworkDeviceManager
         }
         public void Disconnect()
         {
-            if ((int) protocol <= 1)
+            if ((int) _protocol <= 1)
             {
-                sshManager.Disconnect();
+                _sshManager.Disconnect();
             }else
             {
                 throw new Exception("FU");

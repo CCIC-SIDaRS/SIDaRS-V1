@@ -1,50 +1,39 @@
 ﻿using Renci.SshNet;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Text.Json;
-using System.Threading.Tasks;
-using System.Security.Cryptography;
 using System.IO;
-using System.Security;
-using System.Security.Principal;
-using System.Collections;
-using CredentialManager;
-using NetworkDeviceManager;
-using System.Text.Json.Serialization;
+using Backend.CredentialManager;
+using Backend.NetworkDeviceManager;
 
 namespace SSHBackend
 {
     class SSHManager
     {
         public ManagementProtocol sshType { get; set; }
-        private SshClient client { get; set; }
-        private ShellStream? stream { get; set; }
-        private TerminalManager.ReadCallback readCallback { get; set; }
-        private Thread? readThread { get; set; }
-        private bool connected { get; set; }
+        private SshClient _client { get; set; }
+        private ShellStream? _stream { get; set; }
+        private TerminalManager.ReadCallback _readCallback { get; set; }
+        private Thread? _readThread { get; set; }
+        private bool _connected { get; set; }
 
         // Can send a command and recieve a response to the command
         // returns a string with the response to the command -- either the error or the result
         public SSHManager(string hostaddress, Credentials credentials, TerminalManager.ReadCallback readCallback)
         {
-            this.readCallback = readCallback;
+            this._readCallback = readCallback;
             this.sshType = ManagementProtocol.SSH;
-            connected = false;
+            _connected = false;
 
-            client = new SshClient(hostaddress, credentials.GetCreds()[0], credentials.GetCreds()[1]);
+            _client = new SshClient(hostaddress, credentials.GetCreds()[0], credentials.GetCreds()[1]);
             Console.WriteLine(hostaddress);
         }
         private void ReadThreadMethod()
         {
-            StreamReader reader = new StreamReader(stream);
-            while (connected)
+            StreamReader reader = new StreamReader(_stream);
+            while (_connected)
             {
                 string output = ReadStream(reader);
                 if (output != null && output != "" && output != "\n")
                 {
-                    readCallback(output);
+                    _readCallback(output);
                 }
                 Thread.Sleep(500);
             }
@@ -53,16 +42,16 @@ namespace SSHBackend
         {
             try
             {
-                client.Connect();
+                _client.Connect();
                 if (sshType == ManagementProtocol.SSHNoExe)
                 {
-                    connected = true;
+                    _connected = true;
                     CreateShellStream();
 
                     // Initialize read thread
-                    readThread = new Thread(ReadThreadMethod);
-                    readThread.IsBackground = true;
-                    readThread.Start();
+                    _readThread = new Thread(ReadThreadMethod);
+                    _readThread.IsBackground = true;
+                    _readThread.Start();
                 }  
             }
             catch (Exception ex)
@@ -74,30 +63,30 @@ namespace SSHBackend
 
         public void CreateShellStream()
         {
-            stream = client.CreateShellStream("customCommand", 80, 24, 800, 600, 1024);
+            _stream = _client.CreateShellStream("customCommand", 80, 24, 800, 600, 1024);
         }
 
         public void ExecuteExecChannel(string command)
         {
-            SshCommand _command = client.CreateCommand(command);
+            SshCommand _command = _client.CreateCommand(command);
             _command.Execute();
             string result = _command.Result;
             if (_command.Error != "")
             {
                 throw new Exception("SSH Command Error " + _command.Error);
             }
-            readCallback(result);
+            _readCallback(result);
         }
 
         public void ExecuteShellStream(string command)
         {
-            if (stream == null)
+            if (_stream == null)
             {
-                throw new NullReferenceException(nameof(stream) + " Please run the create shell stream function before attempting to execute commands through the shell channel");
+                throw new NullReferenceException(nameof(_stream) + " Please run the create shell stream function before attempting to execute commands through the shell channel");
             }
-            StreamWriter writer = new StreamWriter(stream);
+            StreamWriter writer = new StreamWriter(_stream);
             writer.AutoFlush = true;
-            WriteStream(command, writer, stream);
+            WriteStream(command, writer, _stream);
         }
 
         public void Disconnect()
@@ -106,9 +95,9 @@ namespace SSHBackend
             {
                 if (sshType == ManagementProtocol.SSHNoExe)
                 {
-                    connected = false;
+                    _connected = false;
                 }
-                client.Disconnect();
+                _client.Disconnect();
             }
             catch (Exception ex)
             {

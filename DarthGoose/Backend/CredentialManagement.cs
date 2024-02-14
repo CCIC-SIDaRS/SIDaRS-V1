@@ -1,45 +1,37 @@
-﻿using Renci.SshNet;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Security;
-using System.Security.Cryptography;
+﻿using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
-using System.Text.Json.Serialization;
-using System.Threading.Tasks;
-using System.Xml.Serialization;
 using System.Reflection;
-using System.Runtime.CompilerServices;
 using System.Text.RegularExpressions;
+using System.IO;
 
-namespace CredentialManager
+namespace Backend.CredentialManager
 {
     class Credentials
     {
         
-        private string username { get; set; }
-        private string password { get; set; }
+        private string _username { get; set; }
+        private string _password { get; set; }
         public Credentials(string username, string password, bool encrypted = true)
         {
-            this.username = username;
+            this._username = username;
             if (!encrypted)
             {
-                this.password = SymmetricEncryption.Encrypt(password, SymmetricEncryption.master);
+                this._password = SymmetricEncryption.Encrypt(password, SymmetricEncryption.master);
             }else
             {
-                this.password = password;
+                this._password = password;
             }
         }
         public Credentials(Dictionary<string,string> serializedData)
         {
             // This constructor is for use with deserializers
-            this.username = serializedData[nameof(this.username)];
-            this.password = serializedData[nameof(this.password)];
+            this._username = serializedData[nameof(this._username)];
+            this._password = serializedData[nameof(this._password)];
         }
         public string[] GetCreds()
         {
-            return [username, SymmetricEncryption.Decrypt(password, SymmetricEncryption.master)];
+            return [_username, SymmetricEncryption.Decrypt(_password, SymmetricEncryption.master)];
         }
         public string Save()
         {
@@ -61,12 +53,12 @@ namespace CredentialManager
             HashAlgorithmName hashMethod = HashAlgorithmName.SHA512;
             return Rfc2898DeriveBytes.Pbkdf2(Encoding.Unicode.GetBytes(source), salt, iterations, hashMethod, desiredKeyLength);
         }
-        public static string Encrypt(string sourceText, byte[] password)
+        public static string Encrypt(string sourceText, byte[] _password)
         {
             try
             {
                 using Aes aes = Aes.Create();
-                aes.Key = password;
+                aes.Key = _password;
                 aes.Padding = PaddingMode.PKCS7;
                 using MemoryStream output = new();
                 using CryptoStream cryptoStream = new(output, aes.CreateEncryptor(), CryptoStreamMode.Write);
@@ -80,13 +72,13 @@ namespace CredentialManager
                 throw new Exception("Error during encrpytion " + ex);
             }
         }
-        public static string Decrypt(string encryptedText, byte[] password)
+        public static string Decrypt(string encryptedText, byte[] _password)
         {
             try
             {
                 byte[] encrpytedBytes = Convert.FromBase64String(encryptedText.Split("'''")[0]);
                 using Aes aes = Aes.Create();
-                aes.Key = password;
+                aes.Key = _password;
                 aes.IV = Convert.FromBase64String(encryptedText.Split("'''")[1]);
                 aes.Padding = PaddingMode.PKCS7;
                 using MemoryStream input = new(encrpytedBytes);
