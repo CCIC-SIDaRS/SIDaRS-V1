@@ -295,7 +295,6 @@ namespace FrontEnd
             {Key.OemPeriod, "."},
             {Key.OemQuestion, "/"},
             {Key.Space, " "}
-            // Add more key-value pairs for other keys as needed
         };
         private static Dictionary<Key, string> shiftedKeyboard = new Dictionary<Key, string>
     {
@@ -357,7 +356,6 @@ namespace FrontEnd
         {Key.OemPeriod, ">"},
         {Key.OemQuestion, "?"},
         {Key.Space, " "},
-        // Add more key-value pairs for other keys as needed
     };
         public Device (Image image, List<Image> connections, List<Line> cables)
         {
