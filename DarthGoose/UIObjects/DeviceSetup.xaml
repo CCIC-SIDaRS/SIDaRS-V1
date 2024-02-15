@@ -1,0 +1,24 @@
+﻿<Window x:Class="DarthGoose.UIObjects.DeviceSetup"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:DarthGoose.UIObjects"
+        mc:Ignorable="d"
+        Title="Device Setup" Height="450" Width="300">
+    <Grid Background="Black">
+        <TextBlock Foreground="White" Margin="50, 10">
+            Optional Items are Followed by a *
+            <LineBreak/>
+            Device Name*
+        </TextBlock>
+        <TextBox x:Name="SetupNameBox" Width="200" Height="20" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="10,45"/>
+        <TextBlock Foreground="White" Text="IP V4 Address" Margin="50,70"/>
+        <TextBox x:Name="SetupV4AddressBox" Width="200" Height="20" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="10,90"/>
+        <TextBlock Foreground="White" Text="SSH Username" Margin="50,115"/>
+        <TextBox x:Name="SetupSSHUsernameBox" Width="200" Height="20" HorizontalAlignment="Center" VerticalAlignment="Top" Margin= "10,135"/>
+        <TextBlock Foreground="White" Text="SSH Password" Margin="50,160"/>
+        <PasswordBox x:Name="SetupSSHPasswordBox" Width="200" Height="20" HorizontalAlignment="Center" VerticalAlignment="Top" Margin= "10,180"/>
+        <Button x:Name="FinishedSetup" Width="200" Height="20" Content="Submit" Margin="50,85,50,50"/>
+    </Grid>
+</Window>

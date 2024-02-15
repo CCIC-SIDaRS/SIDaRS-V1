@@ -8,14 +8,14 @@ namespace Backend.NetworkDeviceManager
     class NetworkDevice
     {
         public string name { get; private set; }
-        public string v4address { get; private set; }
+        public string? v4address { get; private set; }
         public TerminalManager terminal { get; private set; }
 
         private Credentials _credentials { get; set; }
         private string _assetsDir { get; set; }
         private TerminalManager.ReadCallback _readCallback { get; set; }
 
-        public NetworkDevice(string name, string v4address, Credentials credentials, string assetsDir, TerminalManager.ReadCallback readCallback, string uid = null)
+        public NetworkDevice(string name, string v4address = null, Credentials credentials, string assetsDir, TerminalManager.ReadCallback readCallback, string uid = null)
         {
             this.name = name;
             this.v4address = v4address;

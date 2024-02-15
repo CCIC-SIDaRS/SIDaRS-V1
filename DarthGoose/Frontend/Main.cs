@@ -7,6 +7,9 @@ using System.Windows.Input;
 using System.IO;
 using System.Windows.Shapes;
 using System.ComponentModel;
+using System.Diagnostics.SymbolStore;
+using Backend.CredentialManager;
+using DarthGoose.UIObjects;
 
 namespace DarthGoose.Frontend
 {
@@ -19,6 +22,7 @@ namespace DarthGoose.Frontend
 
         private static LoginPage _loginPage = new();
         private static Dictionary<Image, UIDevice> _devices = new();
+        private static DeviceSetup _deviceSetupWindow = new();
 
         public static void FrontendMain(MainWindow window)
         {
@@ -52,6 +56,7 @@ namespace DarthGoose.Frontend
             networkMap.InsertEndPoint.Click += new RoutedEventHandler(InsertDeviceClick);
             networkMap.InsertServer.Click += new RoutedEventHandler(InsertDeviceClick);
             networkMap.InsertConnection.Click += new RoutedEventHandler(OnInsertConnection);
+            _deviceSetupWindow.FinishedSetup.Click += new RoutedEventHandler(OnFinishedSetup);
             mainWindow.MainFrame.Navigate(networkMap);
         }
 
@@ -108,7 +113,22 @@ namespace DarthGoose.Frontend
             Canvas.SetTop(image, 20);
 
             networkMap.MainCanvas.Children.Add(image);
-            _devices[image] = new UIDevice(image, new List<Image>(), new List<Line>());
+
+            if (deviceType.Name == "InsertRouter" || deviceType.Name == "InsertSwitch" || deviceType.Name == "InsertFirewall")
+            {
+                SymmetricEncryption.SetMaster("PhatWalrus123");
+                _deviceSetupWindow.Show();
+                _devices[image] = new UINetDevice(image, new List<Image>(), new List<Line>(), deviceType.Name + _devices.Count().ToString(), "NoConf", new Backend.CredentialManager.Credentials("walrus", "12345678!Aa", false), @".\Backend\Assets");
+            }else
+            {
+                _devices[image] = new EndpointDevice(image, new List<Image>(), new List<Line>(), "NoConf");
+            }
+            
+
+        }
+
+        private static void OnFinishedSetup(object sender, RoutedEventArgs e)
+        {
 
         }
 

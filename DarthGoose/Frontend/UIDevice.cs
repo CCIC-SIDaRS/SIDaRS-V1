@@ -263,9 +263,10 @@ namespace DarthGoose.Frontend
     }
     class EndpointDevice : UIDevice
     {
-        public EndpointDevice(Image image, List<Image> connections, List<Line> cables) : base(image, connections, cables)
+        public string v4Address { get; private set; }
+        public EndpointDevice(Image image, List<Image> connections, List<Line> cables, string v4Address) : base(image, connections, cables)
         {
-            
+            this.v4Address = v4Address;
         }
     }
 

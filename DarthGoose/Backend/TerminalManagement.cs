@@ -2,6 +2,7 @@
 using System.IO;
 using Backend.CredentialManager;
 using SSHBackend;
+using System.Diagnostics;
 
 namespace Backend.NetworkDeviceManager
 {
@@ -26,6 +27,7 @@ namespace Backend.NetworkDeviceManager
         public TerminalManager(string assetsDir, string v4address, ManagementProtocol protocol, Credentials credentials, ReadCallback readCallback) 
         {
             this._assetsDir = assetsDir;
+            Debug.WriteLine(assetsDir);
             this._catalystCommands = JsonSerializer.Deserialize<Dictionary<string, object>>(File.ReadAllText(this._assetsDir + @"\CiscoCommandTree.json")) ?? new Dictionary<string, object>();
             this._v4address = v4address;
             this._credentials = credentials;
