@@ -28,7 +28,6 @@ namespace DarthGoose.Frontend
             windowSize = new Point(mainWindow.Width, mainWindow.Height);
             mainWindow.SizeChanged += OnWindowSizeChanged;
             mainWindow.Closing += new CancelEventHandler(MainWindowClosing);
-
             _loginPage.LoginButton.Click += new RoutedEventHandler(OnLoginEnter);
             _loginPage.LoginButton.IsDefault = true;
         }

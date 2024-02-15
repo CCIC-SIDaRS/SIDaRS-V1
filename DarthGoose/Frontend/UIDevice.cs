@@ -5,6 +5,8 @@ using System.Windows;
 using System.Windows.Controls;
 using Backend.NetworkDeviceManager;
 using Backend.CredentialManager;
+using System.Diagnostics;
+using System.Xml.Linq;
 
 namespace DarthGoose.Frontend
 {
@@ -20,7 +22,7 @@ namespace DarthGoose.Frontend
         private bool _drag;
         private Point _startPoint;
 
-        private static Dictionary<Key, string> _keyboard = new Dictionary<Key, string>
+        private static readonly Dictionary<Key, string> _keyboard = new Dictionary<Key, string>
         {
             {Key.A, "a"},
             {Key.B, "b"},
@@ -81,7 +83,7 @@ namespace DarthGoose.Frontend
             {Key.OemQuestion, "/"},
             {Key.Space, " "}
         };
-        private static Dictionary<Key, string> _shiftedKeyboard = new Dictionary<Key, string>
+        private static readonly Dictionary<Key, string> _shiftedKeyboard = new Dictionary<Key, string>
         {
             {Key.A, "A"},
             {Key.B, "B"},
@@ -151,9 +153,10 @@ namespace DarthGoose.Frontend
             this.deviceMenu = new DeviceDetails();
             this.uid = DateTime.Now.ToString() + "-" + this.GetHashCode().ToString();
 
-            image.MouseDown += DeviceMouseDown;
-            image.MouseMove += DeviceMouseMove;
-            image.MouseUp += DeviceMouseUp;
+            this.image.MouseDown += DeviceMouseDown;
+            this.image.MouseMove += DeviceMouseMove;
+            this.image.MouseUp += DeviceMouseUp;
+            FrontendManager.networkMap.MainCanvas.MouseUp += DeviceMouseUp;
 
             deviceMenu.Closing += new CancelEventHandler(OnClosing);
             deviceMenu.KeyDown += KeyDown;
@@ -166,7 +169,7 @@ namespace DarthGoose.Frontend
             {
                 FrontendManager.AddToPendingConnections(this.image);
             }
-            if (e.ClickCount < 2)
+            else if (e.ClickCount < 2)
             {
                 _drag = true;
                 _startPoint = Mouse.GetPosition(FrontendManager.networkMap.MainCanvas);
@@ -185,8 +188,9 @@ namespace DarthGoose.Frontend
                 Point newPoint = Mouse.GetPosition(FrontendManager.networkMap.MainCanvas);
                 double left = Canvas.GetLeft(draggedRectangle) + (newPoint.X - _startPoint.X);
                 double top = Canvas.GetTop(draggedRectangle) + (newPoint.Y - _startPoint.Y);
-                if (left + draggedRectangle.Width < FrontendManager.windowSize.X && left > 0 && top + draggedRectangle.Height < FrontendManager.windowSize.Y && top >= FrontendManager.networkMap.TopMenu.Height)
+                if (_drag /*left + draggedRectangle.Width < FrontendManager.windowSize.X && left > 0 && top + draggedRectangle.Height < FrontendManager.windowSize.Y && top >= -FrontendManager.networkMap.TopMenu.Height*/)
                 {
+                    //Debug.WriteLine(newPoint.X);
                     Canvas.SetLeft(draggedRectangle, left);
                     Canvas.SetTop(draggedRectangle, top);
                     _startPoint = newPoint;
@@ -200,6 +204,7 @@ namespace DarthGoose.Frontend
 
         private void DeviceMouseUp(object sender, MouseButtonEventArgs e)
         {
+            //Debug.WriteLine("Done");
             _drag = false;
         }
 
