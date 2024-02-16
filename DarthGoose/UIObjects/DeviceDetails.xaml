@@ -9,7 +9,7 @@
       Title="DeviceDetails">
 
     <Grid>
-        <TabControl>
+        <TabControl x:Name="DeviceDetailsTabs">
             <TabItem x:Name="Statistics" Header="Statistics">
                 <Grid x:Name="StatsGrid" Background="Black">
                     <TextBox x:Name="Name" Width="200" Height="20" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="10,10"/>

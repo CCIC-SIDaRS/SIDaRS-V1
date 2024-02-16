@@ -22,6 +22,9 @@ namespace DarthGoose.Frontend
         public DeviceDetails deviceMenu { get; set; }
         public string uid { get; private set; }
 
+        protected string currentCommand = "";
+        protected bool commandComplete = false;
+
         private bool _shiftDown { get; set; }
         private bool _drag;
         private Point _startPoint;
@@ -242,14 +245,20 @@ namespace DarthGoose.Frontend
             if (foundKey)
             {
                 deviceMenu.TerminalTextBox.Text += key;
+                currentCommand += key;
             }
             else if (e.Key == Key.Back && deviceMenu.TerminalTextBox.Text.Length > 0)
             {
                 deviceMenu.TerminalTextBox.Text = deviceMenu.TerminalTextBox.Text.Substring(0, deviceMenu.TerminalTextBox.Text.Length - 1);
+                currentCommand = currentCommand.Substring(0, currentCommand.Length - 1);
             }
             else if (e.Key == Key.LeftShift || e.Key == Key.RightShift)
             {
                 _shiftDown = true;
+            }
+            else if (e.Key == Key.Return || e.Key == Key.Enter)
+            {
+                commandComplete = true;
             }
         }
 
@@ -290,10 +299,41 @@ namespace DarthGoose.Frontend
         private void OnNameChange(object sender, TextChangedEventArgs e)
         {
             _networkDevice.ChangeName(deviceMenu.Name.Text);
+            deviceMenu.DeviceDetailsTabs.SelectionChanged += OnTabChanged;
         }
         private void OnAddressChange(object sender, TextChangedEventArgs e)
         {
             _networkDevice.ChangeAddress(deviceMenu.V4Address.Text);
+        }
+        private void OnTabChanged(object sender, SelectionChangedEventArgs e)
+        {
+            Debug.WriteLine(deviceMenu.DeviceDetailsTabs.SelectedIndex);
+            if (deviceMenu.DeviceDetailsTabs.SelectedIndex == 2)
+            {
+                Debug.WriteLine("Something is happening");
+                _networkDevice.terminal.Connect();
+                RunTerminal();
+            }
+        }
+
+        private void RunTerminal()
+        {
+            while(true)
+            {
+                if(commandComplete)
+                {
+                    if(currentCommand == "stop")
+                    {
+                        _networkDevice.terminal.Disconnect();
+                        break;
+                    }else
+                    {
+                        _networkDevice.terminal.SendCommand(currentCommand);
+                        commandComplete = false;
+                        currentCommand = "";
+                    }
+                }
+            }
         }
     }
 }
