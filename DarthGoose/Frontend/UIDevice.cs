@@ -276,6 +276,19 @@ namespace DarthGoose.Frontend
         public UINetDevice(Image image, List<Image> connections, List<Line> cables, string name, string v4Address, Credentials credentials, string assetsDir) : base(image, connections, cables)
         {
             _networkDevice = new NetworkDevice(name, v4Address, credentials, assetsDir, base.ReadCallback);
+            deviceMenu.Name.Text = name;
+            deviceMenu.Name.TextChanged += OnNameChange;
+            deviceMenu.V4Address.Text = v4Address;
+            deviceMenu.V4Address.TextChanged += OnAddressChange;
+        }
+        // This should probably be changed so that there is a confirmation but that's Roman's problem :)
+        private void OnNameChange(object sender, TextChangedEventArgs e)
+        {
+            _networkDevice.ChangeName(deviceMenu.Name.Text);
+        }
+        private void OnAddressChange(object sender, TextChangedEventArgs e)
+        {
+            _networkDevice.ChangeAddress(deviceMenu.V4Address.Text);
         }
     }
 }

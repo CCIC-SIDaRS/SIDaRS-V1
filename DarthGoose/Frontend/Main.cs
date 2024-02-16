@@ -128,7 +128,7 @@ namespace DarthGoose.Frontend
                 _finishedSetup = false;
             }else
             {
-                _devices[image] = new EndpointDevice(image, new List<Image>(), new List<Line>(), "NoConf");
+                _devices[image] = new EndpointDevice(image, new List<Image>(), new List<Line>(), "THIS IS TEMPORARY!!!!");
             }
             
 

@@ -54,5 +54,15 @@ namespace Backend.NetworkDeviceManager
             }
             return Regex.Replace (JsonSerializer.Serialize(properties), @"[^\u0000-\u007F]+", string.Empty);
         }
+
+        public void ChangeName(string name)
+        {
+            this.name = name;
+        }
+
+        public void ChangeAddress(string address)
+        {
+            this.v4address = address;
+        }
     }
 }

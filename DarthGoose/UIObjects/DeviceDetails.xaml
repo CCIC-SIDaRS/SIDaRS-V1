@@ -11,11 +11,14 @@
     <Grid>
         <TabControl>
             <TabItem x:Name="Statistics" Header="Statistics">
-                <Grid Background="#FFE5E5E5">
+                <Grid x:Name="StatsGrid" Background="Black">
+                    <TextBox x:Name="Name" Width="200" Height="20" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="10,10"/>
+                    <TextBox x:Name="V4Address" Width="200" Height="20" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="10,50"/>
                 </Grid>
             </TabItem>
             <TabItem x:Name="Settings" Header="Settings">
-                <Grid Background="#FFE5E5E5">
+                <Grid Background="Black">
+                    
                 </Grid>
             </TabItem>
             <TabItem x:Name="SshTerminal" Header="SSH Terminal">
