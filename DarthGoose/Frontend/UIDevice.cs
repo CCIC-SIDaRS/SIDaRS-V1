@@ -12,6 +12,9 @@ namespace DarthGoose.Frontend
 {
     class UIDevice
     {
+        private static int gridCubeWidth = 10;
+        private static int gridCubeHeight = 10;
+        
         public Image image { get; set; }
         public List<Image> connections { get; set; }
         public List<Line> cables { get; set; }
@@ -186,8 +189,9 @@ namespace DarthGoose.Frontend
             {
                 Image draggedRectangle = (Image)sender;
                 Point newPoint = Mouse.GetPosition(FrontendManager.networkMap.MainCanvas);
-                double left = Canvas.GetLeft(draggedRectangle) + (newPoint.X - _startPoint.X);
-                double top = Canvas.GetTop(draggedRectangle) + (newPoint.Y - _startPoint.Y);
+
+                double left = Math.Round((Canvas.GetLeft(draggedRectangle) + (newPoint.X - _startPoint.X)) / gridCubeWidth)  * gridCubeWidth;
+                double top = Math.Round((Canvas.GetTop(draggedRectangle) + (newPoint.Y - _startPoint.Y)) / gridCubeHeight) * gridCubeHeight;
                 if (_drag /*left + draggedRectangle.Width < FrontendManager.windowSize.X && left > 0 && top + draggedRectangle.Height < FrontendManager.windowSize.Y && top >= -FrontendManager.networkMap.TopMenu.Height*/)
                 {
                     //Debug.WriteLine(newPoint.X);
