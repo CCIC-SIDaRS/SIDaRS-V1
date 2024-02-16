@@ -15,15 +15,16 @@ namespace Backend.NetworkDeviceManager
         private string _assetsDir { get; set; }
         private TerminalManager.ReadCallback _readCallback { get; set; }
 
-        public NetworkDevice(string name, string v4address = null, Credentials credentials, string assetsDir, TerminalManager.ReadCallback readCallback, string uid = null)
+        public NetworkDevice(string name, string v4address, Credentials credentials, string assetsDir, TerminalManager.ReadCallback readCallback, string uid = null)
         {
             this.name = name;
             this.v4address = v4address;
             this._credentials = credentials;
             this._assetsDir = assetsDir;
             this._readCallback = readCallback;
-
-            this.terminal = new TerminalManager(this._assetsDir, this.v4address, ManagementProtocol.SSH, this._credentials, this._readCallback);
+            Thread thread = new Thread(() => { this.terminal = new TerminalManager(this._assetsDir, this.v4address, ManagementProtocol.SSH, this._credentials, this._readCallback); });
+            thread.Start();
+            
         }
 
         public NetworkDevice(Dictionary<string, object> serializedData)

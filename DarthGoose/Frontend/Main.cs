@@ -75,8 +75,8 @@ namespace DarthGoose.Frontend
                 UseShellExecute = true
             });
         }
-
-        private static void InsertDeviceClick(object sender, RoutedEventArgs e)
+        private static bool _finishedSetup = false;
+        private static async void InsertDeviceClick(object sender, RoutedEventArgs e)
         {
             MenuItem deviceType = (MenuItem)sender;
             BitmapImage bitMap = new BitmapImage();
@@ -118,7 +118,14 @@ namespace DarthGoose.Frontend
             {
                 SymmetricEncryption.SetMaster("PhatWalrus123");
                 _deviceSetupWindow.Show();
-                _devices[image] = new UINetDevice(image, new List<Image>(), new List<Line>(), deviceType.Name + _devices.Count().ToString(), "NoConf", new Backend.CredentialManager.Credentials("walrus", "12345678!Aa", false), @".\Backend\Assets");
+                while (!_finishedSetup)
+                {
+                    await Task.Delay(25);
+                    Debug.WriteLine("Something");
+                }
+                _devices[image] = new UINetDevice(image, new List<Image>(), new List<Line>(), _deviceSetupWindow.SetupNameBox.Text, _deviceSetupWindow.SetupV4AddressBox.Text, new Backend.CredentialManager.Credentials(_deviceSetupWindow.SetupSSHUsernameBox.Text, _deviceSetupWindow.SetupSSHPasswordBox.SecurePassword.ToString(), false), @".\Backend\Assets");
+                _deviceSetupWindow.Close();
+                _finishedSetup = false;
             }else
             {
                 _devices[image] = new EndpointDevice(image, new List<Image>(), new List<Line>(), "NoConf");
@@ -129,7 +136,7 @@ namespace DarthGoose.Frontend
 
         private static void OnFinishedSetup(object sender, RoutedEventArgs e)
         {
-
+            _finishedSetup = true;
         }
 
         private static List<Image> devicesToBeConnected = new();
