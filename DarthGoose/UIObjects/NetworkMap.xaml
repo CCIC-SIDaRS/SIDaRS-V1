@@ -30,7 +30,7 @@
                 </MenuItem>
             </Menu>
         </DockPanel>
-        <Border x:Name="DragBorder" BorderBrush="White" BorderThickness="3" Margin="0,19,0,0">
+        <Border x:Name="DragBorder" BorderBrush="White" BorderThickness="3" Margin="0,19,0,0" Panel.ZIndex="1">
             <Canvas x:Name="MainCanvas" Panel.ZIndex="1">
                     <Canvas.Background>
                         <VisualBrush TileMode="Tile" Viewport="0,0,16,16" ViewportUnits="Absolute" Viewbox="0,0,16,16" ViewboxUnits="Absolute">
@@ -41,6 +41,6 @@
                     </Canvas.Background>
                 </Canvas>
         </Border>
-        <Canvas x:Name="ConnectionCanvas"/>
+        <Canvas x:Name="ConnectionCanvas" Panel.ZIndex="0"/>
     </Grid>
 </Page>

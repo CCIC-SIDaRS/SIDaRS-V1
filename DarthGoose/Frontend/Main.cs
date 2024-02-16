@@ -121,9 +121,10 @@ namespace DarthGoose.Frontend
                 while (!_finishedSetup)
                 {
                     await Task.Delay(25);
-                    Debug.WriteLine("Something");
+                    // Debug.WriteLine("Something");
                 }
-                _devices[image] = new UINetDevice(image, new List<Image>(), new List<Line>(), _deviceSetupWindow.SetupNameBox.Text, _deviceSetupWindow.SetupV4AddressBox.Text, new Backend.CredentialManager.Credentials(_deviceSetupWindow.SetupSSHUsernameBox.Text, _deviceSetupWindow.SetupSSHPasswordBox.SecurePassword.ToString(), false), @".\Backend\Assets");
+                Debug.WriteLine(_deviceSetupWindow.SetupSSHPasswordBox.Password);
+                _devices[image] = new UINetDevice(image, new List<Image>(), new List<Line>(), _deviceSetupWindow.SetupNameBox.Text, _deviceSetupWindow.SetupV4AddressBox.Text, new Backend.CredentialManager.Credentials(_deviceSetupWindow.SetupSSHUsernameBox.Text, _deviceSetupWindow.SetupSSHPasswordBox.Password, false), @".\Backend\Assets");
                 _deviceSetupWindow.Close();
                 _finishedSetup = false;
             }else

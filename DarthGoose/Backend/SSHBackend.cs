@@ -2,6 +2,7 @@
 using System.IO;
 using Backend.CredentialManager;
 using Backend.NetworkDeviceManager;
+using System.Diagnostics;
 
 namespace SSHBackend
 {
@@ -21,9 +22,9 @@ namespace SSHBackend
             this._readCallback = readCallback;
             this.sshType = ManagementProtocol.SSH;
             _connected = false;
-
+            Debug.WriteLine(credentials.GetCreds()[1]);
             _client = new SshClient(hostaddress, credentials.GetCreds()[0], credentials.GetCreds()[1]);
-            Console.WriteLine(hostaddress);
+            // Console.WriteLine(hostaddress);
         }
         private void ReadThreadMethod()
         {

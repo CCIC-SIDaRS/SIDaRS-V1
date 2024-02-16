@@ -7,13 +7,14 @@ using Backend.NetworkDeviceManager;
 using Backend.CredentialManager;
 using System.Diagnostics;
 using System.Xml.Linq;
+using System.Windows.Threading;
 
 namespace DarthGoose.Frontend
 {
     class UIDevice
     {
-        private static int gridCubeWidth = 10;
-        private static int gridCubeHeight = 10;
+        private static int gridCubeWidth = 1;
+        private static int gridCubeHeight = 1;
         
         public Image image { get; set; }
         public List<Image> connections { get; set; }
@@ -192,7 +193,7 @@ namespace DarthGoose.Frontend
 
                 double left = Math.Round((Canvas.GetLeft(draggedRectangle) + (newPoint.X - _startPoint.X)) / gridCubeWidth)  * gridCubeWidth;
                 double top = Math.Round((Canvas.GetTop(draggedRectangle) + (newPoint.Y - _startPoint.Y)) / gridCubeHeight) * gridCubeHeight;
-                if (_drag /*left + draggedRectangle.Width < FrontendManager.windowSize.X && left > 0 && top + draggedRectangle.Height < FrontendManager.windowSize.Y && top >= -FrontendManager.networkMap.TopMenu.Height*/)
+                if (left + draggedRectangle.Width < FrontendManager.windowSize.X && left > 0 && top + draggedRectangle.Height < FrontendManager.windowSize.Y && top >= -FrontendManager.networkMap.TopMenu.Height)
                 {
                     //Debug.WriteLine(newPoint.X);
                     Canvas.SetLeft(draggedRectangle, left);
@@ -260,9 +261,9 @@ namespace DarthGoose.Frontend
             }
         }
 
-        protected void ReadCallback(string input)
+        public void ReadCallback(string input)
         {
-            deviceMenu.TerminalTextBox.Text += input;
+            Application.Current.Dispatcher.Invoke(() => { deviceMenu.TerminalTextBox.Text += input; });
         }
     }
     class EndpointDevice : UIDevice
