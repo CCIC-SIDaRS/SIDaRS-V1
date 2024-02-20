@@ -247,7 +247,7 @@ namespace DarthGoose.Frontend
                 deviceMenu.TerminalTextBox.Text += key;
                 currentCommand += key;
             }
-            else if (e.Key == Key.Back && deviceMenu.TerminalTextBox.Text.Length > 0)
+            else if (e.Key == Key.Back && deviceMenu.TerminalTextBox.Text.Length > 0 && currentCommand.Length > 0)
             {
                 deviceMenu.TerminalTextBox.Text = deviceMenu.TerminalTextBox.Text.Substring(0, deviceMenu.TerminalTextBox.Text.Length - 1);
                 currentCommand = currentCommand.Substring(0, currentCommand.Length - 1);
@@ -259,6 +259,7 @@ namespace DarthGoose.Frontend
             else if (e.Key == Key.Return || e.Key == Key.Enter)
             {
                 commandComplete = true;
+                Debug.WriteLine(commandComplete);
             }
         }
 
@@ -294,12 +295,12 @@ namespace DarthGoose.Frontend
             deviceMenu.Name.TextChanged += OnNameChange;
             deviceMenu.V4Address.Text = v4Address;
             deviceMenu.V4Address.TextChanged += OnAddressChange;
+            deviceMenu.DeviceDetailsTabs.SelectionChanged += OnTabChanged;
         }
         // This should probably be changed so that there is a confirmation but that's Roman's problem :)
         private void OnNameChange(object sender, TextChangedEventArgs e)
         {
             _networkDevice.ChangeName(deviceMenu.Name.Text);
-            deviceMenu.DeviceDetailsTabs.SelectionChanged += OnTabChanged;
         }
         private void OnAddressChange(object sender, TextChangedEventArgs e)
         {
@@ -307,12 +308,10 @@ namespace DarthGoose.Frontend
         }
         private void OnTabChanged(object sender, SelectionChangedEventArgs e)
         {
-            Debug.WriteLine(deviceMenu.DeviceDetailsTabs.SelectedIndex);
             if (deviceMenu.DeviceDetailsTabs.SelectedIndex == 2)
             {
-                Debug.WriteLine("Something is happening");
                 _networkDevice.terminal.Connect();
-                RunTerminal();
+                Thread thread = new Thread(RunTerminal);
             }
         }
 
@@ -320,6 +319,7 @@ namespace DarthGoose.Frontend
         {
             while(true)
             {
+                Debug.WriteLine(commandComplete);
                 if(commandComplete)
                 {
                     if(currentCommand == "stop")
