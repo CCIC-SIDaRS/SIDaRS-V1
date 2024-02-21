@@ -259,7 +259,6 @@ namespace DarthGoose.Frontend
             else if (e.Key == Key.Return || e.Key == Key.Enter)
             {
                 commandComplete = true;
-                Debug.WriteLine(commandComplete);
             }
         }
 
@@ -287,7 +286,8 @@ namespace DarthGoose.Frontend
 
     class UINetDevice : UIDevice
     {
-        private NetworkDevice _networkDevice { get; set; } 
+        private NetworkDevice _networkDevice { get; set; }
+        // private readonly Task _terminalTask = new Task(RunTerminal);
         public UINetDevice(Image image, List<Image> connections, List<Line> cables, string name, string v4Address, Credentials credentials, string assetsDir) : base(image, connections, cables)
         {
             _networkDevice = new NetworkDevice(name, v4Address, credentials, assetsDir, base.ReadCallback);
@@ -310,29 +310,35 @@ namespace DarthGoose.Frontend
         {
             if (deviceMenu.DeviceDetailsTabs.SelectedIndex == 2)
             {
-                _networkDevice.terminal.Connect();
-                Thread thread = new Thread(RunTerminal);
+                if(_networkDevice.terminal is null)
+                {
+                    MessageBox.Show("Please wait for the connection to be completed before access the ssh terminal");
+                }else
+                {
+                    _networkDevice.terminal.Connect();
+                    Thread thread = new Thread(RunTerminal);
+                    thread.Start();
+                }
             }
         }
 
-        private void RunTerminal()
+        private async void RunTerminal()
         {
-            while(true)
+            while(!commandComplete)
             {
-                Debug.WriteLine(commandComplete);
-                if(commandComplete)
-                {
-                    if(currentCommand == "stop")
-                    {
-                        _networkDevice.terminal.Disconnect();
-                        break;
-                    }else
-                    {
-                        _networkDevice.terminal.SendCommand(currentCommand);
-                        commandComplete = false;
-                        currentCommand = "";
-                    }
-                }
+                await Task.Delay(25);
+            }
+            commandComplete = false;
+            if (currentCommand == "stop")
+            {
+                _networkDevice.terminal.Disconnect();
+                currentCommand = "";
+            }else
+            {
+                _networkDevice.terminal.SendCommand(currentCommand);
+                currentCommand = "";
+                Debug.WriteLine("Something");
+                RunTerminal();
             }
         }
     }
