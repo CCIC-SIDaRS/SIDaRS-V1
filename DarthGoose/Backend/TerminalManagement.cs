@@ -41,7 +41,7 @@ namespace Backend.NetworkDeviceManager
             {
                 sshManager = new SSHManager(this.v4address, this.credentials, this.readCallback);
                 sshManager.Connect();
-                var task = new Task(() => { sshManager.ExecuteExecChannel("ls"); });
+                var task = new Task(() => { sshManager.ExecuteExecChannel("show version"); });
 
                 readCallback("Attempting SSH (Exec)...");
 

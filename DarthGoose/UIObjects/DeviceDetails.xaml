@@ -23,7 +23,10 @@
             </TabItem>
             <TabItem x:Name="SshTerminal" Header="SSH Terminal">
                 <Grid Background="#FFE5E5E5">
-                    <TextBlock x:Name="TerminalTextBox" TextWrapping="Wrap" Background="Black" Foreground="GreenYellow"/>
+                    <ScrollViewer>
+                        <TextBlock x:Name="TerminalTextBox" TextWrapping="Wrap" Background="Black" Foreground="GreenYellow"/>
+                    </ScrollViewer>
+                    
                 </Grid>
             </TabItem>
         </TabControl>

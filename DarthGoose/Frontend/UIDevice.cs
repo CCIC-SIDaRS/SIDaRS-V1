@@ -337,7 +337,6 @@ namespace DarthGoose.Frontend
             {
                 _networkDevice.terminal.SendCommand(currentCommand);
                 currentCommand = "";
-                Debug.WriteLine("Something");
                 RunTerminal();
             }
         }
