@@ -3,17 +3,18 @@ using System.IO;
 using Backend.CredentialManager;
 using Backend.NetworkDeviceManager;
 using System.Diagnostics;
+using System.Security;
 
 namespace SSHBackend
 {
     class SSHManager
     {
         public ManagementProtocol sshType { get; set; }
+        public bool _connected { get; private set; }
         private SshClient _client { get; set; }
         private ShellStream? _stream { get; set; }
         private TerminalManager.ReadCallback _readCallback { get; set; }
         private Thread? _readThread { get; set; }
-        private bool _connected { get; set; }
 
         // Can send a command and recieve a response to the command
         // returns a string with the response to the command -- either the error or the result
@@ -34,6 +35,7 @@ namespace SSHBackend
                 string output = ReadStream(reader);
                 if (output != null && output != "" && output != "\n")
                 {
+                    
                     _readCallback(output);
                 }
                 Thread.Sleep(500);
@@ -94,7 +96,7 @@ namespace SSHBackend
         {
             try
             {
-                if (sshType == ManagementProtocol.SSHNoExe)
+                if (sshType == ManagementProtocol.SSHNoExe && _connected)
                 {
                     _connected = false;
                 }
@@ -126,6 +128,28 @@ namespace SSHBackend
                 result += line + "\n";
             }
             return result;
+        }
+    }
+
+    class TerminalBuffer
+    {
+        public string terminalMessage { get; private set; }
+        private TerminalManager.ReadCallback _readCallback { get; set; }
+
+        public TerminalBuffer(TerminalManager.ReadCallback readCallBack) 
+        {
+            this._readCallback = readCallBack;
+        }
+
+        public void Push(string line)
+        {
+            terminalMessage += line;
+        }
+
+        public void Flush()
+        {
+            string[] middleman = terminalMessage.Split("\n");
+
         }
     }
 }

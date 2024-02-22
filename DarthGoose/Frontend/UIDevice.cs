@@ -271,11 +271,6 @@ namespace DarthGoose.Frontend
                 _shiftDown = false;
             }
         }
-
-        public void ReadCallback(string input)
-        {
-            Application.Current.Dispatcher.Invoke(() => { deviceMenu.TerminalTextBox.Text += input; });
-        }
     }
     class EndpointDevice : UIDevice
     {
@@ -292,7 +287,7 @@ namespace DarthGoose.Frontend
         // private readonly Task _terminalTask = new Task(RunTerminal);
         public UINetDevice(Image image, List<Image> connections, List<Line> cables, string name, string v4Address, Credentials credentials, string assetsDir) : base(image, connections, cables)
         {
-            _networkDevice = new NetworkDevice(name, v4Address, credentials, assetsDir, base.ReadCallback);
+            _networkDevice = new NetworkDevice(name, v4Address, credentials, assetsDir, ReadCallback);
             deviceMenu.Name.Text = name;
             deviceMenu.Name.TextChanged += OnNameChange;
             deviceMenu.V4Address.Text = v4Address;
@@ -312,24 +307,26 @@ namespace DarthGoose.Frontend
         {
             if (deviceMenu.DeviceDetailsTabs.SelectedIndex == 2)
             {
-                if(_networkDevice.terminal is null)
+                if (_networkDevice.terminal is null)
                 {
                     MessageBox.Show("Please wait for the connection to be completed before access the ssh terminal");
-                }else
+                } else
                 {
                     _networkDevice.terminal.Connect();
                     Thread thread = new Thread(RunTerminal);
                     thread.IsBackground = true;
                     thread.Start();
                 }
+            } else if (deviceMenu.DeviceDetailsTabs.SelectedIndex != 2 && _networkDevice.terminal is not null)
+            {
+                _networkDevice.terminal.Disconnect();
             }
         }
-
-        private async void RunTerminal()
+        private void RunTerminal()
         {
             while(!commandComplete)
             {
-                await Task.Delay(25);
+                Task.Delay(25);
             }
             commandComplete = false;
             if (currentCommand == "stop")
@@ -342,6 +339,11 @@ namespace DarthGoose.Frontend
                 currentCommand = "";
                 RunTerminal();
             }
+        }
+
+        public void ReadCallback(string input)
+        {
+            Application.Current.Dispatcher.Invoke(() => { deviceMenu.TerminalTextBox.Text += input; deviceMenu.TerminalScroller.ScrollToBottom(); });
         }
     }
 }
