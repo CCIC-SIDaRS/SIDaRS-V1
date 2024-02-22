@@ -13,8 +13,8 @@ namespace DarthGoose.Frontend
 {
     class UIDevice
     {
-        private static int gridCubeWidth = 1;
-        private static int gridCubeHeight = 1;
+        private static int gridCubeWidth = 50;
+        private static int gridCubeHeight = 50;
         
         public Image image { get; set; }
         public List<Image> connections { get; set; }
@@ -163,6 +163,8 @@ namespace DarthGoose.Frontend
             this.image.MouseDown += DeviceMouseDown;
             this.image.MouseMove += DeviceMouseMove;
             this.image.MouseUp += DeviceMouseUp;
+
+            FrontendManager.networkMap.MainCanvas.MouseMove += DeviceMouseMove;
             FrontendManager.networkMap.MainCanvas.MouseUp += DeviceMouseUp;
 
             deviceMenu.Closing += new CancelEventHandler(OnClosing);
@@ -191,11 +193,11 @@ namespace DarthGoose.Frontend
         {
             if (_drag)
             {
-                Image draggedRectangle = (Image)sender;
+                Image draggedRectangle = this.image;
                 Point newPoint = Mouse.GetPosition(FrontendManager.networkMap.MainCanvas);
 
-                double left = Math.Round((Canvas.GetLeft(draggedRectangle) + (newPoint.X - _startPoint.X)) / gridCubeWidth)  * gridCubeWidth;
-                double top = Math.Round((Canvas.GetTop(draggedRectangle) + (newPoint.Y - _startPoint.Y)) / gridCubeHeight) * gridCubeHeight;
+                double left = Math.Round((newPoint.X - (draggedRectangle.Width / 2)) / gridCubeWidth)  * gridCubeWidth;
+                double top = Math.Round((newPoint.Y - (draggedRectangle.Height / 2)) / gridCubeHeight) * gridCubeHeight;
                 if (left + draggedRectangle.Width < FrontendManager.windowSize.X && left > 0 && top + draggedRectangle.Height < FrontendManager.windowSize.Y && top >= -FrontendManager.networkMap.TopMenu.Height)
                 {
                     //Debug.WriteLine(newPoint.X);
@@ -317,6 +319,7 @@ namespace DarthGoose.Frontend
                 {
                     _networkDevice.terminal.Connect();
                     Thread thread = new Thread(RunTerminal);
+                    thread.IsBackground = true;
                     thread.Start();
                 }
             }

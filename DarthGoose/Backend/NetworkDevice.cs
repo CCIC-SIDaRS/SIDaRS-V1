@@ -30,8 +30,8 @@ namespace Backend.NetworkDeviceManager
             this.assetsDir = assetsDir;
             this.readCallback = readCallback;
 
-            Thread thead = new Thread(() => { this.terminal = new TerminalManager(this.assetsDir, this.v4address, ManagementProtocol.SSH, this.credentials, this.readCallback); });
-            thead.Start();
+            Task task = new Task(() => { this.terminal = new TerminalManager(this.assetsDir, this.v4address, ManagementProtocol.SSH, this.credentials, this.readCallback); });
+            task.Start();
         }
 
         public void ChangeName(string name)
