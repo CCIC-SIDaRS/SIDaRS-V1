@@ -10,6 +10,7 @@ using System.ComponentModel;
 using System.Diagnostics.SymbolStore;
 using Backend.CredentialManager;
 using DarthGoose.UIObjects;
+using System.Windows.Media.Animation;
 
 namespace DarthGoose.Frontend
 {
@@ -23,6 +24,7 @@ namespace DarthGoose.Frontend
         private static LoginPage _loginPage = new();
         private static Dictionary<Image, UIDevice> _devices = new();
         private static DeviceSetup _deviceSetupWindow = new();
+        private static Credentials _masterCredentials;
 
         public static void FrontendMain(MainWindow window)
         {
@@ -33,6 +35,7 @@ namespace DarthGoose.Frontend
             mainWindow.SizeChanged += OnWindowSizeChanged;
             mainWindow.Closing += new CancelEventHandler(MainWindowClosing);
             _loginPage.LoginButton.Click += new RoutedEventHandler(OnLoginEnter);
+            _loginPage.CreateAccountButton.Click += new RoutedEventHandler(OnCreateNewAccount);
             _loginPage.LoginButton.IsDefault = true;
         }
 
@@ -62,8 +65,20 @@ namespace DarthGoose.Frontend
 
         private static void OnLoginEnter(object sender, RoutedEventArgs e)
         {
-            _loginPage = null;
-            SetupNetworkMap();
+            if(_loginPage.LoginTitle.Text == "Login")
+            {
+                _loginPage = null;
+                SetupNetworkMap();
+            }else if(_loginPage.LoginTitle.Text == "Create New Account")
+            {
+                SymmetricEncryption.SetMaster(_loginPage.LoginPassword.Password);
+                _masterCredentials = new Credentials(_loginPage.LoginUsername.Text, _loginPage.LoginPassword.Password, false);
+            }
+        }
+
+        private static void OnCreateNewAccount(object sender, RoutedEventArgs e)
+        {
+            _loginPage.LoginTitle.Text = "Create New Account";
         }
 
         private static void GetGooseSupport(object sender, RoutedEventArgs e)

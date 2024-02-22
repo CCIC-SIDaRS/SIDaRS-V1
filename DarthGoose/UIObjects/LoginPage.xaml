@@ -11,7 +11,8 @@
     <Grid>
         <PasswordBox x:Name="LoginPassword" HorizontalAlignment="Center" Margin="0,276,0,0" VerticalAlignment="Top" Width="308" Height="35" />
         <TextBox x:Name="LoginUsername" HorizontalAlignment="Center" Margin="0,217,0,0" TextWrapping="Wrap" Text="User Name" VerticalAlignment="Top" Width="308" Height="35" />
-        <TextBlock HorizontalAlignment="Center" Margin="0,52,0,0" TextWrapping="Wrap" Text="Login" VerticalAlignment="Top" FontSize="100" Foreground="White"/>
+        <TextBlock x:Name="LoginTitle" HorizontalAlignment="Center" Margin="0,52,0,0" TextWrapping="Wrap" Text="Login" VerticalAlignment="Top" FontSize="100" Foreground="White"/>
         <Button x:Name="LoginButton" Content="GO" HorizontalAlignment="Center" Margin="0,337,0,0" VerticalAlignment="Top" RenderTransformOrigin="0.145,-0.178" Width="100" Height="25"/>
+        <Button x:Name="CreateAccountButton" Content="Create Account" HorizontalAlignment="Center" Margin="0,392,0,0" VerticalAlignment="Top" RenderTransformOrigin="-0.448,0.44" Width="100" Height="22"/>
     </Grid>
 </Page>
