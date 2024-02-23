@@ -154,10 +154,9 @@ namespace DarthGoose.Frontend
                 _finishedSetup = false;
             }else
             {
-                _devices[label] = new EndpointDevice(label, new List<Label>(), new List<Line>(), "THIS IS TEMPORARY!!!!");
+                _devices[label] = new EndpointDevice(label, new List<Label>(), new List<Line>(), "Not Configured", deviceType.Name + _devices.Count());
+                label.Content = deviceType.Name + _devices.Count() + "\nNot Configured";
             }
-            
-
         }
 
         private static void OnFinishedSetup(object sender, RoutedEventArgs e)

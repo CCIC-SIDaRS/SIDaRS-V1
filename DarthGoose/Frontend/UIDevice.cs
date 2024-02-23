@@ -8,6 +8,7 @@ using Backend.CredentialManager;
 using System.Diagnostics;
 using System.Xml.Linq;
 using System.Windows.Threading;
+using System.Printing;
 
 namespace DarthGoose.Frontend
 {
@@ -275,10 +276,28 @@ namespace DarthGoose.Frontend
     class EndpointDevice : UIDevice
     {
         public string v4Address { get; private set; }
-        public EndpointDevice(Label image, List<Label> connections, List<Line> cables, string v4Address) : base(image, connections, cables)
+        public string name { get; private set; }
+        public EndpointDevice(Label image, List<Label> connections, List<Line> cables, string v4Address, string name) : base(image, connections, cables)
         {
             this.v4Address = v4Address;
+            this.name = name;
+            deviceMenu.Name.Text = name;
+            deviceMenu.V4Address.Text = v4Address;
+            deviceMenu.Name.TextChanged += OnNameChange;
+            deviceMenu.V4Address.TextChanged += OnAddressChanged;
             deviceMenu.SshTerminal.Visibility = Visibility.Hidden;
+        }
+
+        private void OnNameChange(object sender, TextChangedEventArgs e)
+        {
+            name = deviceMenu.Name.Text;
+            image.Content = name + "\n" + v4Address;
+        }
+
+        private void OnAddressChanged(object sender, TextChangedEventArgs e)
+        {
+            v4Address = deviceMenu.V4Address.Text;
+            image.Content = name + "\n" + v4Address;
         }
     }
 
@@ -299,10 +318,12 @@ namespace DarthGoose.Frontend
         private void OnNameChange(object sender, TextChangedEventArgs e)
         {
             _networkDevice.ChangeName(deviceMenu.Name.Text);
+            image.Content = deviceMenu.Name.Text + "\n" + deviceMenu.V4Address.Text;
         }
         private void OnAddressChange(object sender, TextChangedEventArgs e)
         {
             _networkDevice.ChangeAddress(deviceMenu.V4Address.Text);
+            image.Content = deviceMenu.Name.Text + "\n" + deviceMenu.V4Address.Text;
         }
         private void OnTabChanged(object sender, SelectionChangedEventArgs e)
         {
