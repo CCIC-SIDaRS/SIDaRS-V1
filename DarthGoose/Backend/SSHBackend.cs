@@ -144,7 +144,7 @@ namespace SSHBackend
 
         public void Flush()
         {
-            if(terminalMessage is not null && terminalMessage != "" && terminalMessage != "\n")
+            if(terminalMessage is not null && terminalMessage is not "" && terminalMessage is not "\n")
             {
                 string[] middleman = terminalMessage.Split("\n");
                 middleman = middleman.Distinct().ToArray();

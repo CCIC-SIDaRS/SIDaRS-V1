@@ -16,8 +16,8 @@ namespace DarthGoose.Frontend
         private static int gridCubeWidth = 50;
         private static int gridCubeHeight = 50;
         
-        public Image image { get; set; }
-        public List<Image> connections { get; set; }
+        public Label image { get; set; }
+        public List<Label> connections { get; set; }
         public List<Line> cables { get; set; }
         public DeviceDetails deviceMenu { get; set; }
         public string uid { get; private set; }
@@ -152,7 +152,7 @@ namespace DarthGoose.Frontend
             {Key.Space, " "},
         };
 
-        public UIDevice(Image image, List<Image> connections, List<Line> cables)
+        public UIDevice(Label image, List<Label> connections, List<Line> cables)
         {
             this.image = image;
             this.connections = connections;
@@ -193,7 +193,7 @@ namespace DarthGoose.Frontend
         {
             if (_drag)
             {
-                Image draggedRectangle = this.image;
+                Label draggedRectangle = this.image;
                 Point newPoint = Mouse.GetPosition(FrontendManager.networkMap.MainCanvas);
 
                 double left = Math.Round((newPoint.X - (draggedRectangle.Width / 2)) / gridCubeWidth)  * gridCubeWidth;
@@ -206,7 +206,7 @@ namespace DarthGoose.Frontend
                     _startPoint = newPoint;
                     for (int i = 0; i < this.connections.Count; i++)
                     {
-                        FrontendManager.drawConnection(new List<Image>() { draggedRectangle, this.connections[i] }, this.cables[i]);
+                        FrontendManager.drawConnection(new List<Label>() { draggedRectangle, this.connections[i] }, this.cables[i]);
                     }
                 }
             }
@@ -275,9 +275,10 @@ namespace DarthGoose.Frontend
     class EndpointDevice : UIDevice
     {
         public string v4Address { get; private set; }
-        public EndpointDevice(Image image, List<Image> connections, List<Line> cables, string v4Address) : base(image, connections, cables)
+        public EndpointDevice(Label image, List<Label> connections, List<Line> cables, string v4Address) : base(image, connections, cables)
         {
             this.v4Address = v4Address;
+            deviceMenu.SshTerminal.Visibility = Visibility.Hidden;
         }
     }
 
@@ -285,7 +286,7 @@ namespace DarthGoose.Frontend
     {
         private NetworkDevice _networkDevice { get; set; }
         // private readonly Task _terminalTask = new Task(RunTerminal);
-        public UINetDevice(Image image, List<Image> connections, List<Line> cables, string name, string v4Address, Credentials credentials, string assetsDir) : base(image, connections, cables)
+        public UINetDevice(Label image, List<Label> connections, List<Line> cables, string name, string v4Address, Credentials credentials, string assetsDir) : base(image, connections, cables)
         {
             _networkDevice = new NetworkDevice(name, v4Address, credentials, assetsDir, ReadCallback);
             deviceMenu.Name.Text = name;

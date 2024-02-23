@@ -11,6 +11,7 @@ using System.Diagnostics.SymbolStore;
 using Backend.CredentialManager;
 using DarthGoose.UIObjects;
 using System.Windows.Media.Animation;
+using System.Windows.Media;
 
 namespace DarthGoose.Frontend
 {
@@ -22,7 +23,7 @@ namespace DarthGoose.Frontend
         public static Point windowSize;
 
         private static LoginPage _loginPage = new();
-        private static Dictionary<Image, UIDevice> _devices = new();
+        private static Dictionary<Label, UIDevice> _devices = new();
         private static DeviceSetup _deviceSetupWindow = new();
         private static Credentials _masterCredentials;
 
@@ -119,15 +120,23 @@ namespace DarthGoose.Frontend
             }
             bitMap.EndInit();
 
-            Image image = new Image();
-            image.Source = bitMap;
-            image.Width = 100;
-            image.Height = 100;
+            //Image image = new Image();
+            //image.Source = bitMap;
+            //image.Width = 100;
+            //image.Height = 100;
 
-            Canvas.SetLeft(image, 20);
-            Canvas.SetTop(image, 20);
+            Label label = new Label();
+            label.Background = new ImageBrush(bitMap);
+            label.Width = 100;
+            label.Height = 100;
+            label.Foreground = new SolidColorBrush(Colors.White);
+            label.HorizontalContentAlignment = HorizontalAlignment.Center;
+            label.VerticalContentAlignment = VerticalAlignment.Bottom;
 
-            networkMap.MainCanvas.Children.Add(image);
+            Canvas.SetLeft(label, 20);
+            Canvas.SetTop(label, 20);
+
+            networkMap.MainCanvas.Children.Add(label);
 
             if (deviceType.Name == "InsertRouter" || deviceType.Name == "InsertSwitch" || deviceType.Name == "InsertFirewall")
             {
@@ -138,13 +147,14 @@ namespace DarthGoose.Frontend
                     await Task.Delay(25);
                     // Debug.WriteLine("Something");
                 }
-                Debug.WriteLine(_deviceSetupWindow.SetupSSHPasswordBox.Password);
-                _devices[image] = new UINetDevice(image, new List<Image>(), new List<Line>(), _deviceSetupWindow.SetupNameBox.Text, _deviceSetupWindow.SetupV4AddressBox.Text, new Backend.CredentialManager.Credentials(_deviceSetupWindow.SetupSSHUsernameBox.Text, _deviceSetupWindow.SetupSSHPasswordBox.Password, false), @".\Backend\Assets");
+                // Debug.WriteLine(_deviceSetupWindow.SetupSSHPasswordBox.Password);
+                _devices[label] = new UINetDevice(label, new List<Label>(), new List<Line>(), _deviceSetupWindow.SetupNameBox.Text, _deviceSetupWindow.SetupV4AddressBox.Text, new Backend.CredentialManager.Credentials(_deviceSetupWindow.SetupSSHUsernameBox.Text, _deviceSetupWindow.SetupSSHPasswordBox.Password, false), @".\Backend\Assets");
+                label.Content = _deviceSetupWindow.SetupNameBox.Text + "\n" + _deviceSetupWindow.SetupV4AddressBox.Text;
                 _deviceSetupWindow.Close();
                 _finishedSetup = false;
             }else
             {
-                _devices[image] = new EndpointDevice(image, new List<Image>(), new List<Line>(), "THIS IS TEMPORARY!!!!");
+                _devices[label] = new EndpointDevice(label, new List<Label>(), new List<Line>(), "THIS IS TEMPORARY!!!!");
             }
             
 
@@ -155,13 +165,13 @@ namespace DarthGoose.Frontend
             _finishedSetup = true;
         }
 
-        private static List<Image> devicesToBeConnected = new();
+        private static List<Label> devicesToBeConnected = new();
         private static void OnInsertConnection(object sender, RoutedEventArgs e)
         {
             connecting = true;
         }
 
-        public static void AddToPendingConnections(Image sender)
+        public static void AddToPendingConnections(Label sender)
         {
             devicesToBeConnected.Add(sender);
             if (devicesToBeConnected.Count() == 2)
@@ -174,7 +184,7 @@ namespace DarthGoose.Frontend
             }
         }
 
-        public static void drawConnection(List<Image> connectedDevices, Line existingConnection = null)
+        public static void drawConnection(List<Label> connectedDevices, Line existingConnection = null)
         {
             Line line;
             if (existingConnection == null)
@@ -190,8 +200,8 @@ namespace DarthGoose.Frontend
             {
                 line = existingConnection;
             }
-            Image device1 = connectedDevices[0];
-            Image device2 = connectedDevices[1];
+            Label device1 = connectedDevices[0];
+            Label device2 = connectedDevices[1];
             Point dev1Location = new Point(Canvas.GetLeft(device1), Canvas.GetTop(device1));
             Point dev2Location = new Point(Canvas.GetLeft(device2), Canvas.GetTop(device2));
 
