@@ -158,14 +158,19 @@ namespace DarthGoose.Frontend
             {Key.Space, " "},
         };
 
-        public UIDevice(Label image, List<Label> connections, List<Line> cables)
+        public UIDevice(Label image, List<Label> connections, List<Line> cables, string uid = null)
         {
             this.image = image;
             this.connections = connections;
             this.cables = cables;
             this.deviceMenu = new DeviceDetails();
-            this.uid = DateTime.Now.ToString() + "-" + this.GetHashCode().ToString();
-
+            if (uid is null)
+            {
+                this.uid = DateTime.Now.ToString() + "-" + this.GetHashCode().ToString();
+            }else
+            {
+                this.uid = uid;
+            }
             this.image.MouseDown += DeviceMouseDown;
             this.image.MouseMove += DeviceMouseMove;
             this.image.MouseUp += DeviceMouseUp;
@@ -284,9 +289,9 @@ namespace DarthGoose.Frontend
         public string name { get; private set; }
 
         private string _deviceType { get; set; }
-        private List<string> _serializeable = new() { nameof(name), nameof(v4Address) };
+        private List<string> _serializeable = new() { nameof(name), nameof(v4Address), nameof(_deviceType) };
 
-        public EndpointDevice(Label image, List<Label> connections, List<Line> cables, string v4Address, string name, string deviceType) : base(image, connections, cables)
+        public EndpointDevice(Label image, List<Label> connections, List<Line> cables, string v4Address, string name, string deviceType, string uid = null) : base(image, connections, cables, uid)
         {
             this.v4Address = v4Address;
             this.name = name;
@@ -333,7 +338,7 @@ namespace DarthGoose.Frontend
                 tempList.Add(FrontendManager.devices[device].uid);
             }
             tempDict["connections"] = tempList;
-            tempDict["Location"] = new List<int>() { (int)Canvas.GetLeft(image), (int)Canvas.GetTop(image) };
+            tempDict["location"] = new List<int>() { (int)Canvas.GetLeft(image), (int)Canvas.GetTop(image) };
 
             return JsonSerializer.Serialize(tempDict);
         }
@@ -343,8 +348,9 @@ namespace DarthGoose.Frontend
     {
         private NetworkDevice _networkDevice { get; set; }
         // private readonly Task _terminalTask = new Task(RunTerminal);
-        private List<string> _serializeable = new();
-        public UINetDevice(Label image, List<Label> connections, List<Line> cables, string name, string v4Address, Credentials credentials, string assetsDir) : base(image, connections, cables)
+        private string _deviceType { get; set; }
+        private List<string> _serializeable = new() { nameof(_deviceType) };
+        public UINetDevice(Label image, List<Label> connections, List<Line> cables, string name, string v4Address, Credentials credentials, string assetsDir, string deviceType, string uid = null) : base(image, connections, cables, uid)
         {
             _networkDevice = new NetworkDevice(name, v4Address, credentials, assetsDir, ReadCallback);
             deviceMenu.Name.Text = name;
@@ -352,6 +358,7 @@ namespace DarthGoose.Frontend
             deviceMenu.V4Address.Text = v4Address;
             deviceMenu.V4Address.TextChanged += OnAddressChange;
             deviceMenu.DeviceDetailsTabs.SelectionChanged += OnTabChanged;
+            _deviceType = deviceType;
             _serializeable.AddRange(serializeable);
         }
         // This should probably be changed so that there is a confirmation but that's Roman's problem :)

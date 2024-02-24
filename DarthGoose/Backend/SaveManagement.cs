@@ -1,10 +1,14 @@
-﻿using System.Diagnostics;
-using System.IO;
+﻿using System.IO;
 using System.Text.Json;
+using System.Windows.Controls;
+using System.Windows.Media.Imaging;
+using System.Windows.Media;
+using System.Windows;
 using Backend.CredentialManager;
-using System.Text.RegularExpressions;
-using Backend.NetworkDeviceManager;
 using DarthGoose.Frontend;
+using System.Windows.Shapes;
+using System.IO.Packaging;
+using System.Diagnostics;
 
 
 namespace Backend.SaveManager
@@ -32,31 +36,106 @@ namespace Backend.SaveManager
             // Debug.WriteLine(JsonSerializer.Serialize(saveDict));
             File.WriteAllText(saveFile, JsonSerializer.Serialize(saveDict));
         }
-        /*public static void Load(string saveFile, out NetworkDevice[] networkDevices, out Credentials masterCredentials)
+        public static void Load(string saveFile)
         {
             string data = File.ReadAllText(saveFile);
-            Dictionary<string, string> dict = JsonSerializer.Deserialize<Dictionary<string, string>>(data);
-            masterCredentials = new Credentials (JsonSerializer.Deserialize<Dictionary<string,string>>(dict["MasterCredentials"]));
-            List<string> serializedDevices = JsonSerializer.Deserialize<List<string>>(dict["NetworkDevices"]); 
-            List<NetworkDevice> tempDevices = new();
+            Dictionary<string, object> dict = JsonSerializer.Deserialize<Dictionary<string, object>>(data);
+            FrontendManager.masterCredentials = new Credentials(JsonSerializer.Deserialize<Dictionary<string, string>>(dict["MasterCredentials"].ToString()));
+            SymmetricEncryption.SetMaster("PhatWalrus123");
+            List<string> serializedDevices = JsonSerializer.Deserialize<List<string>>(dict["NetworkDevices"].ToString());
+            List<Label> deserializedDevices = new();
             foreach (string device in serializedDevices)
             {
-                tempDevices.Add(new NetworkDevice(JsonSerializer.Deserialize<Dictionary<string,object>>(device)));
-            }
-            for (int i = 0; i < tempDevices.Count; i++)
-            {
-                List<string> uids = JsonSerializer.Deserialize<List<string>>(JsonSerializer.Deserialize<Dictionary<string, string>>(serializedDevices[i])["connections"]);
-                List<NetworkDevice> thisConnections = new();
-                foreach (NetworkDevice device in tempDevices)
+                Dictionary<string, object> deviceInfo = JsonSerializer.Deserialize<Dictionary<string,object>>(device);
+                Debug.WriteLine(deviceInfo);
+                string managementStyle;
+                Label image;
+                createLabel(deviceInfo["_deviceType"].ToString(), JsonSerializer.Deserialize<int[]>(deviceInfo["location"].ToString()), out managementStyle, out image);
+                deserializedDevices.Add(image);
+                if(managementStyle == "managed")
                 {
-                    if (uids.Contains(device.name))
+                    Dictionary<string, object> networkDevice = JsonSerializer.Deserialize<Dictionary<string, object>>(deviceInfo["networkDevice"].ToString());
+                    Dictionary<string, string> credentials = JsonSerializer.Deserialize<Dictionary<string, string>>(networkDevice["credentials"].ToString());
+                    FrontendManager.devices[image] = new UINetDevice(image, new List<Label>(), new List<Line>(), networkDevice["name"].ToString(), networkDevice["v4address"].ToString(), new Credentials(credentials["_username"], credentials["_password"]), @".\Backend\Assets", deviceInfo["_deviceType"].ToString(), deviceInfo["uid"].ToString());
+                    image.Content = networkDevice["name"].ToString() + "\n" + networkDevice["v4address"].ToString();
+                }
+                else if(managementStyle == "unmanaged")
+                {
+                    FrontendManager.devices[image] = new EndpointDevice(image, new List<Label>(), new List<Line>(), deviceInfo["v4Address"].ToString(), deviceInfo["name"].ToString(), deviceInfo["_deviceType"].ToString(), deviceInfo["uid"].ToString());
+                    image.Content = deviceInfo["name"].ToString() + "\n" + deviceInfo["v4Address"].ToString();
+                }
+                else if (managementStyle == "FU")
+                {
+                    throw new Exception("FU");
+                }
+            }
+            for(int i = 0; i < serializedDevices.Count(); i++)
+            {
+                List<string> connections = JsonSerializer.Deserialize<List<string>>(JsonSerializer.Deserialize<Dictionary<string, object>>(serializedDevices[i])["connections"].ToString());
+                foreach (string uid in connections)
+                {
+                    foreach(KeyValuePair<Label,UIDevice> uiDevice in FrontendManager.devices)
                     {
-                        thisConnections.Add(device);
+                        if (uiDevice.Value.uid == uid)
+                        {
+                            FrontendManager.drawConnection(new List<Label> { uiDevice.Key, deserializedDevices[i] });
+                            uiDevice.Value.connections.Add(deserializedDevices[i]);
+                            FrontendManager.devices[deserializedDevices[i]].connections.Add(uiDevice.Key);
+                        }
                     }
                 }
-                tempDevices[i].SetConnections(thisConnections);
             }
-            networkDevices = tempDevices.ToArray();
-        }*/
-     }
+        }
+
+        private static void createLabel(string deviceType, int[] location, out string managementStyle, out Label image)
+        {
+            BitmapImage bitMap = new BitmapImage();
+            bitMap.BeginInit();
+            switch (deviceType)
+            {
+                case "InsertRouter":
+                    bitMap.UriSource = new Uri(System.IO.Path.Combine(Directory.GetCurrentDirectory(), @"Images\Router.png"));
+                    managementStyle = "managed";
+                    break;
+                case "InsertSwitch":
+                    bitMap.UriSource = new Uri(System.IO.Path.Combine(Directory.GetCurrentDirectory(), @"Images\Switch.png"));
+                    managementStyle = "managed";
+                    break;
+                case "InsertHub":
+                    bitMap.UriSource = new Uri(System.IO.Path.Combine(Directory.GetCurrentDirectory(), @"Images\Hub.png"));
+                    managementStyle = "unmanaged";
+                    break;
+                case "InsertFirewall":
+                    bitMap.UriSource = new Uri(System.IO.Path.Combine(Directory.GetCurrentDirectory(), @"Images\Firewall.png"));
+                    managementStyle = "managed";
+                    break;
+                case "InsertServer":
+                    bitMap.UriSource = new Uri(System.IO.Path.Combine(Directory.GetCurrentDirectory(), @"Images\Server.png"));
+                    managementStyle = "unmanaged";
+                    break;
+                case "InsertEndPoint":
+                    bitMap.UriSource = new Uri(System.IO.Path.Combine(Directory.GetCurrentDirectory(), @"Images\Endpoint.png"));
+                    managementStyle = "unmanaged";
+                    break;
+                default:
+                    managementStyle = "FU";
+                    break;
+            }
+            bitMap.EndInit();
+
+            System.Windows.Controls.Label label = new System.Windows.Controls.Label();
+            label.Background = new ImageBrush(bitMap);
+            label.Width = 100;
+            label.Height = 100;
+            label.Foreground = new SolidColorBrush(Colors.White);
+            label.HorizontalContentAlignment = HorizontalAlignment.Center;
+            label.VerticalContentAlignment = VerticalAlignment.Bottom;
+
+            Canvas.SetLeft(label, location[0]);
+            Canvas.SetTop(label, location[1]);
+
+            FrontendManager.networkMap.MainCanvas.Children.Add(label);
+            image = label;
+        }
+    }
 }

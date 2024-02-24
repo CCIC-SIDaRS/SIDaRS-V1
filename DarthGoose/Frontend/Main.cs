@@ -27,7 +27,7 @@ namespace DarthGoose.Frontend
         private static LoginPage _loginPage = new();
         
         private static DeviceSetup _deviceSetupWindow = new();
-        private static Credentials _masterCredentials;
+        public static Credentials masterCredentials;
 
         public static void FrontendMain(MainWindow window)
         {
@@ -63,6 +63,7 @@ namespace DarthGoose.Frontend
             networkMap.InsertServer.Click += new RoutedEventHandler(InsertDeviceClick);
             networkMap.InsertConnection.Click += new RoutedEventHandler(OnInsertConnection);
             networkMap.Save.Click += new RoutedEventHandler(OnSaveClick);
+            networkMap.Load.Click += new RoutedEventHandler(OnLoadClick);
             networkMap.CancelConnection.Click += new RoutedEventHandler(OnCancelConnection);
             _deviceSetupWindow.FinishedSetup.Click += new RoutedEventHandler(OnFinishedSetup);
             mainWindow.MainFrame.Navigate(networkMap);
@@ -77,7 +78,7 @@ namespace DarthGoose.Frontend
             }else if(_loginPage.LoginTitle.Text == "Create New Account")
             {
                 SymmetricEncryption.SetMaster(_loginPage.LoginPassword.Password);
-                _masterCredentials = new Credentials(_loginPage.LoginUsername.Text, _loginPage.LoginPassword.Password, false);
+                masterCredentials = new Credentials(_loginPage.LoginUsername.Text, _loginPage.LoginPassword.Password, false);
             }
         }
 
@@ -152,7 +153,7 @@ namespace DarthGoose.Frontend
                     // Debug.WriteLine("Something");
                 }
                 // Debug.WriteLine(_deviceSetupWindow.SetupSSHPasswordBox.Password);
-                devices[label] = new UINetDevice(label, new List<Label>(), new List<Line>(), _deviceSetupWindow.SetupNameBox.Text, _deviceSetupWindow.SetupV4AddressBox.Text, new Backend.CredentialManager.Credentials(_deviceSetupWindow.SetupSSHUsernameBox.Text, _deviceSetupWindow.SetupSSHPasswordBox.Password, false), @".\Backend\Assets");
+                devices[label] = new UINetDevice(label, new List<Label>(), new List<Line>(), _deviceSetupWindow.SetupNameBox.Text, _deviceSetupWindow.SetupV4AddressBox.Text, new Backend.CredentialManager.Credentials(_deviceSetupWindow.SetupSSHUsernameBox.Text, _deviceSetupWindow.SetupSSHPasswordBox.Password, false), @".\Backend\Assets", deviceType.Name);
                 label.Content = _deviceSetupWindow.SetupNameBox.Text + "\n" + _deviceSetupWindow.SetupV4AddressBox.Text;
                 _deviceSetupWindow.Close();
                 _finishedSetup = false;
@@ -198,7 +199,12 @@ namespace DarthGoose.Frontend
                     endDevices.Add(device as EndpointDevice);
                 }
             }
-            SaveSystem.Save(@".\Backend\Assets\SaveFile.json",netDevices.ToArray(), endDevices.ToArray(), new Credentials("walrus","12345678!Aa", false));
+            SaveSystem.Save(@".\Backend\Assets\SaveFile.sidars",netDevices.ToArray(), endDevices.ToArray(), new Credentials("walrus","12345678!Aa", false));
+        }
+
+        private static void OnLoadClick (object sender, RoutedEventArgs e)
+        {
+            SaveSystem.Load(@".\Backend\Assets\SaveFile.sidars");
         }
 
         public static void AddToPendingConnections(Label sender)
