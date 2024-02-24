@@ -60,6 +60,7 @@ namespace DarthGoose.Frontend
             networkMap.InsertEndPoint.Click += new RoutedEventHandler(InsertDeviceClick);
             networkMap.InsertServer.Click += new RoutedEventHandler(InsertDeviceClick);
             networkMap.InsertConnection.Click += new RoutedEventHandler(OnInsertConnection);
+            networkMap.CancelConnection.Click += new RoutedEventHandler(OnCancelConnection);
             _deviceSetupWindow.FinishedSetup.Click += new RoutedEventHandler(OnFinishedSetup);
             mainWindow.MainFrame.Navigate(networkMap);
         }
@@ -168,6 +169,16 @@ namespace DarthGoose.Frontend
         private static void OnInsertConnection(object sender, RoutedEventArgs e)
         {
             connecting = true;
+            networkMap.InfoText.Text = "Connecting Devices: 0 of 2 Devices Selected";
+            networkMap.CancelConnection.Visibility = Visibility.Visible;
+        }
+
+        private static void OnCancelConnection(object sender, RoutedEventArgs e)
+        {
+            connecting = false;
+            devicesToBeConnected.Clear();
+            networkMap.InfoText.Text = string.Empty;
+            networkMap.CancelConnection.Visibility = Visibility.Hidden;
         }
 
         public static void AddToPendingConnections(Label sender)
@@ -180,6 +191,12 @@ namespace DarthGoose.Frontend
                 drawConnection(devicesToBeConnected);
                 devicesToBeConnected.Clear();
                 connecting = false;
+                networkMap.InfoText.Text = string.Empty;
+                networkMap.CancelConnection.Visibility = Visibility.Hidden;
+            }
+            else
+            {
+                networkMap.InfoText.Text = "Connecting Devices: 1 of 2 Devices Selected";
             }
         }
 
@@ -193,7 +210,7 @@ namespace DarthGoose.Frontend
                 line.Margin = thickness;
                 line.Visibility = Visibility.Visible;
                 line.StrokeThickness = 2;
-                line.Stroke = System.Windows.Media.Brushes.White;
+                line.Stroke = Brushes.White;
             }
             else
             {
