@@ -12,18 +12,20 @@ using Backend.CredentialManager;
 using DarthGoose.UIObjects;
 using System.Windows.Media.Animation;
 using System.Windows.Media;
+using Backend.SaveManager;
 
 namespace DarthGoose.Frontend
 {
-    public static class FrontendManager
+    static class FrontendManager
     {
         public static bool connecting = false;
         public static MainWindow mainWindow;
         public static NetworkMap networkMap = new();
         public static Point windowSize;
+        public static Dictionary<Label, UIDevice> devices = new();
 
         private static LoginPage _loginPage = new();
-        private static Dictionary<Label, UIDevice> _devices = new();
+        
         private static DeviceSetup _deviceSetupWindow = new();
         private static Credentials _masterCredentials;
 
@@ -60,6 +62,7 @@ namespace DarthGoose.Frontend
             networkMap.InsertEndPoint.Click += new RoutedEventHandler(InsertDeviceClick);
             networkMap.InsertServer.Click += new RoutedEventHandler(InsertDeviceClick);
             networkMap.InsertConnection.Click += new RoutedEventHandler(OnInsertConnection);
+            networkMap.Save.Click += new RoutedEventHandler(OnSaveClick);
             networkMap.CancelConnection.Click += new RoutedEventHandler(OnCancelConnection);
             _deviceSetupWindow.FinishedSetup.Click += new RoutedEventHandler(OnFinishedSetup);
             mainWindow.MainFrame.Navigate(networkMap);
@@ -149,14 +152,14 @@ namespace DarthGoose.Frontend
                     // Debug.WriteLine("Something");
                 }
                 // Debug.WriteLine(_deviceSetupWindow.SetupSSHPasswordBox.Password);
-                _devices[label] = new UINetDevice(label, new List<Label>(), new List<Line>(), _deviceSetupWindow.SetupNameBox.Text, _deviceSetupWindow.SetupV4AddressBox.Text, new Backend.CredentialManager.Credentials(_deviceSetupWindow.SetupSSHUsernameBox.Text, _deviceSetupWindow.SetupSSHPasswordBox.Password, false), @".\Backend\Assets");
+                devices[label] = new UINetDevice(label, new List<Label>(), new List<Line>(), _deviceSetupWindow.SetupNameBox.Text, _deviceSetupWindow.SetupV4AddressBox.Text, new Backend.CredentialManager.Credentials(_deviceSetupWindow.SetupSSHUsernameBox.Text, _deviceSetupWindow.SetupSSHPasswordBox.Password, false), @".\Backend\Assets");
                 label.Content = _deviceSetupWindow.SetupNameBox.Text + "\n" + _deviceSetupWindow.SetupV4AddressBox.Text;
                 _deviceSetupWindow.Close();
                 _finishedSetup = false;
             }else
             {
-                _devices[label] = new EndpointDevice(label, new List<Label>(), new List<Line>(), "Not Configured", deviceType.Name + _devices.Count());
-                label.Content = deviceType.Name + _devices.Count() + "\nNot Configured";
+                devices[label] = new EndpointDevice(label, new List<Label>(), new List<Line>(), "Not Configured", deviceType.Name + devices.Count(), deviceType.Name);
+                label.Content = deviceType.Name + devices.Count() + "\nNot Configured";
             }
         }
 
@@ -181,13 +184,30 @@ namespace DarthGoose.Frontend
             networkMap.CancelConnection.Visibility = Visibility.Hidden;
         }
 
+        private static void OnSaveClick(object sender, RoutedEventArgs e)
+        {
+            var netDevices = new List<UINetDevice>();
+            var endDevices = new List<EndpointDevice>();
+            foreach (UIDevice device in devices.Values)
+            {
+                if (device.GetType() ==  typeof(UINetDevice))
+                {
+                    netDevices.Add(device as UINetDevice);
+                }else
+                {
+                    endDevices.Add(device as EndpointDevice);
+                }
+            }
+            SaveSystem.Save(@".\Backend\Assets\SaveFile.json",netDevices.ToArray(), endDevices.ToArray(), new Credentials("walrus","12345678!Aa", false));
+        }
+
         public static void AddToPendingConnections(Label sender)
         {
             devicesToBeConnected.Add(sender);
             if (devicesToBeConnected.Count() == 2)
             {
-                _devices[devicesToBeConnected[0]].connections.Add(devicesToBeConnected[1]);
-                _devices[devicesToBeConnected[1]].connections.Add(devicesToBeConnected[0]);
+                devices[devicesToBeConnected[0]].connections.Add(devicesToBeConnected[1]);
+                devices[devicesToBeConnected[1]].connections.Add(devicesToBeConnected[0]);
                 drawConnection(devicesToBeConnected);
                 devicesToBeConnected.Clear();
                 connecting = false;
@@ -230,8 +250,8 @@ namespace DarthGoose.Frontend
             if (existingConnection == null)
             {
                 networkMap.ConnectionCanvas.Children.Add(line);
-                _devices[device1].cables.Add(line);
-                _devices[device2].cables.Add(line);
+                devices[device1].cables.Add(line);
+                devices[device2].cables.Add(line);
             }
         }
     }

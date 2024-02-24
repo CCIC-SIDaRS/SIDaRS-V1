@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.InteropServices;
 using System.Security;
 using System.Text;
 using System.Text.Json;
@@ -42,6 +43,25 @@ namespace Backend.NetworkDeviceManager
         public void ChangeAddress(string address)
         {
             this.v4address = address;
+        }
+
+        public string Save()
+        {
+            // Will serialize all fields except the terminal and the readCallBackFunction
+
+            var tempDict = new Dictionary<string, object>();
+
+            foreach (PropertyInfo prop in this.GetType().GetProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic))
+            {
+                if (prop.Name != "terminal" && prop.Name != "readCallback" && prop.Name != "credentials")
+                {
+                    tempDict[prop.Name] = prop.GetValue(this);
+                }else if (prop.Name == "credentials")
+                {
+                    tempDict[prop.Name] = credentials.Save();
+                }
+            }
+            return JsonSerializer.Serialize(tempDict);
         }
     }
 }

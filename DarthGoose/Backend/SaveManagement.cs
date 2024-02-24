@@ -1,31 +1,38 @@
-﻿/*using System.IO;
+﻿using System.Diagnostics;
+using System.IO;
 using System.Text.Json;
 using Backend.CredentialManager;
+using System.Text.RegularExpressions;
 using Backend.NetworkDeviceManager;
+using DarthGoose.Frontend;
 
 
-namespace SaveManager
+namespace Backend.SaveManager
 {
     // Need to deserialize the uids and find common connections
      static class SaveSystem
      {
-        public static void Save(string saveFile, NetworkDevice[] networkDevices, Credentials masterCredentials)
+        public static void Save(string saveFile, UINetDevice[] netDevices, EndpointDevice[] endpointDevices, Credentials masterCredentials)
         {
             
             Dictionary<string, object> saveDict = new();
             saveDict["MasterCredentials"] = masterCredentials.Save();
 
             List<string> serializedNetDevices = new();
-            foreach (NetworkDevice netDevice in networkDevices)
+            foreach (UINetDevice netDevice in netDevices)
             {
                 serializedNetDevices.Add(netDevice.Save());
             }
+            foreach (EndpointDevice endpointDevice in endpointDevices)
+            {
+                serializedNetDevices.Add(endpointDevice.Save());
+            }
 
             saveDict["NetworkDevices"] = serializedNetDevices;
-            Console.WriteLine(JsonSerializer.Serialize(saveDict));
+            // Debug.WriteLine(JsonSerializer.Serialize(saveDict));
             File.WriteAllText(saveFile, JsonSerializer.Serialize(saveDict));
         }
-        public static void Load(string saveFile, out NetworkDevice[] networkDevices, out Credentials masterCredentials)
+        /*public static void Load(string saveFile, out NetworkDevice[] networkDevices, out Credentials masterCredentials)
         {
             string data = File.ReadAllText(saveFile);
             Dictionary<string, string> dict = JsonSerializer.Deserialize<Dictionary<string, string>>(data);
@@ -50,6 +57,6 @@ namespace SaveManager
                 tempDevices[i].SetConnections(thisConnections);
             }
             networkDevices = tempDevices.ToArray();
-        }
+        }*/
      }
-}*/
+}

@@ -5,10 +5,14 @@ using System.Windows;
 using System.Windows.Controls;
 using Backend.NetworkDeviceManager;
 using Backend.CredentialManager;
+using System.Reflection;
 using System.Diagnostics;
 using System.Xml.Linq;
 using System.Windows.Threading;
 using System.Printing;
+using System.Text.Json;
+using System.Text.RegularExpressions;
+using System.Runtime.CompilerServices;
 
 namespace DarthGoose.Frontend
 {
@@ -23,6 +27,7 @@ namespace DarthGoose.Frontend
         public DeviceDetails deviceMenu { get; set; }
         public string uid { get; private set; }
 
+        protected readonly List<string> serializeable = new() { nameof(uid) };
         protected string currentCommand = "";
         protected bool commandComplete = false;
 
@@ -277,7 +282,11 @@ namespace DarthGoose.Frontend
     {
         public string v4Address { get; private set; }
         public string name { get; private set; }
-        public EndpointDevice(Label image, List<Label> connections, List<Line> cables, string v4Address, string name) : base(image, connections, cables)
+
+        private string _deviceType { get; set; }
+        private List<string> _serializeable = new() { nameof(name), nameof(v4Address) };
+
+        public EndpointDevice(Label image, List<Label> connections, List<Line> cables, string v4Address, string name, string deviceType) : base(image, connections, cables)
         {
             this.v4Address = v4Address;
             this.name = name;
@@ -286,6 +295,8 @@ namespace DarthGoose.Frontend
             deviceMenu.Name.TextChanged += OnNameChange;
             deviceMenu.V4Address.TextChanged += OnAddressChanged;
             deviceMenu.SshTerminal.Visibility = Visibility.Hidden;
+            _deviceType = deviceType;
+            _serializeable.AddRange(serializeable);
         }
 
         private void OnNameChange(object sender, TextChangedEventArgs e)
@@ -299,12 +310,40 @@ namespace DarthGoose.Frontend
             v4Address = deviceMenu.V4Address.Text;
             image.Content = name + "\n" + v4Address;
         }
+
+        public string Save()
+        {
+            // Will serialize the device type, name (if configured), and v4Address (if configured) COMPLETE
+            // will serialize the UID of each device that it is connected to COMPLETE
+            // will serialize its current corrdinates COMPLETE
+
+            var tempDict = new Dictionary<string, object>();
+
+            foreach(PropertyInfo prop in this.GetType().GetProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic))
+            {
+                if (_serializeable.Contains(prop.Name))
+                {
+                    tempDict[prop.Name] = prop.GetValue(this);
+                }
+            }
+            
+            var tempList = new List<string>();
+            foreach(Label device in connections)
+            {
+                tempList.Add(FrontendManager.devices[device].uid);
+            }
+            tempDict["connections"] = tempList;
+            tempDict["Location"] = new List<int>() { (int)Canvas.GetLeft(image), (int)Canvas.GetTop(image) };
+
+            return JsonSerializer.Serialize(tempDict);
+        }
     }
 
     class UINetDevice : UIDevice
     {
         private NetworkDevice _networkDevice { get; set; }
         // private readonly Task _terminalTask = new Task(RunTerminal);
+        private List<string> _serializeable = new();
         public UINetDevice(Label image, List<Label> connections, List<Line> cables, string name, string v4Address, Credentials credentials, string assetsDir) : base(image, connections, cables)
         {
             _networkDevice = new NetworkDevice(name, v4Address, credentials, assetsDir, ReadCallback);
@@ -313,6 +352,7 @@ namespace DarthGoose.Frontend
             deviceMenu.V4Address.Text = v4Address;
             deviceMenu.V4Address.TextChanged += OnAddressChange;
             deviceMenu.DeviceDetailsTabs.SelectionChanged += OnTabChanged;
+            _serializeable.AddRange(serializeable);
         }
         // This should probably be changed so that there is a confirmation but that's Roman's problem :)
         private void OnNameChange(object sender, TextChangedEventArgs e)
@@ -366,6 +406,31 @@ namespace DarthGoose.Frontend
         public void ReadCallback(string input)
         {
             Application.Current.Dispatcher.Invoke(() => { deviceMenu.TerminalTextBox.Text += input; deviceMenu.TerminalScroller.ScrollToBottom(); });
+        }
+
+        public string Save()
+        {
+            // Will serialize the network device object, uid, device type, uids of connected devices, and current coordinates in the grid
+            var tempDict = new Dictionary<string, object>();
+
+            foreach(PropertyInfo prop in this.GetType().GetProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic))
+            {
+                if (_serializeable.Contains(prop.Name))
+                {
+                    tempDict[prop.Name] = prop.GetValue(this);
+                }
+            }
+
+            var tempList = new List<string>();
+            foreach (Label device in connections)
+            {
+                tempList.Add(FrontendManager.devices[device].uid);
+            }
+            tempDict["connections"] = tempList;
+            tempDict["location"] = new List<int>() { (int)Canvas.GetLeft(image), (int)Canvas.GetTop(image) };
+            tempDict["networkDevice"] = _networkDevice.Save();
+
+            return JsonSerializer.Serialize(tempDict);
         }
     }
 }

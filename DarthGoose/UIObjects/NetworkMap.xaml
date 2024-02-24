@@ -11,7 +11,7 @@
         <DockPanel>
             <Menu x:Name="TopMenu" Height="19" DockPanel.Dock="Top" VerticalAlignment="Top">
                 <MenuItem Header="File">
-                    <MenuItem Header="Save"/>
+                    <MenuItem Header="Save" x:Name="Save"/>
                     <MenuItem Header="Load"/>
                 </MenuItem>
                 <MenuItem Header="Insert">
