@@ -29,6 +29,8 @@ namespace Backend.NetworkDeviceManager
         private SSHManager? sshManager { get; set; }
         private ReadCallback readCallback { get; set; }
 
+        private bool connectionEstablished { get; set; }
+
         public TerminalManager(string assetsDir, string v4address, ManagementProtocol protocol, Credentials credentials, ReadCallback readCallback)
         {
             this.assetsDir = assetsDir;
@@ -41,11 +43,13 @@ namespace Backend.NetworkDeviceManager
             {
                 sshManager = new SSHManager(this.v4address, this.credentials, this.readCallback);
                 sshManager.Connect();
-                var task = new Task(() => { sshManager.ExecuteExecChannel("show version"); });
+                var task = new Task(() => { sshManager.ExecuteExecChannel("ls"); });
 
                 readCallback("Attempting SSH (Exec)...");
 
-                if (task.Wait(TimeSpan.FromSeconds(5)))
+                task.Wait(TimeSpan.FromSeconds(5));
+
+                if (connectionEstablished)
                 {
                     this.protocol = ManagementProtocol.SSH;
                 }
@@ -136,6 +140,11 @@ namespace Backend.NetworkDeviceManager
             {
                 throw new Exception("FU");
             }
+        }
+
+        public void checkConnection(string output)
+        {
+            connectionEstablished = true;
         }
     }
 }
