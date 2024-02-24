@@ -149,6 +149,7 @@ namespace SSHBackend
                 string[] middleman = terminalMessage.Split("\n");
                 middleman = middleman.Distinct().ToArray();
                 _readCallback(string.Join("\n", middleman));
+                terminalMessage = string.Empty;
             }
         }
     }
