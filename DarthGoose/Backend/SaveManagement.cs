@@ -49,19 +49,20 @@ namespace Backend.SaveManager
                 Debug.WriteLine(deviceInfo);
                 string managementStyle;
                 Label image;
-                createLabel(deviceInfo["_deviceType"].ToString(), JsonSerializer.Deserialize<int[]>(deviceInfo["location"].ToString()), out managementStyle, out image);
+                TextBlock imageLabel;
+                createLabel(deviceInfo["_deviceType"].ToString(), JsonSerializer.Deserialize<int[]>(deviceInfo["location"].ToString()), out managementStyle, out image, out imageLabel);
                 deserializedDevices.Add(image);
                 if(managementStyle == "managed")
                 {
                     Dictionary<string, object> networkDevice = JsonSerializer.Deserialize<Dictionary<string, object>>(deviceInfo["networkDevice"].ToString());
                     Dictionary<string, string> credentials = JsonSerializer.Deserialize<Dictionary<string, string>>(networkDevice["credentials"].ToString());
                     FrontendManager.devices[image] = new UINetDevice(image, new List<Label>(), new List<Line>(), networkDevice["name"].ToString(), networkDevice["v4address"].ToString(), new Credentials(credentials["_username"], credentials["_password"]), @".\Backend\Assets", deviceInfo["_deviceType"].ToString(), deviceInfo["uid"].ToString());
-                    image.Content = networkDevice["name"].ToString() + "\n" + networkDevice["v4address"].ToString();
+                    imageLabel.Text = networkDevice["name"].ToString() + "\n" + networkDevice["v4address"].ToString();
                 }
                 else if(managementStyle == "unmanaged")
                 {
                     FrontendManager.devices[image] = new EndpointDevice(image, new List<Label>(), new List<Line>(), deviceInfo["v4Address"].ToString(), deviceInfo["name"].ToString(), deviceInfo["_deviceType"].ToString(), deviceInfo["uid"].ToString());
-                    image.Content = deviceInfo["name"].ToString() + "\n" + deviceInfo["v4Address"].ToString();
+                    imageLabel.Text = deviceInfo["name"].ToString() + "\n" + deviceInfo["v4Address"].ToString();
                 }
                 else if (managementStyle == "FU")
                 {
@@ -86,7 +87,7 @@ namespace Backend.SaveManager
             }
         }
 
-        private static void createLabel(string deviceType, int[] location, out string managementStyle, out Label image)
+        private static void createLabel(string deviceType, int[] location, out string managementStyle, out Label image, out TextBlock imageLabel)
         {
             BitmapImage bitMap = new BitmapImage();
             bitMap.BeginInit();
@@ -123,19 +124,34 @@ namespace Backend.SaveManager
             bitMap.EndInit();
 
             System.Windows.Controls.Label label = new System.Windows.Controls.Label();
-            label.Background = new SolidColorBrush(Colors.Black);
-            label.Background = new ImageBrush(bitMap);
-            label.Width = 100;
-            label.Height = 100;
+            label.Width = 125;
+            label.Height = 150;
             label.Foreground = new SolidColorBrush(Colors.White);
-            label.HorizontalContentAlignment = HorizontalAlignment.Center;
-            label.VerticalContentAlignment = VerticalAlignment.Bottom;
+            label.HorizontalContentAlignment = HorizontalAlignment.Left;
+            label.VerticalContentAlignment = VerticalAlignment.Top;
+
+            Image picture = new Image();
+            picture.HorizontalAlignment = HorizontalAlignment.Left;
+            picture.VerticalAlignment = VerticalAlignment.Top;
+            picture.Source = bitMap;
+            picture.Width = 100;
+            picture.Height = 100;
+
+            TextBlock textBlock = new TextBlock();
+            textBlock.HorizontalAlignment = HorizontalAlignment.Center;
+
+            StackPanel stackPanel = new StackPanel();
+            stackPanel.Children.Add(picture);
+            stackPanel.Children.Add(textBlock);
+
+            label.Content = stackPanel;
 
             Canvas.SetLeft(label, location[0]);
             Canvas.SetTop(label, location[1]);
 
             FrontendManager.networkMap.MainCanvas.Children.Add(label);
             image = label;
+            imageLabel = textBlock;
         }
     }
 }

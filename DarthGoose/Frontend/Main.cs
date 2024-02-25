@@ -125,19 +125,31 @@ namespace DarthGoose.Frontend
             }
             bitMap.EndInit();
 
-            //Image image = new Image();
-            //image.Source = bitMap;
-            //image.Width = 100;
-            //image.Height = 100;
+            Image image = new Image();
+            image.Source = bitMap;
+            image.HorizontalAlignment = HorizontalAlignment.Left;
+            image.VerticalAlignment = VerticalAlignment.Top;
+            image.Width = 100;
+            image.Height = 100;
 
             Label label = new Label();
-            label.Background = new SolidColorBrush(Colors.Black);
-            label.Background = new ImageBrush(bitMap);
-            label.Width = 100;
-            label.Height = 100;
+            label.Width = 125;
+            label.Height = 150;
             label.Foreground = new SolidColorBrush(Colors.White);
-            label.HorizontalContentAlignment = HorizontalAlignment.Center;
-            label.VerticalContentAlignment = VerticalAlignment.Bottom;
+            label.HorizontalContentAlignment = HorizontalAlignment.Left;
+            label.VerticalContentAlignment = VerticalAlignment.Top;
+
+
+            TextBlock textBlock = new TextBlock();
+            textBlock.HorizontalAlignment = HorizontalAlignment.Center;
+            textBlock.VerticalAlignment = VerticalAlignment.Top;
+            textBlock.TextWrapping = TextWrapping.Wrap;
+
+            StackPanel stackPanel = new StackPanel();
+            stackPanel.Children.Add(image);
+            stackPanel.Children.Add(textBlock);
+
+            label.Content = stackPanel;
 
             Canvas.SetLeft(label, 20);
             Canvas.SetTop(label, 20);
@@ -155,13 +167,13 @@ namespace DarthGoose.Frontend
                 }
                 // Debug.WriteLine(_deviceSetupWindow.SetupSSHPasswordBox.Password);
                 devices[label] = new UINetDevice(label, new List<Label>(), new List<Line>(), _deviceSetupWindow.SetupNameBox.Text, _deviceSetupWindow.SetupV4AddressBox.Text, new Backend.CredentialManager.Credentials(_deviceSetupWindow.SetupSSHUsernameBox.Text, _deviceSetupWindow.SetupSSHPasswordBox.Password, false), @".\Backend\Assets", deviceType.Name);
-                label.Content = _deviceSetupWindow.SetupNameBox.Text + "\n" + _deviceSetupWindow.SetupV4AddressBox.Text;
+                textBlock.Text = _deviceSetupWindow.SetupNameBox.Text + "\n" + _deviceSetupWindow.SetupV4AddressBox.Text;
                 _deviceSetupWindow.Close();
                 _finishedSetup = false;
             }else
             {
                 devices[label] = new EndpointDevice(label, new List<Label>(), new List<Line>(), "Not Configured", deviceType.Name + devices.Count(), deviceType.Name);
-                label.Content = deviceType.Name + devices.Count() + "\nNot Configured";
+                textBlock.Text = deviceType.Name + devices.Count() + "\nNot Configured";
             }
         }
 
