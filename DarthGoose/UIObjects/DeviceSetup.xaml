@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:DarthGoose.UIObjects"
         mc:Ignorable="d"
-        Title="Device Setup" Height="450" Width="300">
+        Title="Device Setup" Height="450" Width="300" Icon="..\Images\sidars.png">
     <Grid Background="Black">
         <TextBlock Foreground="White" Margin="50, 10">
             Optional Items are Followed by a *

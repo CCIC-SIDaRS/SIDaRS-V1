@@ -19,7 +19,7 @@
                     <MenuItem Header="Firewall" x:Name="InsertFirewall"/>
                     <MenuItem Header="Switch" x:Name="InsertSwitch"/>
                     <MenuItem Header="Server" x:Name="InsertServer"/>
-                    <MenuItem Header="Hub" x:Name="InsertHub"/>
+                    <MenuItem Header="Unmanaged Switch" x:Name="InsertUnmanagedSwitch"/>
                     <MenuItem Header="End Point" x:Name="InsertEndPoint"/>
                     <MenuItem Header="Connection" x:Name="InsertConnection"/>
                 </MenuItem>

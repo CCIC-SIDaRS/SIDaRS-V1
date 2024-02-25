@@ -13,7 +13,6 @@ using System.Diagnostics;
 
 namespace Backend.SaveManager
 {
-    // Need to deserialize the uids and find common connections
      static class SaveSystem
      {
         public static void Save(string saveFile, UINetDevice[] netDevices, EndpointDevice[] endpointDevices, Credentials masterCredentials)
@@ -101,8 +100,8 @@ namespace Backend.SaveManager
                     bitMap.UriSource = new Uri(System.IO.Path.Combine(Directory.GetCurrentDirectory(), @"Images\Switch.png"));
                     managementStyle = "managed";
                     break;
-                case "InsertHub":
-                    bitMap.UriSource = new Uri(System.IO.Path.Combine(Directory.GetCurrentDirectory(), @"Images\Hub.png"));
+                case "InsertUnmanagedSwitch":
+                    bitMap.UriSource = new Uri(System.IO.Path.Combine(Directory.GetCurrentDirectory(), @"Images\Switch.png"));
                     managementStyle = "unmanaged";
                     break;
                 case "InsertFirewall":
@@ -124,6 +123,7 @@ namespace Backend.SaveManager
             bitMap.EndInit();
 
             System.Windows.Controls.Label label = new System.Windows.Controls.Label();
+            label.Background = new SolidColorBrush(Colors.Black);
             label.Background = new ImageBrush(bitMap);
             label.Width = 100;
             label.Height = 100;

@@ -6,7 +6,7 @@
       xmlns:local="clr-namespace:DarthGoose"
       mc:Ignorable="d" 
       d:DesignHeight="450" d:DesignWidth="800"
-      Title="DeviceDetails">
+      Title="DeviceDetails" Icon="..\Images\sidars.png">
 
     <Grid>
         <TabControl x:Name="DeviceDetailsTabs">

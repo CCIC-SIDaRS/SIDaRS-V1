@@ -57,7 +57,7 @@ namespace DarthGoose.Frontend
             networkMap.GooseSupport.Click += new RoutedEventHandler(GetGooseSupport);
             networkMap.InsertRouter.Click += new RoutedEventHandler(InsertDeviceClick);
             networkMap.InsertFirewall.Click += new RoutedEventHandler(InsertDeviceClick);
-            networkMap.InsertHub.Click += new RoutedEventHandler(InsertDeviceClick);
+            networkMap.InsertUnmanagedSwitch.Click += new RoutedEventHandler(InsertDeviceClick);
             networkMap.InsertSwitch.Click += new RoutedEventHandler(InsertDeviceClick);
             networkMap.InsertEndPoint.Click += new RoutedEventHandler(InsertDeviceClick);
             networkMap.InsertServer.Click += new RoutedEventHandler(InsertDeviceClick);
@@ -110,8 +110,8 @@ namespace DarthGoose.Frontend
                 case "InsertSwitch":
                     bitMap.UriSource = new Uri(System.IO.Path.Combine(Directory.GetCurrentDirectory(), @"Images\Switch.png"));
                     break;
-                case "InsertHub":
-                    bitMap.UriSource = new Uri(System.IO.Path.Combine(Directory.GetCurrentDirectory(), @"Images\Hub.png"));
+                case "InsertUnmanagedSwitch":
+                    bitMap.UriSource = new Uri(System.IO.Path.Combine(Directory.GetCurrentDirectory(), @"Images\Switch.png"));
                     break;
                 case "InsertFirewall":
                     bitMap.UriSource = new Uri(System.IO.Path.Combine(Directory.GetCurrentDirectory(), @"Images\Firewall.png"));
@@ -131,6 +131,7 @@ namespace DarthGoose.Frontend
             //image.Height = 100;
 
             Label label = new Label();
+            label.Background = new SolidColorBrush(Colors.Black);
             label.Background = new ImageBrush(bitMap);
             label.Width = 100;
             label.Height = 100;
