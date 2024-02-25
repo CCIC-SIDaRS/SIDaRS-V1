@@ -71,7 +71,7 @@ namespace DarthGoose.Frontend
 
         private static void OnLoginEnter(object sender, RoutedEventArgs e)
         {
-            if(_loginPage.LoginTitle.Text == "Login")
+            if(_loginPage.LoginTitle.Text == "Welcome")
             {
                 _loginPage = null;
                 SetupNetworkMap();
