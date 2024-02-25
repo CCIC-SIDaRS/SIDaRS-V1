@@ -272,6 +272,13 @@ namespace DarthGoose.Frontend
             else if (e.Key == Key.Return || e.Key == Key.Enter)
             {
                 commandComplete = true;
+            }else if (e.Key == Key.Tab)
+            {
+                Debug.WriteLine(currentCommand);
+                var something = TerminalManager.CiscoCommandCompletion(currentCommand.Split(" "));
+                deviceMenu.TerminalTextBox.Text = deviceMenu.TerminalTextBox.Text.Substring(0,deviceMenu.TerminalTextBox.Text.Length - currentCommand.Length);
+                currentCommand = something;
+                deviceMenu.TerminalTextBox.Text += something;
             }
         }
 
@@ -404,8 +411,9 @@ namespace DarthGoose.Frontend
                 currentCommand = "";
             }else
             {
+                // it seems to be getting stuck here and I can't for the life of me figure out why
                 _networkDevice.terminal.SendCommand(currentCommand);
-                currentCommand = "";
+                currentCommand = string.Empty;
                 RunTerminal();
             }
         }

@@ -22,7 +22,7 @@ namespace Backend.NetworkDeviceManager
     {
         public delegate void ReadCallback(string output);
         private string assetsDir { get; set; }
-        private Dictionary<string, object> catalystCommands { get; set; }
+        private static Dictionary<string, object> catalystCommands { get; set; }
         private string v4address { get; set; }
         private ManagementProtocol protocol { get; set; }
         private Credentials credentials { get; set; }
@@ -34,7 +34,7 @@ namespace Backend.NetworkDeviceManager
         public TerminalManager(string assetsDir, string v4address, ManagementProtocol protocol, Credentials credentials, ReadCallback readCallback)
         {
             this.assetsDir = assetsDir;
-            this.catalystCommands = JsonSerializer.Deserialize<Dictionary<string, object>>(File.ReadAllText(this.assetsDir + @"\CiscoCommandTree.json")) ?? new Dictionary<string, object>();
+            catalystCommands = JsonSerializer.Deserialize<Dictionary<string, object>>(File.ReadAllText(this.assetsDir + @"\CiscoCommandTree.json")) ?? new Dictionary<string, object>();
             this.v4address = v4address;
             this.credentials = credentials;
             this.readCallback = readCallback;
@@ -63,7 +63,7 @@ namespace Backend.NetworkDeviceManager
             }
         }
 
-        public string[] CiscoCommandCompletion(string[] currentCommand)
+        public static string CiscoCommandCompletion(string[] currentCommand)
         {
             IEnumerable<string> matchingValues;
 
@@ -93,8 +93,12 @@ namespace Backend.NetworkDeviceManager
                 matchingValues = catalystCommands.Keys
                                     .Where(x => x.StartsWith(currentCommand[0]));
             }
-
-            return matchingValues.ToArray();
+            matchingValues = from arrElement in matchingValues.Distinct()
+                             orderby arrElement.Length
+                             select arrElement;
+            string[] updatedCommand = currentCommand;
+            updatedCommand[currentCommand.Length - 1] = matchingValues.ToArray()[0];
+            return string.Join(" ", updatedCommand);
         }
 
         public void SendCommand(string command)
