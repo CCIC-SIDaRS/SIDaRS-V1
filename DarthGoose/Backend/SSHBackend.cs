@@ -24,7 +24,7 @@ namespace SSHBackend
             this._readCallback = readCallback;
             this.sshType = ManagementProtocol.SSH;
             _connected = false;
-            Debug.WriteLine(credentials.GetCreds()[1]);
+            // Debug.WriteLine(credentials.GetCreds()[1]);
             _client = new SshClient(hostaddress, credentials.GetCreds()[0], credentials.GetCreds()[1]);
             this._buff = new TerminalBuffer(readCallback);
             // Console.WriteLine(hostaddress);

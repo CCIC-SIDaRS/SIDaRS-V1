@@ -348,10 +348,10 @@ namespace DarthGoose.Frontend
         {
             Application.Current.Dispatcher.Invoke(() => { 
                 Debug.WriteLine(input);
-                if (lastCommand != "" && input.Contains(lastCommand))
-                {
-                    return;
-                }
+                //if (lastCommand != "" && input.Contains(lastCommand))
+                //{
+                //    return;
+                //}
                 deviceMenu.TerminalTextBox.Text += input; 
                 deviceMenu.TerminalScroller.ScrollToBottom();
             });
