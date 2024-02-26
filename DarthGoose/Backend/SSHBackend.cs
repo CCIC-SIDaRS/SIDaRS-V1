@@ -29,16 +29,7 @@ namespace SSHBackend
             this._buff = new TerminalBuffer(readCallback);
             // Console.WriteLine(hostaddress);
         }
-        private void ReadThreadMethod()
-        {
-            StreamReader reader = new StreamReader(_stream);
-            while (_connected)
-            {
-                ReadStream(reader);
-                _buff.Flush();
-                Thread.Sleep(500);
-            }
-        }
+        
         public void Connect()
         {
             try
@@ -60,6 +51,17 @@ namespace SSHBackend
                 throw new Exception(ex.ToString());
             }
 
+        }
+
+        private void ReadThreadMethod()
+        {
+            StreamReader reader = new StreamReader(_stream);
+            while (_connected)
+            {
+                ReadStream(reader);
+                _buff.Flush();
+                Thread.Sleep(500);
+            }
         }
 
         public void CreateShellStream()
@@ -110,10 +112,6 @@ namespace SSHBackend
         private static void WriteStream(string cmd, StreamWriter writer, ShellStream stream)
         {
             writer.WriteLine(cmd);
-            while (stream.Length == 0)
-            {
-                Thread.Sleep(500);
-            }
         }
 
         private void ReadStream(StreamReader reader)
@@ -122,6 +120,7 @@ namespace SSHBackend
             while (line != null)
             {
                 line = reader.ReadLine();
+                //Debug.WriteLine(line);
                 _buff.Push(line + "\n");
             }
         }
@@ -139,11 +138,13 @@ namespace SSHBackend
 
         public void Push(string line)
         {
+            //Debug.WriteLine(terminalMessage);
             terminalMessage += line;
         }
 
         public void Flush()
         {
+            //Debug.WriteLine(terminalMessage);
             if(terminalMessage is not null && terminalMessage is not "" && terminalMessage is not "\n")
             {
                 string[] middleman = terminalMessage.Split("\n");

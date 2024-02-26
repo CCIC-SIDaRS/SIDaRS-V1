@@ -53,7 +53,7 @@
 
         <Style TargetType="PasswordBox">
             <Setter Property="Background" Value="Transparent"/>
-            <Setter Property="Foreground" Value="{StaticResource TextColor}"/>
+            <Setter Property="Foreground" Value="{StaticResource TextColor}"/>   
             <Setter Property="FontWeight" Value="Bold"/>
             <Setter Property="FontFamily" Value="Cooper Black"/>
             <Setter Property="CaretBrush" Value="{StaticResource TextColor}"/>

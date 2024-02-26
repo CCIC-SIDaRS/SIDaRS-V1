@@ -31,9 +31,152 @@ namespace DarthGoose.Frontend
         protected string currentCommand = "";
         protected bool commandComplete = false;
 
-        private bool _shiftDown { get; set; }
         private bool _drag;
-        private Point _startPoint;
+
+        public UIDevice(Label image, List<Label> connections, List<Line> cables, string uid = null)
+        {
+            this.image = image;
+            this.connections = connections;
+            this.cables = cables;
+            this.deviceMenu = new DeviceDetails();
+            if (uid is null)
+            {
+                this.uid = DateTime.Now.ToString() + "-" + this.GetHashCode().ToString();
+            }else
+            {
+                this.uid = uid;
+            }
+            this.image.MouseDown += DeviceMouseDown;
+            this.image.MouseMove += DeviceMouseMove;
+            this.image.MouseUp += DeviceMouseUp;
+
+            FrontendManager.networkMap.MainCanvas.MouseMove += DeviceMouseMove;
+            FrontendManager.networkMap.MainCanvas.MouseUp += DeviceMouseUp;
+
+            deviceMenu.Closing += new CancelEventHandler(OnClosing);
+        }
+
+        private void DeviceMouseDown(object sender, MouseButtonEventArgs e)
+        {
+            if (FrontendManager.connecting)
+            {
+                FrontendManager.AddToPendingConnections(this.image);
+            }
+            else if (e.ClickCount < 2)
+            {
+                _drag = true;
+            }
+            else
+            {
+                this.deviceMenu.Show();
+            }
+        }
+
+        private void DeviceMouseMove(object sender, MouseEventArgs e)
+        {
+            if (_drag)
+            {
+                Label draggedRectangle = this.image;
+                Point newPoint = Mouse.GetPosition(FrontendManager.networkMap.MainCanvas);
+
+                double left = Math.Round((newPoint.X - (draggedRectangle.Width / 2)) / gridCubeWidth)  * gridCubeWidth;
+                double top = Math.Round((newPoint.Y - (draggedRectangle.Height / 2)) / gridCubeHeight) * gridCubeHeight;
+                if (left + draggedRectangle.Width < FrontendManager.windowSize.X && left > 0 && top + draggedRectangle.Height < FrontendManager.windowSize.Y && top >= -FrontendManager.networkMap.TopMenu.Height)
+                {
+                    //Debug.WriteLine(newPoint.X);
+                    Canvas.SetLeft(draggedRectangle, left);
+                    Canvas.SetTop(draggedRectangle, top);
+                    for (int i = 0; i < this.connections.Count; i++)
+                    {
+                        FrontendManager.drawConnection(new List<Label>() { draggedRectangle, this.connections[i] }, this.cables[i]);
+                    }
+                }
+            }
+        }
+
+        private void DeviceMouseUp(object sender, MouseButtonEventArgs e)
+        {
+            //Debug.WriteLine("Done");
+            _drag = false;
+        }
+
+        private void OnClosing(object s, CancelEventArgs e)
+        {
+            Window sender = (Window)s;
+            e.Cancel = true;
+            sender.Hide();
+        }
+    }
+    class EndpointDevice : UIDevice
+    {
+        public string v4Address { get; private set; }
+        public string name { get; private set; }
+
+        private string _deviceType { get; set; }
+        private List<string> _serializeable = new() { nameof(name), nameof(v4Address), nameof(_deviceType) };
+
+        public EndpointDevice(Label image, List<Label> connections, List<Line> cables, string v4Address, string name, string deviceType, string uid = null) : base(image, connections, cables, uid)
+        {
+            this.v4Address = v4Address;
+            this.name = name;
+            deviceMenu.Name.Text = name;
+            deviceMenu.V4Address.Text = v4Address;
+            deviceMenu.Name.TextChanged += OnNameChange;
+            deviceMenu.V4Address.TextChanged += OnAddressChanged;
+            deviceMenu.SshTerminal.Visibility = Visibility.Hidden;
+            _deviceType = deviceType;
+            _serializeable.AddRange(serializeable);
+        }
+
+        private void OnNameChange(object sender, TextChangedEventArgs e)
+        {
+            name = deviceMenu.Name.Text;
+            image.Content = name + "\n" + v4Address;
+        }
+
+        private void OnAddressChanged(object sender, TextChangedEventArgs e)
+        {
+            v4Address = deviceMenu.V4Address.Text;
+            image.Content = name + "\n" + v4Address;
+        }
+
+        public string Save()
+        {
+            // Will serialize the device type, name (if configured), and v4Address (if configured) COMPLETE
+            // will serialize the UID of each device that it is connected to COMPLETE
+            // will serialize its current corrdinates COMPLETE
+
+            var tempDict = new Dictionary<string, object>();
+
+            foreach(PropertyInfo prop in this.GetType().GetProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic))
+            {
+                if (_serializeable.Contains(prop.Name))
+                {
+                    tempDict[prop.Name] = prop.GetValue(this);
+                }
+            }
+            
+            var tempList = new List<string>();
+            foreach(Label device in connections)
+            {
+                tempList.Add(FrontendManager.devices[device].uid);
+            }
+            tempDict["connections"] = tempList;
+            tempDict["location"] = new List<int>() { (int)Canvas.GetLeft(image), (int)Canvas.GetTop(image) };
+
+            return JsonSerializer.Serialize(tempDict);
+        }
+    }
+
+    class UINetDevice : UIDevice
+    {
+        private NetworkDevice _networkDevice { get; set; }
+        // private readonly Task _terminalTask = new Task(RunTerminal);
+        private string _deviceType { get; set; }
+        private List<string> _serializeable = new() { nameof(_deviceType) };
+
+        private bool _shiftDown { get; set; }
+        private string lastCommand = string.Empty;
 
         private static readonly Dictionary<Key, string> _keyboard = new Dictionary<Key, string>
         {
@@ -158,82 +301,85 @@ namespace DarthGoose.Frontend
             {Key.Space, " "},
         };
 
-        public UIDevice(Label image, List<Label> connections, List<Line> cables, string uid = null)
+        public UINetDevice(Label image, List<Label> connections, List<Line> cables, string name, string v4Address, Credentials credentials, string assetsDir, string deviceType, string uid = null) : base(image, connections, cables, uid)
         {
-            this.image = image;
-            this.connections = connections;
-            this.cables = cables;
-            this.deviceMenu = new DeviceDetails();
-            if (uid is null)
-            {
-                this.uid = DateTime.Now.ToString() + "-" + this.GetHashCode().ToString();
-            }else
-            {
-                this.uid = uid;
-            }
-            this.image.MouseDown += DeviceMouseDown;
-            this.image.MouseMove += DeviceMouseMove;
-            this.image.MouseUp += DeviceMouseUp;
+            _networkDevice = new NetworkDevice(name, v4Address, credentials, assetsDir, ReadCallback);
+            deviceMenu.Name.Text = name;
+            deviceMenu.Name.TextChanged += OnNameChange;
+            deviceMenu.V4Address.Text = v4Address;
+            deviceMenu.V4Address.TextChanged += OnAddressChange;
+            deviceMenu.DeviceDetailsTabs.SelectionChanged += OnTabChanged;
+            _deviceType = deviceType;
+            _serializeable.AddRange(serializeable);
 
-            FrontendManager.networkMap.MainCanvas.MouseMove += DeviceMouseMove;
-            FrontendManager.networkMap.MainCanvas.MouseUp += DeviceMouseUp;
 
-            deviceMenu.Closing += new CancelEventHandler(OnClosing);
             deviceMenu.KeyDown += KeyDown;
             deviceMenu.KeyUp += KeyUp;
         }
-
-        private void DeviceMouseDown(object sender, MouseButtonEventArgs e)
+        // This should probably be changed so that there is a confirmation but that's Roman's problem :)
+        private void OnNameChange(object sender, TextChangedEventArgs e)
         {
-            if (FrontendManager.connecting)
+            _networkDevice.ChangeName(deviceMenu.Name.Text);
+            image.Content = deviceMenu.Name.Text + "\n" + deviceMenu.V4Address.Text;
+        }
+        private void OnAddressChange(object sender, TextChangedEventArgs e)
+        {
+            _networkDevice.ChangeAddress(deviceMenu.V4Address.Text);
+            image.Content = deviceMenu.Name.Text + "\n" + deviceMenu.V4Address.Text;
+        }
+        private void OnTabChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (deviceMenu.DeviceDetailsTabs.SelectedIndex == 2)
             {
-                FrontendManager.AddToPendingConnections(this.image);
-            }
-            else if (e.ClickCount < 2)
+                if (_networkDevice.terminal is null)
+                {
+                    MessageBox.Show("Please wait for the connection to be completed before access the ssh terminal");
+                } else
+                {
+                    _networkDevice.terminal.Connect();
+                }
+            } else if (deviceMenu.DeviceDetailsTabs.SelectedIndex != 2 && _networkDevice.terminal is not null)
             {
-                _drag = true;
-                _startPoint = Mouse.GetPosition(FrontendManager.networkMap.MainCanvas);
-            }
-            else
-            {
-                this.deviceMenu.Show();
+                _networkDevice.terminal.Disconnect();
             }
         }
 
-        private void DeviceMouseMove(object sender, MouseEventArgs e)
+        public void ReadCallback(string input)
         {
-            if (_drag)
-            {
-                Label draggedRectangle = this.image;
-                Point newPoint = Mouse.GetPosition(FrontendManager.networkMap.MainCanvas);
-
-                double left = Math.Round((newPoint.X - (draggedRectangle.Width / 2)) / gridCubeWidth)  * gridCubeWidth;
-                double top = Math.Round((newPoint.Y - (draggedRectangle.Height / 2)) / gridCubeHeight) * gridCubeHeight;
-                if (left + draggedRectangle.Width < FrontendManager.windowSize.X && left > 0 && top + draggedRectangle.Height < FrontendManager.windowSize.Y && top >= -FrontendManager.networkMap.TopMenu.Height)
+            Application.Current.Dispatcher.Invoke(() => { 
+                Debug.WriteLine(input);
+                if (lastCommand != "" && input.Contains(lastCommand))
                 {
-                    //Debug.WriteLine(newPoint.X);
-                    Canvas.SetLeft(draggedRectangle, left);
-                    Canvas.SetTop(draggedRectangle, top);
-                    _startPoint = newPoint;
-                    for (int i = 0; i < this.connections.Count; i++)
-                    {
-                        FrontendManager.drawConnection(new List<Label>() { draggedRectangle, this.connections[i] }, this.cables[i]);
-                    }
+                    return;
+                }
+                deviceMenu.TerminalTextBox.Text += input; 
+                deviceMenu.TerminalScroller.ScrollToBottom();
+            });
+        }
+
+        public string Save()
+        {
+            // Will serialize the network device object, uid, device type, uids of connected devices, and current coordinates in the grid
+            var tempDict = new Dictionary<string, object>();
+
+            foreach(PropertyInfo prop in this.GetType().GetProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic))
+            {
+                if (_serializeable.Contains(prop.Name))
+                {
+                    tempDict[prop.Name] = prop.GetValue(this);
                 }
             }
-        }
 
-        private void DeviceMouseUp(object sender, MouseButtonEventArgs e)
-        {
-            //Debug.WriteLine("Done");
-            _drag = false;
-        }
+            var tempList = new List<string>();
+            foreach (Label device in connections)
+            {
+                tempList.Add(FrontendManager.devices[device].uid);
+            }
+            tempDict["connections"] = tempList;
+            tempDict["location"] = new List<int>() { (int)Canvas.GetLeft(image), (int)Canvas.GetTop(image) };
+            tempDict["networkDevice"] = _networkDevice.Save();
 
-        private void OnClosing(object s, CancelEventArgs e)
-        {
-            Window sender = (Window)s;
-            e.Cancel = true;
-            sender.Hide();
+            return JsonSerializer.Serialize(tempDict);
         }
 
         private void KeyDown(object sender, KeyEventArgs e)
@@ -271,14 +417,16 @@ namespace DarthGoose.Frontend
             }
             else if (e.Key == Key.Return || e.Key == Key.Enter)
             {
-                commandComplete = true;
-            }else if (e.Key == Key.Tab)
+                _networkDevice.terminal.SendCommand(currentCommand);
+                lastCommand = currentCommand;
+                currentCommand = string.Empty;
+            }
+            else if (e.Key == Key.Tab)
             {
-                Debug.WriteLine(currentCommand);
-                var something = TerminalManager.CiscoCommandCompletion(currentCommand.Split(" "));
-                deviceMenu.TerminalTextBox.Text = deviceMenu.TerminalTextBox.Text.Substring(0,deviceMenu.TerminalTextBox.Text.Length - currentCommand.Length);
-                currentCommand = something;
-                deviceMenu.TerminalTextBox.Text += something;
+                string completedCommand = TerminalManager.CiscoCommandCompletion(currentCommand.Split(" "));
+                deviceMenu.TerminalTextBox.Text = deviceMenu.TerminalTextBox.Text.Substring(0, deviceMenu.TerminalTextBox.Text.Length - currentCommand.Length);
+                currentCommand = completedCommand;
+                deviceMenu.TerminalTextBox.Text += completedCommand;
             }
         }
 
@@ -288,164 +436,6 @@ namespace DarthGoose.Frontend
             {
                 _shiftDown = false;
             }
-        }
-    }
-    class EndpointDevice : UIDevice
-    {
-        public string v4Address { get; private set; }
-        public string name { get; private set; }
-
-        private string _deviceType { get; set; }
-        private List<string> _serializeable = new() { nameof(name), nameof(v4Address), nameof(_deviceType) };
-
-        public EndpointDevice(Label image, List<Label> connections, List<Line> cables, string v4Address, string name, string deviceType, string uid = null) : base(image, connections, cables, uid)
-        {
-            this.v4Address = v4Address;
-            this.name = name;
-            deviceMenu.Name.Text = name;
-            deviceMenu.V4Address.Text = v4Address;
-            deviceMenu.Name.TextChanged += OnNameChange;
-            deviceMenu.V4Address.TextChanged += OnAddressChanged;
-            deviceMenu.SshTerminal.Visibility = Visibility.Hidden;
-            _deviceType = deviceType;
-            _serializeable.AddRange(serializeable);
-        }
-
-        private void OnNameChange(object sender, TextChangedEventArgs e)
-        {
-            name = deviceMenu.Name.Text;
-            image.Content = name + "\n" + v4Address;
-        }
-
-        private void OnAddressChanged(object sender, TextChangedEventArgs e)
-        {
-            v4Address = deviceMenu.V4Address.Text;
-            image.Content = name + "\n" + v4Address;
-        }
-
-        public string Save()
-        {
-            // Will serialize the device type, name (if configured), and v4Address (if configured) COMPLETE
-            // will serialize the UID of each device that it is connected to COMPLETE
-            // will serialize its current corrdinates COMPLETE
-
-            var tempDict = new Dictionary<string, object>();
-
-            foreach(PropertyInfo prop in this.GetType().GetProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic))
-            {
-                if (_serializeable.Contains(prop.Name))
-                {
-                    tempDict[prop.Name] = prop.GetValue(this);
-                }
-            }
-            
-            var tempList = new List<string>();
-            foreach(Label device in connections)
-            {
-                tempList.Add(FrontendManager.devices[device].uid);
-            }
-            tempDict["connections"] = tempList;
-            tempDict["location"] = new List<int>() { (int)Canvas.GetLeft(image), (int)Canvas.GetTop(image) };
-
-            return JsonSerializer.Serialize(tempDict);
-        }
-    }
-
-    class UINetDevice : UIDevice
-    {
-        private NetworkDevice _networkDevice { get; set; }
-        // private readonly Task _terminalTask = new Task(RunTerminal);
-        private string _deviceType { get; set; }
-        private List<string> _serializeable = new() { nameof(_deviceType) };
-        public UINetDevice(Label image, List<Label> connections, List<Line> cables, string name, string v4Address, Credentials credentials, string assetsDir, string deviceType, string uid = null) : base(image, connections, cables, uid)
-        {
-            _networkDevice = new NetworkDevice(name, v4Address, credentials, assetsDir, ReadCallback);
-            deviceMenu.Name.Text = name;
-            deviceMenu.Name.TextChanged += OnNameChange;
-            deviceMenu.V4Address.Text = v4Address;
-            deviceMenu.V4Address.TextChanged += OnAddressChange;
-            deviceMenu.DeviceDetailsTabs.SelectionChanged += OnTabChanged;
-            _deviceType = deviceType;
-            _serializeable.AddRange(serializeable);
-        }
-        // This should probably be changed so that there is a confirmation but that's Roman's problem :)
-        private void OnNameChange(object sender, TextChangedEventArgs e)
-        {
-            _networkDevice.ChangeName(deviceMenu.Name.Text);
-            image.Content = deviceMenu.Name.Text + "\n" + deviceMenu.V4Address.Text;
-        }
-        private void OnAddressChange(object sender, TextChangedEventArgs e)
-        {
-            _networkDevice.ChangeAddress(deviceMenu.V4Address.Text);
-            image.Content = deviceMenu.Name.Text + "\n" + deviceMenu.V4Address.Text;
-        }
-        private void OnTabChanged(object sender, SelectionChangedEventArgs e)
-        {
-            if (deviceMenu.DeviceDetailsTabs.SelectedIndex == 2)
-            {
-                if (_networkDevice.terminal is null)
-                {
-                    MessageBox.Show("Please wait for the connection to be completed before access the ssh terminal");
-                } else
-                {
-                    _networkDevice.terminal.Connect();
-                    Thread thread = new Thread(RunTerminal);
-                    thread.IsBackground = true;
-                    thread.Start();
-                }
-            } else if (deviceMenu.DeviceDetailsTabs.SelectedIndex != 2 && _networkDevice.terminal is not null)
-            {
-                _networkDevice.terminal.Disconnect();
-            }
-        }
-        private void RunTerminal()
-        {
-            while(!commandComplete)
-            {
-                Task.Delay(25);
-            }
-            commandComplete = false;
-            if (currentCommand == "stop")
-            {
-                _networkDevice.terminal.Disconnect();
-                currentCommand = "";
-            }else
-            {
-                // it seems to be getting stuck here and I can't for the life of me figure out why
-                _networkDevice.terminal.SendCommand(currentCommand);
-                currentCommand = string.Empty;
-                RunTerminal();
-            }
-        }
-
-        public void ReadCallback(string input)
-        {
-            Application.Current.Dispatcher.Invoke(() => { deviceMenu.TerminalTextBox.Text += input; deviceMenu.TerminalScroller.ScrollToBottom(); });
-        }
-
-        public string Save()
-        {
-            // Will serialize the network device object, uid, device type, uids of connected devices, and current coordinates in the grid
-            var tempDict = new Dictionary<string, object>();
-
-            foreach(PropertyInfo prop in this.GetType().GetProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic))
-            {
-                if (_serializeable.Contains(prop.Name))
-                {
-                    tempDict[prop.Name] = prop.GetValue(this);
-                }
-            }
-
-            var tempList = new List<string>();
-            foreach (Label device in connections)
-            {
-                tempList.Add(FrontendManager.devices[device].uid);
-            }
-            tempDict["connections"] = tempList;
-            tempDict["location"] = new List<int>() { (int)Canvas.GetLeft(image), (int)Canvas.GetTop(image) };
-            tempDict["networkDevice"] = _networkDevice.Save();
-
-            return JsonSerializer.Serialize(tempDict);
         }
     }
 }
