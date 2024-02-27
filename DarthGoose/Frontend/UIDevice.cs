@@ -54,6 +54,7 @@ namespace DarthGoose.Frontend
             FrontendManager.networkMap.MainCanvas.MouseUp += DeviceMouseUp;
 
             deviceMenu.Closing += new CancelEventHandler(OnClosing);
+            deviceMenu.DeleteDevice.Click += new RoutedEventHandler(OnDeleteDevice);
         }
 
         private void DeviceMouseDown(object sender, MouseButtonEventArgs e)
@@ -105,6 +106,16 @@ namespace DarthGoose.Frontend
             Window sender = (Window)s;
             e.Cancel = true;
             sender.Hide();
+        }
+
+        private void OnDeleteDevice(object sender, RoutedEventArgs e)
+        {
+            if (MessageBox.Show("Are you sure you want to delete this device\nThis action will delete all data associated with this device", "SIDaRS", MessageBoxButton.YesNo) == MessageBoxResult.Yes)
+            {
+                FrontendManager.devices.Remove(image);
+                FrontendManager.networkMap.MainCanvas.Children.Remove(image);
+                deviceMenu.Close();
+            }
         }
     }
     class EndpointDevice : UIDevice

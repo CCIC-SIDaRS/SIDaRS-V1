@@ -19,6 +19,7 @@
                 <Grid Background="Black">
                     <TextBox x:Name="Name" Width="200" Height="20" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="10,10"/>
                     <TextBox x:Name="V4Address" Width="200" Height="20" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="10,50"/>
+                    <Button x:Name="DeleteDevice" Width="200" Height="20" HorizontalAlignment="Left" VerticalAlignment="Bottom" Content="Delete Device" Margin="10,10" Background="Red" Foreground="White"/>
                 </Grid>
             </TabItem>
             <TabItem x:Name="SshTerminal" Header="SSH Terminal">
