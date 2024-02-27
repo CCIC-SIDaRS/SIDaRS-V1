@@ -13,7 +13,7 @@
             <Setter Property="Background" Value="{StaticResource Color1}"/>
             <Setter Property="Foreground" Value="{StaticResource TextColor}"/>
             <Setter Property="FontWeight" Value="Bold"/>
-            <Setter Property="FontFamily" Value="Cooper Black"/>
+            <Setter Property="FontFamily" Value="Arial Black"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
@@ -38,7 +38,7 @@
             <Setter Property="Background" Value="Transparent"/>
             <Setter Property="Foreground" Value="{StaticResource TextColor}"/>
             <Setter Property="FontWeight" Value="Bold"/>
-            <Setter Property="FontFamily" Value="Cooper Black"/>
+            <Setter Property="FontFamily" Value="Arial Black"/>
             <Setter Property="CaretBrush" Value="{StaticResource TextColor}"/>
             <Setter Property="Template">
                 <Setter.Value>
@@ -55,7 +55,7 @@
             <Setter Property="Background" Value="Transparent"/>
             <Setter Property="Foreground" Value="{StaticResource TextColor}"/>
             <Setter Property="FontWeight" Value="Bold"/>
-            <Setter Property="FontFamily" Value="Cooper Black"/>
+            <Setter Property="FontFamily" Value="Arial Black"/>
             <Setter Property="CaretBrush" Value="{StaticResource TextColor}"/>
             <Setter Property="Template">
                 <Setter.Value>
@@ -72,7 +72,7 @@
     <Grid>
         <PasswordBox x:Name="LoginPassword" HorizontalAlignment="Center" Margin="0,276,0,0" VerticalAlignment="Top" Width="308" Height="35" />
         <TextBox x:Name="LoginUsername" HorizontalAlignment="Center" Margin="0,217,0,0" TextWrapping="Wrap" Text="User Name" VerticalAlignment="Top" Width="308" Height="35" />
-        <TextBlock x:Name="LoginTitle" HorizontalAlignment="Center" Margin="0,52,0,0" TextWrapping="NoWrap" Text="Welcome" VerticalAlignment="Top" FontSize="100" Foreground="White" FontWeight="Bold" FontFamily="Cooper Black"/>
+        <TextBlock x:Name="LoginTitle" HorizontalAlignment="Center" Margin="0,52,0,0" TextWrapping="NoWrap" Text="Welcome" VerticalAlignment="Top" FontSize="100" Foreground="White" FontWeight="Bold" FontFamily="Arial Black"/>
         <Button x:Name="LoginButton" Content="Sign In" HorizontalAlignment="Center" Margin="0,337,0,0" VerticalAlignment="Top" RenderTransformOrigin="0.145,-0.178" Width="150" Height="55"/>
         <Button x:Name="CreateAccountButton" Content="Create Account" HorizontalAlignment="Center" Margin="0,392,0,0" VerticalAlignment="Top" RenderTransformOrigin="-0.448,0.44" Width="150" Height="55"/>
     </Grid>

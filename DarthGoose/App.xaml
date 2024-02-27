@@ -5,8 +5,8 @@
              StartupUri="UIObjects\MainWindow.xaml">
     <Application.Resources>
 
-        <SolidColorBrush x:Key="Color1" Color="#4E6A68"/>
-        <SolidColorBrush x:Key="Highlight" Color="#A3320B"/>
+        <SolidColorBrush x:Key="Color1" Color="#153B44"/>
+        <SolidColorBrush x:Key="Highlight" Color="#2D6E7E"/>
         <SolidColorBrush x:Key="TextColor" Color="White"/>
     </Application.Resources>
 </Application>
