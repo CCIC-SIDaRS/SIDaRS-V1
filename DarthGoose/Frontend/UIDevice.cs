@@ -13,6 +13,8 @@ using System.Printing;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using System.Runtime.CompilerServices;
+using System.Text.Json.Serialization;
+using System.Runtime.Serialization;
 
 namespace DarthGoose.Frontend
 {
@@ -20,32 +22,34 @@ namespace DarthGoose.Frontend
     {
         private static int gridCubeWidth = 50;
         private static int gridCubeHeight = 50;
-        
+
+        [JsonIgnore]
         public Label image { get; set; }
-        public List<Label> connections { get; set; }
+        public List<string> connections { get; set; }
+        [JsonIgnore]
         public List<Line> cables { get; set; }
+        [JsonIgnore]
         public DeviceDetails deviceMenu { get; set; }
         public string uid { get; private set; }
 
-        protected readonly List<string> serializeable = new() { nameof(uid) };
         protected string currentCommand = "";
         protected bool commandComplete = false;
 
         private bool _drag;
+        [JsonInclude]
+        private int[] _currentLocation;
+        [JsonInclude]
+        private string _deviceType;
 
-        public UIDevice(Label image, List<Label> connections, List<Line> cables, string uid = null)
+        public UIDevice(Label image, List<string> connections, List<Line> cables, string uid, string deviceType)
         {
             this.image = image;
+            this._currentLocation = [(int)Canvas.GetLeft(image), (int)Canvas.GetTop(image)];
             this.connections = connections;
             this.cables = cables;
             this.deviceMenu = new DeviceDetails();
-            if (uid is null)
-            {
-                this.uid = DateTime.Now.ToString() + "-" + this.GetHashCode().ToString();
-            }else
-            {
-                this.uid = uid;
-            }
+            this.uid = uid;
+            this._deviceType = deviceType;
             this.image.MouseDown += DeviceMouseDown;
             this.image.MouseMove += DeviceMouseMove;
             this.image.MouseUp += DeviceMouseUp;
@@ -87,9 +91,10 @@ namespace DarthGoose.Frontend
                     //Debug.WriteLine(newPoint.X);
                     Canvas.SetLeft(draggedRectangle, left);
                     Canvas.SetTop(draggedRectangle, top);
+                    _currentLocation = [(int)left, (int)top];
                     for (int i = 0; i < this.connections.Count; i++)
                     {
-                        FrontendManager.drawConnection(new List<Label>() { draggedRectangle, this.connections[i] }, this.cables[i]);
+                        FrontendManager.drawConnection(new List<Label>() { draggedRectangle, FrontendManager.devices[this.connections[i]].image }, new List<string>() { this.uid, this.connections[i] }, this.cables[i]);
                     }
                 }
             }
@@ -118,7 +123,7 @@ namespace DarthGoose.Frontend
 
         public void DestroyDevice()
         {
-            FrontendManager.devices.Remove(image);
+            FrontendManager.devices.Remove(uid);
             FrontendManager.networkMap.MainCanvas.Children.Remove(image);
             deviceMenu.Close();
         }
@@ -128,10 +133,8 @@ namespace DarthGoose.Frontend
         public string v4Address { get; private set; }
         public string name { get; private set; }
 
-        private string _deviceType { get; set; }
-        private List<string> _serializeable = new() { nameof(name), nameof(v4Address), nameof(_deviceType) };
 
-        public EndpointDevice(Label image, List<Label> connections, List<Line> cables, string v4Address, string name, string deviceType, string uid = null) : base(image, connections, cables, uid)
+        public EndpointDevice(Label image, List<string> connections, List<Line> cables, string v4Address, string name, string deviceType, string uid = null) : base(image, connections, cables, uid, deviceType)
         {
             this.v4Address = v4Address;
             this.name = name;
@@ -140,8 +143,6 @@ namespace DarthGoose.Frontend
             deviceMenu.Name.TextChanged += OnNameChange;
             deviceMenu.V4Address.TextChanged += OnAddressChanged;
             deviceMenu.SshTerminal.Visibility = Visibility.Hidden;
-            _deviceType = deviceType;
-            _serializeable.AddRange(serializeable);
         }
 
         private void OnNameChange(object sender, TextChangedEventArgs e)
@@ -155,41 +156,13 @@ namespace DarthGoose.Frontend
             v4Address = deviceMenu.V4Address.Text;
             image.Content = name + "\n" + v4Address;
         }
-
-        public string Save()
-        {
-            // Will serialize the device type, name (if configured), and v4Address (if configured) COMPLETE
-            // will serialize the UID of each device that it is connected to COMPLETE
-            // will serialize its current corrdinates COMPLETE
-
-            var tempDict = new Dictionary<string, object>();
-
-            foreach(PropertyInfo prop in this.GetType().GetProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic))
-            {
-                if (_serializeable.Contains(prop.Name))
-                {
-                    tempDict[prop.Name] = prop.GetValue(this);
-                }
-            }
-            
-            var tempList = new List<string>();
-            foreach(Label device in connections)
-            {
-                tempList.Add(FrontendManager.devices[device].uid);
-            }
-            tempDict["connections"] = tempList;
-            tempDict["location"] = new List<int>() { (int)Canvas.GetLeft(image), (int)Canvas.GetTop(image) };
-
-            return JsonSerializer.Serialize(tempDict);
-        }
     }
 
     class UINetDevice : UIDevice
     {
+        [JsonInclude]
         private NetworkDevice _networkDevice { get; set; }
         // private readonly Task _terminalTask = new Task(RunTerminal);
-        private string _deviceType { get; set; }
-        private List<string> _serializeable = new() { nameof(_deviceType) };
 
         private bool _shiftDown { get; set; }
         private string lastCommand = string.Empty;
@@ -317,7 +290,7 @@ namespace DarthGoose.Frontend
             {Key.Space, " "},
         };
 
-        public UINetDevice(Label image, List<Label> connections, List<Line> cables, string name, string v4Address, Credentials credentials, string assetsDir, string deviceType, string uid = null) : base(image, connections, cables, uid)
+        public UINetDevice(Label image, List<string> connections, List<Line> cables, string name, string v4Address, Credentials credentials, string assetsDir, string deviceType, string uid = null) : base(image, connections, cables, uid, deviceType)
         {
             _networkDevice = new NetworkDevice(name, v4Address, credentials, assetsDir, ReadCallback);
             deviceMenu.Name.Text = name;
@@ -325,8 +298,6 @@ namespace DarthGoose.Frontend
             deviceMenu.V4Address.Text = v4Address;
             deviceMenu.V4Address.TextChanged += OnAddressChange;
             deviceMenu.DeviceDetailsTabs.SelectionChanged += OnTabChanged;
-            _deviceType = deviceType;
-            _serializeable.AddRange(serializeable);
 
 
             deviceMenu.KeyDown += KeyDown;
@@ -371,31 +342,6 @@ namespace DarthGoose.Frontend
                 deviceMenu.TerminalTextBox.Text += input; 
                 deviceMenu.TerminalScroller.ScrollToBottom();
             });
-        }
-
-        public string Save()
-        {
-            // Will serialize the network device object, uid, device type, uids of connected devices, and current coordinates in the grid
-            var tempDict = new Dictionary<string, object>();
-
-            foreach(PropertyInfo prop in this.GetType().GetProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic))
-            {
-                if (_serializeable.Contains(prop.Name))
-                {
-                    tempDict[prop.Name] = prop.GetValue(this);
-                }
-            }
-
-            var tempList = new List<string>();
-            foreach (Label device in connections)
-            {
-                tempList.Add(FrontendManager.devices[device].uid);
-            }
-            tempDict["connections"] = tempList;
-            tempDict["location"] = new List<int>() { (int)Canvas.GetLeft(image), (int)Canvas.GetTop(image) };
-            tempDict["networkDevice"] = _networkDevice.Save();
-
-            return JsonSerializer.Serialize(tempDict);
         }
 
         private void KeyDown(object sender, KeyEventArgs e)

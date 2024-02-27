@@ -4,13 +4,16 @@ using System.Text.Json;
 using System.Reflection;
 using System.Text.RegularExpressions;
 using System.IO;
+using System.Text.Json.Serialization;
 
 namespace Backend.CredentialManager
 {
     class Credentials
     {
-        
+        [JsonInclude]
         private string _username { get; set; }
+
+        [JsonInclude]
         private string _password { get; set; }
         public Credentials(string username, string password, bool encrypted = true)
         {

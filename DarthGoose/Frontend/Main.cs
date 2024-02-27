@@ -22,7 +22,7 @@ namespace DarthGoose.Frontend
         public static MainWindow mainWindow;
         public static NetworkMap networkMap = new();
         public static Point windowSize;
-        public static Dictionary<Label, UIDevice> devices = new();
+        public static Dictionary<string, UIDevice> devices = new();
 
         private static LoginPage _loginPage = new();
         
@@ -154,6 +154,8 @@ namespace DarthGoose.Frontend
             Canvas.SetLeft(label, 20);
             Canvas.SetTop(label, 20);
 
+            string uid = DateTime.Now.ToString() + "-" + label.GetHashCode().ToString();
+
             networkMap.MainCanvas.Children.Add(label);
 
             if (deviceType.Name == "InsertRouter" || deviceType.Name == "InsertSwitch" || deviceType.Name == "InsertFirewall")
@@ -166,13 +168,13 @@ namespace DarthGoose.Frontend
                     // Debug.WriteLine("Something");
                 }
                 // Debug.WriteLine(_deviceSetupWindow.SetupSSHPasswordBox.Password);
-                devices[label] = new UINetDevice(label, new List<Label>(), new List<Line>(), _deviceSetupWindow.SetupNameBox.Text, _deviceSetupWindow.SetupV4AddressBox.Text, new Backend.CredentialManager.Credentials(_deviceSetupWindow.SetupSSHUsernameBox.Text, _deviceSetupWindow.SetupSSHPasswordBox.Password, false), @".\Backend\Assets", deviceType.Name);
+                devices[uid] = new UINetDevice(label, new List<string>(), new List<Line>(), _deviceSetupWindow.SetupNameBox.Text, _deviceSetupWindow.SetupV4AddressBox.Text, new Backend.CredentialManager.Credentials(_deviceSetupWindow.SetupSSHUsernameBox.Text, _deviceSetupWindow.SetupSSHPasswordBox.Password, false), @".\Backend\Assets", deviceType.Name, uid);
                 textBlock.Text = _deviceSetupWindow.SetupNameBox.Text + "\n" + _deviceSetupWindow.SetupV4AddressBox.Text;
                 _deviceSetupWindow.Close();
                 _finishedSetup = false;
             }else
             {
-                devices[label] = new EndpointDevice(label, new List<Label>(), new List<Line>(), "Not Configured", deviceType.Name + devices.Count(), deviceType.Name);
+                devices[uid] = new EndpointDevice(label, new List<string>(), new List<Line>(), "Not Configured", deviceType.Name + devices.Count(), deviceType.Name, uid);
                 textBlock.Text = deviceType.Name + devices.Count() + "\nNot Configured";
             }
         }
@@ -225,9 +227,11 @@ namespace DarthGoose.Frontend
             devicesToBeConnected.Add(sender);
             if (devicesToBeConnected.Count() == 2)
             {
-                devices[devicesToBeConnected[0]].connections.Add(devicesToBeConnected[1]);
-                devices[devicesToBeConnected[1]].connections.Add(devicesToBeConnected[0]);
-                drawConnection(devicesToBeConnected);
+                string key1 = devices.FirstOrDefault(x => x.Value.image == devicesToBeConnected[0]).Key;
+                string key2 = devices.FirstOrDefault(x => x.Value.image == devicesToBeConnected[1]).Key;
+                devices[key1].connections.Add(key2);
+                devices[key2].connections.Add(key1);
+                drawConnection(devicesToBeConnected, new List<string> { key1, key2 });
                 devicesToBeConnected.Clear();
                 connecting = false;
                 networkMap.InfoText.Text = string.Empty;
@@ -239,7 +243,7 @@ namespace DarthGoose.Frontend
             }
         }
 
-        public static void drawConnection(List<Label> connectedDevices, Line existingConnection = null)
+        public static void drawConnection(List<Label> connectedDevices, List<string> connectedUids, Line existingConnection = null)
         {
             Line line;
             if (existingConnection == null)
@@ -269,8 +273,8 @@ namespace DarthGoose.Frontend
             if (existingConnection == null)
             {
                 networkMap.ConnectionCanvas.Children.Add(line);
-                devices[device1].cables.Add(line);
-                devices[device2].cables.Add(line);
+                devices[connectedUids[0]].cables.Add(line);
+                devices[connectedUids[1]].cables.Add(line);
             }
         }
     }

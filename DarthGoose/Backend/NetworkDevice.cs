@@ -6,6 +6,7 @@ using System.Runtime.InteropServices;
 using System.Security;
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Xml.Serialization;
@@ -18,8 +19,11 @@ namespace Backend.NetworkDeviceManager
     {
         public string name { get; private set; }
         public string v4address { get; private set; }
+        [JsonIgnore]
         public TerminalManager terminal { get; private set; }
+        [JsonInclude]
         private Credentials credentials { get; set; }
+        [JsonInclude]
         private string assetsDir { get; set; }
         private TerminalManager.ReadCallback readCallback { get; set; }
 
