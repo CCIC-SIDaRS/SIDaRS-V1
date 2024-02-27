@@ -37,6 +37,11 @@ namespace Backend.SaveManager
         }
         public static void Load(string saveFile)
         {
+            foreach(UIDevice device in FrontendManager.devices.Values)
+            {
+                 device.DestroyDevice();
+            }
+            FrontendManager.devices.Clear();
             string data = File.ReadAllText(saveFile);
             Dictionary<string, object> dict = JsonSerializer.Deserialize<Dictionary<string, object>>(data);
             FrontendManager.masterCredentials = new Credentials(JsonSerializer.Deserialize<Dictionary<string, string>>(dict["MasterCredentials"].ToString()));

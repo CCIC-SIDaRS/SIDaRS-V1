@@ -112,10 +112,15 @@ namespace DarthGoose.Frontend
         {
             if (MessageBox.Show("Are you sure you want to delete this device\nThis action will delete all data associated with this device", "SIDaRS", MessageBoxButton.YesNo) == MessageBoxResult.Yes)
             {
-                FrontendManager.devices.Remove(image);
-                FrontendManager.networkMap.MainCanvas.Children.Remove(image);
-                deviceMenu.Close();
+                DestroyDevice();
             }
+        }
+
+        public void DestroyDevice()
+        {
+            FrontendManager.devices.Remove(image);
+            FrontendManager.networkMap.MainCanvas.Children.Remove(image);
+            deviceMenu.Close();
         }
     }
     class EndpointDevice : UIDevice
