@@ -15,6 +15,7 @@ using System.Text.RegularExpressions;
 using System.Runtime.CompilerServices;
 using System.Text.Json.Serialization;
 using System.Runtime.Serialization;
+using System.Net;
 
 namespace DarthGoose.Frontend
 {
@@ -50,6 +51,34 @@ namespace DarthGoose.Frontend
             this.deviceMenu = new DeviceDetails();
             this.uid = uid;
             this._deviceType = deviceType;
+            this.image.MouseDown += DeviceMouseDown;
+            this.image.MouseMove += DeviceMouseMove;
+            this.image.MouseUp += DeviceMouseUp;
+
+            FrontendManager.networkMap.MainCanvas.MouseMove += DeviceMouseMove;
+            FrontendManager.networkMap.MainCanvas.MouseUp += DeviceMouseUp;
+
+            deviceMenu.Closing += new CancelEventHandler(OnClosing);
+            deviceMenu.DeleteDevice.Click += new RoutedEventHandler(OnDeleteDevice);
+        }
+
+        public UIDevice(string deviceType, int[] location, List<string> connections, string uid)
+        {
+            this.connections = connections;
+            TextBlock caption;
+            Label label;
+            string tempUid;
+            FrontendManager.CreateLabel(deviceType, location, out label, out caption, out tempUid);
+            this.uid = uid;
+            this.image = label;
+            this.cables = new List<Line>();
+            this._currentLocation = location;
+            this._deviceType = deviceType;
+
+            caption = null;
+            label = null;
+
+            this.deviceMenu = new DeviceDetails();
             this.image.MouseDown += DeviceMouseDown;
             this.image.MouseMove += DeviceMouseMove;
             this.image.MouseUp += DeviceMouseUp;
@@ -135,6 +164,18 @@ namespace DarthGoose.Frontend
 
 
         public EndpointDevice(Label image, List<string> connections, List<Line> cables, string v4Address, string name, string deviceType, string uid = null) : base(image, connections, cables, uid, deviceType)
+        {
+            this.v4Address = v4Address;
+            this.name = name;
+            deviceMenu.Name.Text = name;
+            deviceMenu.V4Address.Text = v4Address;
+            deviceMenu.Name.TextChanged += OnNameChange;
+            deviceMenu.V4Address.TextChanged += OnAddressChanged;
+            deviceMenu.SshTerminal.Visibility = Visibility.Hidden;
+        }
+
+        [JsonConstructor]
+        public EndpointDevice(string _deviceType, int[] _currentLocation, List<string> connections, string v4Address, string uid, string name) : base(_deviceType, _currentLocation, connections, uid)
         {
             this.v4Address = v4Address;
             this.name = name;
@@ -302,6 +343,20 @@ namespace DarthGoose.Frontend
 
             deviceMenu.KeyDown += KeyDown;
             deviceMenu.KeyUp += KeyUp;
+        }
+
+        [JsonConstructor]
+        public UINetDevice(string _deviceType, int[] _currentLocation, List<string> connections, string uid, NetworkDevice _networkDevice) : base(_deviceType, _currentLocation, connections, uid)
+        {
+            this._networkDevice = _networkDevice;
+            deviceMenu.Name.Text = _networkDevice.name;
+            deviceMenu.Name.TextChanged += OnNameChange;
+            deviceMenu.V4Address.Text = _networkDevice.v4address;
+            deviceMenu.V4Address.TextChanged += OnAddressChange;
+            deviceMenu.DeviceDetailsTabs.SelectionChanged += OnTabChanged;
+            deviceMenu.KeyDown += KeyDown;
+            deviceMenu.KeyUp += KeyUp;
+            _networkDevice.SetCallBack(ReadCallback);
         }
         // This should probably be changed so that there is a confirmation but that's Roman's problem :)
         private void OnNameChange(object sender, TextChangedEventArgs e)

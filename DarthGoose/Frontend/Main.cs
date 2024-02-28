@@ -71,7 +71,8 @@ namespace DarthGoose.Frontend
 
         private static void OnLoginEnter(object sender, RoutedEventArgs e)
         {
-            if(_loginPage.LoginTitle.Text == "Welcome")
+            SymmetricEncryption.SetMaster("PhatWalrus123");
+            if (_loginPage.LoginTitle.Text == "Welcome")
             {
                 _loginPage = null;
                 SetupNetworkMap();
@@ -100,9 +101,36 @@ namespace DarthGoose.Frontend
         private static async void InsertDeviceClick(object sender, RoutedEventArgs e)
         {
             MenuItem deviceType = (MenuItem)sender;
+            Label label;
+            TextBlock textBlock;
+            string uid;
+            CreateLabel(deviceType.Name, [20, 20], out label, out textBlock, out uid);
+
+            if (deviceType.Name == "InsertRouter" || deviceType.Name == "InsertSwitch" || deviceType.Name == "InsertFirewall")
+            {
+                _deviceSetupWindow.Show();
+                while (!_finishedSetup)
+                {
+                    await Task.Delay(25);
+                    // Debug.WriteLine("Something");
+                }
+                // Debug.WriteLine(_deviceSetupWindow.SetupSSHPasswordBox.Password);
+                devices[uid] = new UINetDevice(label, new List<string>(), new List<Line>(), _deviceSetupWindow.SetupNameBox.Text, _deviceSetupWindow.SetupV4AddressBox.Text, new Backend.CredentialManager.Credentials(_deviceSetupWindow.SetupSSHUsernameBox.Text, _deviceSetupWindow.SetupSSHPasswordBox.Password, false), @".\Backend\Assets", deviceType.Name, uid);
+                textBlock.Text = _deviceSetupWindow.SetupNameBox.Text + "\n" + _deviceSetupWindow.SetupV4AddressBox.Text;
+                _deviceSetupWindow.Close();
+                _finishedSetup = false;
+            }else
+            {
+                devices[uid] = new EndpointDevice(label, new List<string>(), new List<Line>(), "Not Configured", deviceType.Name + devices.Count(), deviceType.Name, uid);
+                textBlock.Text = deviceType.Name + devices.Count() + "\nNot Configured";
+            }
+        }
+
+        public static void CreateLabel(string deviceType, int[] location, out Label label, out TextBlock caption, out string uid)
+        {
             BitmapImage bitMap = new BitmapImage();
             bitMap.BeginInit();
-            switch (deviceType.Name)
+            switch (deviceType)
             {
                 case "InsertRouter":
                     bitMap.UriSource = new Uri(System.IO.Path.Combine(Directory.GetCurrentDirectory(), @"Images\Router.png"));
@@ -132,7 +160,7 @@ namespace DarthGoose.Frontend
             image.Width = 100;
             image.Height = 100;
 
-            Label label = new Label();
+            label = new Label();
             label.Width = 125;
             label.Height = 150;
             label.Foreground = new SolidColorBrush(Colors.White);
@@ -140,43 +168,23 @@ namespace DarthGoose.Frontend
             label.VerticalContentAlignment = VerticalAlignment.Top;
 
 
-            TextBlock textBlock = new TextBlock();
-            textBlock.HorizontalAlignment = HorizontalAlignment.Center;
-            textBlock.VerticalAlignment = VerticalAlignment.Top;
-            textBlock.TextWrapping = TextWrapping.Wrap;
+            caption = new TextBlock();
+            caption.HorizontalAlignment = HorizontalAlignment.Center;
+            caption.VerticalAlignment = VerticalAlignment.Top;
+            caption.TextWrapping = TextWrapping.Wrap;
 
             StackPanel stackPanel = new StackPanel();
             stackPanel.Children.Add(image);
-            stackPanel.Children.Add(textBlock);
+            stackPanel.Children.Add(caption);
 
             label.Content = stackPanel;
 
-            Canvas.SetLeft(label, 20);
-            Canvas.SetTop(label, 20);
+            Canvas.SetLeft(label, location[0]);
+            Canvas.SetTop(label, location[1]);
 
-            string uid = DateTime.Now.ToString() + "-" + label.GetHashCode().ToString();
+            uid = DateTime.Now.ToString() + "-" + label.GetHashCode().ToString();
 
             networkMap.MainCanvas.Children.Add(label);
-
-            if (deviceType.Name == "InsertRouter" || deviceType.Name == "InsertSwitch" || deviceType.Name == "InsertFirewall")
-            {
-                SymmetricEncryption.SetMaster("PhatWalrus123");
-                _deviceSetupWindow.Show();
-                while (!_finishedSetup)
-                {
-                    await Task.Delay(25);
-                    // Debug.WriteLine("Something");
-                }
-                // Debug.WriteLine(_deviceSetupWindow.SetupSSHPasswordBox.Password);
-                devices[uid] = new UINetDevice(label, new List<string>(), new List<Line>(), _deviceSetupWindow.SetupNameBox.Text, _deviceSetupWindow.SetupV4AddressBox.Text, new Backend.CredentialManager.Credentials(_deviceSetupWindow.SetupSSHUsernameBox.Text, _deviceSetupWindow.SetupSSHPasswordBox.Password, false), @".\Backend\Assets", deviceType.Name, uid);
-                textBlock.Text = _deviceSetupWindow.SetupNameBox.Text + "\n" + _deviceSetupWindow.SetupV4AddressBox.Text;
-                _deviceSetupWindow.Close();
-                _finishedSetup = false;
-            }else
-            {
-                devices[uid] = new EndpointDevice(label, new List<string>(), new List<Line>(), "Not Configured", deviceType.Name + devices.Count(), deviceType.Name, uid);
-                textBlock.Text = deviceType.Name + devices.Count() + "\nNot Configured";
-            }
         }
 
         private static void OnFinishedSetup(object sender, RoutedEventArgs e)

@@ -11,7 +11,7 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Xml.Serialization;
 using Backend.CredentialManager;
-using Backend.CredentialManager;
+using DarthGoose.Frontend;
 
 namespace Backend.NetworkDeviceManager
 {
@@ -33,6 +33,23 @@ namespace Backend.NetworkDeviceManager
             this.v4address = v4address;
             this.credentials = credentials;
             this.assetsDir = assetsDir;
+            this.readCallback = readCallback;
+
+            Task task = new Task(() => { this.terminal = new TerminalManager(this.assetsDir, this.v4address, ManagementProtocol.SSH, this.credentials, this.readCallback); });
+            task.Start();
+        }
+
+        [JsonConstructor]
+        public NetworkDevice (string name, string v4address, Credentials credentials, string assetsDir)
+        {
+            this.name = name;
+            this.v4address = v4address;
+            this.credentials = credentials;
+            this.assetsDir = assetsDir;
+        }
+
+        public void SetCallBack(TerminalManager.ReadCallback readCallback)
+        {
             this.readCallback = readCallback;
 
             Task task = new Task(() => { this.terminal = new TerminalManager(this.assetsDir, this.v4address, ManagementProtocol.SSH, this.credentials, this.readCallback); });

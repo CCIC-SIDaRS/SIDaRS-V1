@@ -15,23 +15,32 @@ namespace Backend.CredentialManager
 
         [JsonInclude]
         private string _password { get; set; }
-        public Credentials(string username, string password, bool encrypted = true)
+
+        public Credentials(string _username, string _password, bool encrypted = true)
         {
-            this._username = username;
+            this._username = _username;
             if (!encrypted)
             {
-                this._password = SymmetricEncryption.Encrypt(password, SymmetricEncryption.master);
+                this._password = SymmetricEncryption.Encrypt(_password, SymmetricEncryption.master);
             }else
             {
-                this._password = password;
+                this._password = _password;
             }
         }
-        public Credentials(Dictionary<string,string> serializedData)
+
+        [JsonConstructor]
+        public Credentials(string _username, string _password)
         {
-            // This constructor is for use with deserializers
-            this._username = serializedData[nameof(this._username)];
-            this._password = serializedData[nameof(this._password)];
+            this._username = _username;
+            this._password = _password;
         }
+
+        //public Credentials(Dictionary<string,string> serializedData)
+        //{
+        //    // This constructor is for use with deserializers
+        //    this._username = serializedData[nameof(this._username)];
+        //    this._password = serializedData[nameof(this._password)];
+        //}
         public string[] GetCreds()
         {
             return [_username, SymmetricEncryption.Decrypt(_password, SymmetricEncryption.master)];

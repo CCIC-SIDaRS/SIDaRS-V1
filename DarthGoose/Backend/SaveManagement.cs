@@ -33,13 +33,35 @@ namespace Backend.SaveManager
             }
 
             saveDict["NetworkDevices"] = serializedNetDevices;
-            saveDict["EndpointDevices"] = serializedEndpointDevices;
+            saveDict["EndpointDevices"] = serializedEndpointDevices;   
             // Debug.WriteLine(JsonSerializer.Serialize(saveDict));
             File.WriteAllText(saveFile, JsonSerializer.Serialize(saveDict));
         }
         public static void Load(string saveFile)
         {
-            
+            Dictionary<string, object> saveDict = JsonSerializer.Deserialize<Dictionary<string, object>>(File.ReadAllText(saveFile));
+
+            FrontendManager.masterCredentials = JsonSerializer.Deserialize<Credentials>(saveDict["MasterCredentials"].ToString());
+
+            foreach (string device in JsonSerializer.Deserialize<List<string>>(saveDict["NetworkDevices"].ToString()))
+            {
+                UINetDevice tempDevice = JsonSerializer.Deserialize<UINetDevice>(device);
+                FrontendManager.devices[tempDevice.uid] = tempDevice;
+            }
+
+            foreach(string device in JsonSerializer.Deserialize<List<string>>(saveDict["EndpointDevices"].ToString()))
+            {
+                EndpointDevice tempDevice = JsonSerializer.Deserialize<EndpointDevice>(device);
+                FrontendManager.devices[tempDevice.uid] = tempDevice;
+            }
+
+            foreach(string device in FrontendManager.devices.Keys)
+            {
+                foreach (string connection in FrontendManager.devices[device].connections)
+                {
+                    FrontendManager.drawConnection(new List<Label>() { FrontendManager.devices[device].image, FrontendManager.devices[connection].image }, new List<string>() { device, connection });
+                }
+            }
         }
     }
 }
