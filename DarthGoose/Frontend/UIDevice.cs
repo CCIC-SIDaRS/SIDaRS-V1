@@ -5,25 +5,208 @@ using System.Windows;
 using System.Windows.Controls;
 using Backend.NetworkDeviceManager;
 using Backend.CredentialManager;
+using System.Reflection;
 using System.Diagnostics;
 using System.Xml.Linq;
+using System.Windows.Threading;
+using System.Printing;
+using System.Text.Json;
+using System.Text.RegularExpressions;
+using System.Runtime.CompilerServices;
+using System.Text.Json.Serialization;
+using System.Runtime.Serialization;
+using System.Net;
 
 namespace DarthGoose.Frontend
 {
     class UIDevice
     {
-        private static int gridCubeWidth = 10;
-        private static int gridCubeHeight = 10;
-        
-        public Image image { get; set; }
-        public List<Image> connections { get; set; }
+        private static int gridCubeWidth = 50;
+        private static int gridCubeHeight = 50;
+
+        [JsonIgnore]
+        public Label image { get; set; }
+        public List<string> connections { get; set; }
+        [JsonIgnore]
         public List<Line> cables { get; set; }
+        [JsonIgnore]
         public DeviceDetails deviceMenu { get; set; }
         public string uid { get; private set; }
 
-        private bool _shiftDown { get; set; }
+        protected string currentCommand = "";
+        protected bool commandComplete = false;
+
         private bool _drag;
-        private Point _startPoint;
+        [JsonInclude]
+        private int[] _currentLocation;
+        [JsonInclude]
+        private string _deviceType;
+
+        public UIDevice(Label image, List<string> connections, List<Line> cables, string uid, string deviceType)
+        {
+            this.image = image;
+            this._currentLocation = [(int)Canvas.GetLeft(image), (int)Canvas.GetTop(image)];
+            this.connections = connections;
+            this.cables = cables;
+            this.deviceMenu = new DeviceDetails();
+            this.uid = uid;
+            this._deviceType = deviceType;
+            this.image.MouseDown += DeviceMouseDown;
+            this.image.MouseMove += DeviceMouseMove;
+            this.image.MouseUp += DeviceMouseUp;
+
+            FrontendManager.networkMap.MainCanvas.MouseMove += DeviceMouseMove;
+            FrontendManager.networkMap.MainCanvas.MouseUp += DeviceMouseUp;
+
+            deviceMenu.Closing += new CancelEventHandler(OnClosing);
+            deviceMenu.DeleteDevice.Click += new RoutedEventHandler(OnDeleteDevice);
+        }
+
+        public UIDevice(string deviceType, int[] location, List<string> connections, string uid)
+        {
+            this.connections = connections;
+            TextBlock caption;
+            Label label;
+            string tempUid;
+            FrontendManager.CreateLabel(deviceType, location, out label, out caption, out tempUid);
+            this.uid = uid;
+            this.image = label;
+            this.cables = new List<Line>();
+            this._currentLocation = location;
+            this._deviceType = deviceType;
+
+            caption = null;
+            label = null;
+
+            this.deviceMenu = new DeviceDetails();
+            this.image.MouseDown += DeviceMouseDown;
+            this.image.MouseMove += DeviceMouseMove;
+            this.image.MouseUp += DeviceMouseUp;
+
+            FrontendManager.networkMap.MainCanvas.MouseMove += DeviceMouseMove;
+            FrontendManager.networkMap.MainCanvas.MouseUp += DeviceMouseUp;
+
+            deviceMenu.Closing += new CancelEventHandler(OnClosing);
+            deviceMenu.DeleteDevice.Click += new RoutedEventHandler(OnDeleteDevice);
+        }
+
+        private void DeviceMouseDown(object sender, MouseButtonEventArgs e)
+        {
+            if (FrontendManager.connecting)
+            {
+                FrontendManager.AddToPendingConnections(this.image);
+            }
+            else if (e.ClickCount < 2)
+            {
+                _drag = true;
+            }
+            else
+            {
+                this.deviceMenu.Show();
+            }
+        }
+
+        private void DeviceMouseMove(object sender, MouseEventArgs e)
+        {
+            if (_drag)
+            {
+                Label draggedRectangle = this.image;
+                Point newPoint = Mouse.GetPosition(FrontendManager.networkMap.MainCanvas);
+
+                double left = Math.Round((newPoint.X - (draggedRectangle.Width / 2)) / gridCubeWidth)  * gridCubeWidth;
+                double top = Math.Round((newPoint.Y - (draggedRectangle.Height / 2)) / gridCubeHeight) * gridCubeHeight;
+                if (left + draggedRectangle.Width < FrontendManager.windowSize.X && left > 0 && top + draggedRectangle.Height < FrontendManager.windowSize.Y && top >= -FrontendManager.networkMap.TopMenu.Height)
+                {
+                    //Debug.WriteLine(newPoint.X);
+                    Canvas.SetLeft(draggedRectangle, left);
+                    Canvas.SetTop(draggedRectangle, top);
+                    _currentLocation = [(int)left, (int)top];
+                    for (int i = 0; i < this.connections.Count; i++)
+                    {
+                        FrontendManager.drawConnection(new List<Label>() { draggedRectangle, FrontendManager.devices[this.connections[i]].image }, new List<string>() { this.uid, this.connections[i] }, this.cables[i]);
+                    }
+                }
+            }
+        }
+
+        private void DeviceMouseUp(object sender, MouseButtonEventArgs e)
+        {
+            //Debug.WriteLine("Done");
+            _drag = false;
+        }
+
+        private void OnClosing(object s, CancelEventArgs e)
+        {
+            Window sender = (Window)s;
+            e.Cancel = true;
+            sender.Hide();
+        }
+
+        private void OnDeleteDevice(object sender, RoutedEventArgs e)
+        {
+            if (MessageBox.Show("Are you sure you want to delete this device\nThis action will delete all data associated with this device", "SIDaRS", MessageBoxButton.YesNo) == MessageBoxResult.Yes)
+            {
+                DestroyDevice();
+            }
+        }
+
+        public void DestroyDevice()
+        {
+            FrontendManager.devices.Remove(uid);
+            FrontendManager.networkMap.MainCanvas.Children.Remove(image);
+            deviceMenu.Close();
+        }
+    }
+    class EndpointDevice : UIDevice
+    {
+        public string v4Address { get; private set; }
+        public string name { get; private set; }
+
+
+        public EndpointDevice(Label image, List<string> connections, List<Line> cables, string v4Address, string name, string deviceType, string uid = null) : base(image, connections, cables, uid, deviceType)
+        {
+            this.v4Address = v4Address;
+            this.name = name;
+            deviceMenu.Name.Text = name;
+            deviceMenu.V4Address.Text = v4Address;
+            deviceMenu.Name.TextChanged += OnNameChange;
+            deviceMenu.V4Address.TextChanged += OnAddressChanged;
+            deviceMenu.SshTerminal.Visibility = Visibility.Hidden;
+        }
+
+        [JsonConstructor]
+        public EndpointDevice(string _deviceType, int[] _currentLocation, List<string> connections, string v4Address, string uid, string name) : base(_deviceType, _currentLocation, connections, uid)
+        {
+            this.v4Address = v4Address;
+            this.name = name;
+            deviceMenu.Name.Text = name;
+            deviceMenu.V4Address.Text = v4Address;
+            deviceMenu.Name.TextChanged += OnNameChange;
+            deviceMenu.V4Address.TextChanged += OnAddressChanged;
+            deviceMenu.SshTerminal.Visibility = Visibility.Hidden;
+        }
+
+        private void OnNameChange(object sender, TextChangedEventArgs e)
+        {
+            name = deviceMenu.Name.Text;
+            image.Content = name + "\n" + v4Address;
+        }
+
+        private void OnAddressChanged(object sender, TextChangedEventArgs e)
+        {
+            v4Address = deviceMenu.V4Address.Text;
+            image.Content = name + "\n" + v4Address;
+        }
+    }
+
+    class UINetDevice : UIDevice
+    {
+        [JsonInclude]
+        private NetworkDevice _networkDevice { get; set; }
+        // private readonly Task _terminalTask = new Task(RunTerminal);
+
+        private bool _shiftDown { get; set; }
+        private string lastCommand = string.Empty;
 
         private static readonly Dictionary<Key, string> _keyboard = new Dictionary<Key, string>
         {
@@ -148,75 +331,72 @@ namespace DarthGoose.Frontend
             {Key.Space, " "},
         };
 
-        public UIDevice(Image image, List<Image> connections, List<Line> cables)
+        public UINetDevice(Label image, List<string> connections, List<Line> cables, string name, string v4Address, Credentials credentials, string assetsDir, string deviceType, string uid = null) : base(image, connections, cables, uid, deviceType)
         {
-            this.image = image;
-            this.connections = connections;
-            this.cables = cables;
-            this.deviceMenu = new DeviceDetails();
-            this.uid = DateTime.Now.ToString() + "-" + this.GetHashCode().ToString();
+            _networkDevice = new NetworkDevice(name, v4Address, credentials, assetsDir, ReadCallback);
+            deviceMenu.Name.Text = name;
+            deviceMenu.Name.TextChanged += OnNameChange;
+            deviceMenu.V4Address.Text = v4Address;
+            deviceMenu.V4Address.TextChanged += OnAddressChange;
+            deviceMenu.DeviceDetailsTabs.SelectionChanged += OnTabChanged;
 
-            this.image.MouseDown += DeviceMouseDown;
-            this.image.MouseMove += DeviceMouseMove;
-            this.image.MouseUp += DeviceMouseUp;
-            FrontendManager.networkMap.MainCanvas.MouseUp += DeviceMouseUp;
 
-            deviceMenu.Closing += new CancelEventHandler(OnClosing);
             deviceMenu.KeyDown += KeyDown;
             deviceMenu.KeyUp += KeyUp;
         }
 
-        private void DeviceMouseDown(object sender, MouseButtonEventArgs e)
+        [JsonConstructor]
+        public UINetDevice(string _deviceType, int[] _currentLocation, List<string> connections, string uid, NetworkDevice _networkDevice) : base(_deviceType, _currentLocation, connections, uid)
         {
-            if (FrontendManager.connecting)
-            {
-                FrontendManager.AddToPendingConnections(this.image);
-            }
-            else if (e.ClickCount < 2)
-            {
-                _drag = true;
-                _startPoint = Mouse.GetPosition(FrontendManager.networkMap.MainCanvas);
-            }
-            else
-            {
-                this.deviceMenu.Show();
-            }
+            this._networkDevice = _networkDevice;
+            deviceMenu.Name.Text = _networkDevice.name;
+            deviceMenu.Name.TextChanged += OnNameChange;
+            deviceMenu.V4Address.Text = _networkDevice.v4address;
+            deviceMenu.V4Address.TextChanged += OnAddressChange;
+            deviceMenu.DeviceDetailsTabs.SelectionChanged += OnTabChanged;
+            deviceMenu.KeyDown += KeyDown;
+            deviceMenu.KeyUp += KeyUp;
+            _networkDevice.SetCallBack(ReadCallback);
         }
-
-        private void DeviceMouseMove(object sender, MouseEventArgs e)
+        // This should probably be changed so that there is a confirmation but that's Roman's problem :)
+        private void OnNameChange(object sender, TextChangedEventArgs e)
         {
-            if (_drag)
+            _networkDevice.ChangeName(deviceMenu.Name.Text);
+            image.Content = deviceMenu.Name.Text + "\n" + deviceMenu.V4Address.Text;
+        }
+        private void OnAddressChange(object sender, TextChangedEventArgs e)
+        {
+            _networkDevice.ChangeAddress(deviceMenu.V4Address.Text);
+            image.Content = deviceMenu.Name.Text + "\n" + deviceMenu.V4Address.Text;
+        }
+        private void OnTabChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (deviceMenu.DeviceDetailsTabs.SelectedIndex == 2)
             {
-                Image draggedRectangle = (Image)sender;
-                Point newPoint = Mouse.GetPosition(FrontendManager.networkMap.MainCanvas);
-
-                double left = Math.Round((Canvas.GetLeft(draggedRectangle) + (newPoint.X - _startPoint.X)) / gridCubeWidth)  * gridCubeWidth;
-                double top = Math.Round((Canvas.GetTop(draggedRectangle) + (newPoint.Y - _startPoint.Y)) / gridCubeHeight) * gridCubeHeight;
-                if (_drag /*left + draggedRectangle.Width < FrontendManager.windowSize.X && left > 0 && top + draggedRectangle.Height < FrontendManager.windowSize.Y && top >= -FrontendManager.networkMap.TopMenu.Height*/)
+                if (_networkDevice.terminal is null)
                 {
-                    //Debug.WriteLine(newPoint.X);
-                    Canvas.SetLeft(draggedRectangle, left);
-                    Canvas.SetTop(draggedRectangle, top);
-                    _startPoint = newPoint;
-                    for (int i = 0; i < this.connections.Count; i++)
-                    {
-                        FrontendManager.drawConnection(new List<Image>() { draggedRectangle, this.connections[i] }, this.cables[i]);
-                    }
+                    MessageBox.Show("Please wait for the connection to be completed before access the ssh terminal");
+                } else
+                {
+                    _networkDevice.terminal.Connect();
                 }
+            } else if (deviceMenu.DeviceDetailsTabs.SelectedIndex != 2 && _networkDevice.terminal is not null)
+            {
+                _networkDevice.terminal.Disconnect();
             }
         }
 
-        private void DeviceMouseUp(object sender, MouseButtonEventArgs e)
+        public void ReadCallback(string input)
         {
-            //Debug.WriteLine("Done");
-            _drag = false;
-        }
-
-        private void OnClosing(object s, CancelEventArgs e)
-        {
-            Window sender = (Window)s;
-            e.Cancel = true;
-            sender.Hide();
+            Application.Current.Dispatcher.Invoke(() => { 
+                Debug.WriteLine(input);
+                //if (lastCommand != "" && input.Contains(lastCommand))
+                //{
+                //    return;
+                //}
+                deviceMenu.TerminalTextBox.Text += input; 
+                deviceMenu.TerminalScroller.ScrollToBottom();
+            });
         }
 
         private void KeyDown(object sender, KeyEventArgs e)
@@ -241,14 +421,29 @@ namespace DarthGoose.Frontend
             if (foundKey)
             {
                 deviceMenu.TerminalTextBox.Text += key;
+                currentCommand += key;
             }
-            else if (e.Key == Key.Back && deviceMenu.TerminalTextBox.Text.Length > 0)
+            else if (e.Key == Key.Back && deviceMenu.TerminalTextBox.Text.Length > 0 && currentCommand.Length > 0)
             {
                 deviceMenu.TerminalTextBox.Text = deviceMenu.TerminalTextBox.Text.Substring(0, deviceMenu.TerminalTextBox.Text.Length - 1);
+                currentCommand = currentCommand.Substring(0, currentCommand.Length - 1);
             }
             else if (e.Key == Key.LeftShift || e.Key == Key.RightShift)
             {
                 _shiftDown = true;
+            }
+            else if (e.Key == Key.Return || e.Key == Key.Enter)
+            {
+                _networkDevice.terminal.SendCommand(currentCommand);
+                lastCommand = currentCommand;
+                currentCommand = string.Empty;
+            }
+            else if (e.Key == Key.Tab)
+            {
+                string completedCommand = TerminalManager.CiscoCommandCompletion(currentCommand.Split(" "));
+                deviceMenu.TerminalTextBox.Text = deviceMenu.TerminalTextBox.Text.Substring(0, deviceMenu.TerminalTextBox.Text.Length - currentCommand.Length);
+                currentCommand = completedCommand;
+                deviceMenu.TerminalTextBox.Text += completedCommand;
             }
         }
 
@@ -258,41 +453,6 @@ namespace DarthGoose.Frontend
             {
                 _shiftDown = false;
             }
-        }
-
-        protected void ReadCallback(string input)
-        {
-            deviceMenu.TerminalTextBox.Text += input;
-        }
-    }
-    class EndpointDevice : UIDevice
-    {
-        public string v4Address { get; private set; }
-        public EndpointDevice(Image image, List<Image> connections, List<Line> cables, string v4Address) : base(image, connections, cables)
-        {
-            this.v4Address = v4Address;
-        }
-    }
-
-    class UINetDevice : UIDevice
-    {
-        private NetworkDevice _networkDevice { get; set; } 
-        public UINetDevice(Image image, List<Image> connections, List<Line> cables, string name, string v4Address, Credentials credentials, string assetsDir) : base(image, connections, cables)
-        {
-            _networkDevice = new NetworkDevice(name, v4Address, credentials, assetsDir, base.ReadCallback);
-            deviceMenu.Name.Text = name;
-            deviceMenu.Name.TextChanged += OnNameChange;
-            deviceMenu.V4Address.Text = v4Address;
-            deviceMenu.V4Address.TextChanged += OnAddressChange;
-        }
-        // This should probably be changed so that there is a confirmation but that's Roman's problem :)
-        private void OnNameChange(object sender, TextChangedEventArgs e)
-        {
-            _networkDevice.ChangeName(deviceMenu.Name.Text);
-        }
-        private void OnAddressChange(object sender, TextChangedEventArgs e)
-        {
-            _networkDevice.ChangeAddress(deviceMenu.V4Address.Text);
         }
     }
 }

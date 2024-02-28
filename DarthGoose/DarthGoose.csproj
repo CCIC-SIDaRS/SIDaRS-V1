@@ -1,143 +1,39 @@
-﻿<Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
   <PropertyGroup>
-    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">x86</Platform>
-    <ProjectGuid>{729F6AE3-4B85-4439-93DF-E36E600E0F43}</ProjectGuid>
-    <OutputType>Exe</OutputType>
-    <NoStandardLibraries>false</NoStandardLibraries>
-    <AssemblyName>ConsoleApplication</AssemblyName>
-    <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
-    <TargetFrameworkProfile>
-    </TargetFrameworkProfile>
-    <FileAlignment>512</FileAlignment>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UseWPF>true</UseWPF>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' ">
-    <DebugSymbols>true</DebugSymbols>
-    <DebugType>full</DebugType>
-    <Optimize>false</Optimize>
-    <OutputPath>bin\Debug\</OutputPath>
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-    <PlatformTarget>x86</PlatformTarget>
-    <Prefer32Bit>false</Prefer32Bit>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x86' ">
-    <DebugType>pdbonly</DebugType>
-    <Optimize>true</Optimize>
-    <OutputPath>bin\Release\</OutputPath>
-    <DefineConstants>TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-    <PlatformTarget>x86</PlatformTarget>
-    <Prefer32Bit>false</Prefer32Bit>
-  </PropertyGroup>
-  <PropertyGroup>
-    <RootNamespace>DarthGoose</RootNamespace>
-  </PropertyGroup>
-  <ItemGroup>
-    <Reference Include="Microsoft.CSharp" />
-    <Reference Include="PresentationCore" />
-    <Reference Include="PresentationFramework" />
-    <Reference Include="System" />
-    <Reference Include="System.Core" />
-    <Reference Include="System.Data" />
-    <Reference Include="System.Data.DataSetExtensions" />
-    <Reference Include="System.Xml" />
-    <Reference Include="System.Xml.Linq" />
-    <Reference Include="WindowsBase" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include=".vs\DarthGoose.csproj.dtbcache.json" />
-    <None Include=".vs\DarthGoose\FileContentIndex\07d1f272-bb9e-4d17-94a3-ec66600e7a9b.vsidx" />
-    <None Include=".vs\DarthGoose\FileContentIndex\9a362233-53c0-4508-a625-6521d687eab2.vsidx" />
-    <None Include=".vs\DarthGoose\v17\.suo" />
-    <None Include=".vs\DarthGoose\v17\DocumentLayout.json" />
-    <None Include="app.config" />
-    <None Include="Backend\assets\CiscoCommandTree.json" />
-    <None Include="Backend\assets\SaveFile.sidars" />
-    <None Include="Backend\obj\Debug\net8.0\PhatWalrus.AssemblyInfoInputs.cache" />
-    <None Include="Backend\obj\Debug\net8.0\PhatWalrus.GeneratedMSBuildEditorConfig.editorconfig" />
-    <None Include="Backend\obj\Release\net8.0\PhatWalrus.AssemblyInfoInputs.cache" />
-    <None Include="Backend\obj\Release\net8.0\PhatWalrus.GeneratedMSBuildEditorConfig.editorconfig" />
-    <None Include="Backend\PhatWalrus.csproj" />
-  </ItemGroup>
-  <ItemGroup>
-    <Page Include="App.xaml">
-      <Generator>MSBuild:Compile</Generator>
-      <SubType>Designer</SubType>
-    </Page>
-    <Page Include="UIObjects\DeviceDetails.xaml">
-      <Generator>MSBuild:Compile</Generator>
-      <SubType>Designer</SubType>
-    </Page>
-    <Page Include="UIObjects\DeviceSetup.xaml">
-      <Generator>MSBuild:Compile</Generator>
-      <SubType>Designer</SubType>
-    </Page>
-    <Page Include="UIObjects\LoginPage.xaml">
-      <Generator>MSBuild:Compile</Generator>
-      <SubType>Designer</SubType>
-    </Page>
-    <Page Include="UIObjects\MainWindow.xaml">
-      <Generator>MSBuild:Compile</Generator>
-      <SubType>Designer</SubType>
-    </Page>
-    <Page Include="UIObjects\NetworkMap.xaml">
-      <Generator>MSBuild:Compile</Generator>
-      <SubType>Designer</SubType>
-    </Page>
-  </ItemGroup>
-  <ItemGroup>
-    <Compile Include="AssemblyInfo.cs" />
-    <Compile Include="Backend\CredentialManagement.cs" />
-    <Compile Include="Backend\NetworkDevice.cs" />
-    <Compile Include="Backend\obj\Debug\net8.0\.NETCoreApp,Version=v8.0.AssemblyAttributes.cs" />
-    <Compile Include="Backend\obj\Debug\net8.0\PhatWalrus.AssemblyInfo.cs" />
-    <Compile Include="Backend\obj\Debug\net8.0\PhatWalrus.GlobalUsings.g.cs" />
-    <Compile Include="Backend\obj\Release\net8.0\.NETCoreApp,Version=v8.0.AssemblyAttributes.cs" />
-    <Compile Include="Backend\obj\Release\net8.0\PhatWalrus.AssemblyInfo.cs" />
-    <Compile Include="Backend\obj\Release\net8.0\PhatWalrus.GlobalUsings.g.cs" />
-    <Compile Include="Backend\SaveManagement.cs" />
-    <Compile Include="Backend\SSHBackend.cs" />
-    <Compile Include="Backend\TerminalManagement.cs" />
-    <Compile Include="Frontend\Main.cs" />
-    <Compile Include="Frontend\UIDevice.cs" />
-    <Compile Include="UIObjects\DeviceDetails.xaml.cs">
-      <DependentUpon>DeviceDetails.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="UIObjects\DeviceSetup.xaml.cs">
-      <DependentUpon>DeviceSetup.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="UIObjects\LoginPage.xaml.cs">
-      <DependentUpon>LoginPage.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="UIObjects\MainWindow.xaml.cs">
-      <DependentUpon>MainWindow.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="UIObjects\NetworkMap.xaml.cs">
-      <DependentUpon>NetworkMap.xaml</DependentUpon>
-    </Compile>
-  </ItemGroup>
-  <ItemGroup>
-    <Content Include="Images\Endpoint.png" />
-    <Content Include="Images\Firewall.png" />
-    <Content Include="Images\Hub.png" />
-    <Content Include="Images\Router.png" />
-    <Content Include="Images\Server.png" />
-    <Content Include="Images\SIDaRS.png" />
-    <Content Include="Images\Switch.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Backend\bin\Debug\net8.0\" />
-    <Folder Include="Backend\bin\Release\net8.0\" />
-    <Folder Include="Backend\obj\Debug\net8.0\refint\" />
-    <Folder Include="Backend\obj\Debug\net8.0\ref\" />
-    <Folder Include="Backend\obj\Release\net8.0\refint\" />
-    <Folder Include="Backend\obj\Release\net8.0\ref\" />
-  </ItemGroup>
-  <Import Project="$(MSBuildToolsPath)\Microsoft.CSHARP.Targets" />
-  <ProjectExtensions>
-    <VisualStudio AllowExistingFolder="true" />
-  </ProjectExtensions>
+
+	<ItemGroup>
+		<Content Include="Images\**">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</Content>
+	</ItemGroup>
+
+	<ItemGroup>
+		<Content Include="Backend\Assets\**">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</Content>
+	</ItemGroup>
+
+	<ItemGroup>
+	  <Content Remove="Images\DALLE_2024-01-19_13.30.14_-_Design_a_company_logo_inspired_by_the_whimsical_scene_of_a_goose_riding_on_the_back_of_a_walrus_charging_into_battle_with_a_knife._The_logo_should_be.png" />
+	  <Content Remove="Images\SIDaRS" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <None Remove="Images\DALLE_2024-01-19_13.30.14_-_Design_a_company_logo_inspired_by_the_whimsical_scene_of_a_goose_riding_on_the_back_of_a_walrus_charging_into_battle_with_a_knife._The_logo_should_be.png" />
+	  <None Remove="Images\SIDaRS" />
+	  <None Remove="NewFile1.txt" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <PackageReference Include="SSH.NET" Version="2023.0.1" />
+	  <PackageReference Include="System.Management" Version="8.0.0" />
+	</ItemGroup>
+
 </Project>

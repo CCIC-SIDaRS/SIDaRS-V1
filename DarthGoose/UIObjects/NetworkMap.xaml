@@ -7,19 +7,19 @@
       mc:Ignorable="d" 
       d:DesignHeight="450" d:DesignWidth="800"
       Title="NetworkMap">
-    <Grid Margin="0,0,0,0" Background="#FF0E0D0D" Name="NetworkGrid">
+    <Grid Margin="0,0,0,0" Background="Black" Name="NetworkGrid">
         <DockPanel>
             <Menu x:Name="TopMenu" Height="19" DockPanel.Dock="Top" VerticalAlignment="Top">
                 <MenuItem Header="File">
-                    <MenuItem Header="Save"/>
-                    <MenuItem Header="Load"/>
+                    <MenuItem Header="Save" x:Name="Save"/>
+                    <MenuItem Header="Load" x:Name="Load"/>
                 </MenuItem>
                 <MenuItem Header="Insert">
                     <MenuItem Header="Router" x:Name="InsertRouter"/>
                     <MenuItem Header="Firewall" x:Name="InsertFirewall"/>
                     <MenuItem Header="Switch" x:Name="InsertSwitch"/>
                     <MenuItem Header="Server" x:Name="InsertServer"/>
-                    <MenuItem Header="Hub" x:Name="InsertHub"/>
+                    <MenuItem Header="Unmanaged Switch" x:Name="InsertUnmanagedSwitch"/>
                     <MenuItem Header="End Point" x:Name="InsertEndPoint"/>
                     <MenuItem Header="Connection" x:Name="InsertConnection"/>
                 </MenuItem>
@@ -30,17 +30,19 @@
                 </MenuItem>
             </Menu>
         </DockPanel>
-        <Border x:Name="DragBorder" BorderBrush="White" BorderThickness="3" Margin="0,19,0,0">
+        <TextBlock x:Name="InfoText" HorizontalAlignment="Left" VerticalAlignment="Bottom" FontSize="12" Margin="3,0" Panel.ZIndex="2"/>
+        <Button x:Name="CancelConnection" Content="Cancel" Width="100" Height="40" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="10,20" Panel.ZIndex="2" FontSize="12" Visibility="Hidden"/>
+        <Border x:Name="DragBorder" BorderBrush="White" BorderThickness="3,3,3,15" Margin="0,19,0,0" Panel.ZIndex="1">
             <Canvas x:Name="MainCanvas" Panel.ZIndex="1">
-                    <Canvas.Background>
-                        <VisualBrush TileMode="Tile" Viewport="0,0,16,16" ViewportUnits="Absolute" Viewbox="0,0,16,16" ViewboxUnits="Absolute">
-                            <VisualBrush.Visual>
-                                <Ellipse Fill="White" Width="2" Height="2"/>
-                            </VisualBrush.Visual>
-                        </VisualBrush>
-                    </Canvas.Background>
-                </Canvas>
+                <Canvas.Background>
+                    <VisualBrush TileMode="Tile" Viewport="0,0,50,50" ViewportUnits="Absolute" Viewbox="0,0,50,50" ViewboxUnits="Absolute">
+                        <VisualBrush.Visual>
+                            <Ellipse Fill="White" Width="2" Height="2"/>
+                        </VisualBrush.Visual>
+                    </VisualBrush>
+                </Canvas.Background>
+            </Canvas>
         </Border>
-        <Canvas x:Name="ConnectionCanvas"/>
+        <Canvas x:Name="ConnectionCanvas" Panel.ZIndex="0"/>
     </Grid>
 </Page>

@@ -2,17 +2,20 @@
 using System.IO;
 using Backend.CredentialManager;
 using Backend.NetworkDeviceManager;
+using System.Diagnostics;
+using System.Security;
 
 namespace SSHBackend
 {
     class SSHManager
     {
         public ManagementProtocol sshType { get; set; }
+        public bool _connected { get; private set; }
         private SshClient _client { get; set; }
         private ShellStream? _stream { get; set; }
         private TerminalManager.ReadCallback _readCallback { get; set; }
         private Thread? _readThread { get; set; }
-        private bool _connected { get; set; }
+        private TerminalBuffer _buff { get; set; }
 
         // Can send a command and recieve a response to the command
         // returns a string with the response to the command -- either the error or the result
@@ -21,23 +24,12 @@ namespace SSHBackend
             this._readCallback = readCallback;
             this.sshType = ManagementProtocol.SSH;
             _connected = false;
-
+            // Debug.WriteLine(credentials.GetCreds()[1]);
             _client = new SshClient(hostaddress, credentials.GetCreds()[0], credentials.GetCreds()[1]);
-            Console.WriteLine(hostaddress);
+            this._buff = new TerminalBuffer(readCallback);
+            // Console.WriteLine(hostaddress);
         }
-        private void ReadThreadMethod()
-        {
-            StreamReader reader = new StreamReader(_stream);
-            while (_connected)
-            {
-                string output = ReadStream(reader);
-                if (output != null && output != "" && output != "\n")
-                {
-                    _readCallback(output);
-                }
-                Thread.Sleep(500);
-            }
-        }
+        
         public void Connect()
         {
             try
@@ -59,6 +51,17 @@ namespace SSHBackend
                 throw new Exception(ex.ToString());
             }
 
+        }
+
+        private void ReadThreadMethod()
+        {
+            StreamReader reader = new StreamReader(_stream);
+            while (_connected)
+            {
+                ReadStream(reader);
+                _buff.Flush();
+                Thread.Sleep(500);
+            }
         }
 
         public void CreateShellStream()
@@ -93,7 +96,7 @@ namespace SSHBackend
         {
             try
             {
-                if (sshType == ManagementProtocol.SSHNoExe)
+                if (sshType == ManagementProtocol.SSHNoExe && _connected)
                 {
                     _connected = false;
                 }
@@ -109,22 +112,46 @@ namespace SSHBackend
         private static void WriteStream(string cmd, StreamWriter writer, ShellStream stream)
         {
             writer.WriteLine(cmd);
-            while (stream.Length == 0)
-            {
-                Thread.Sleep(500);
-            }
         }
 
-        private static string ReadStream(StreamReader reader)
+        private void ReadStream(StreamReader reader)
         {
-            string result = "";
             string line = "";
             while (line != null)
             {
                 line = reader.ReadLine();
-                result += line + "\n";
+                //Debug.WriteLine(line);
+                _buff.Push(line + "\n");
             }
-            return result;
+        }
+    }
+
+    class TerminalBuffer
+    {
+        public string terminalMessage { get; private set; }
+        private TerminalManager.ReadCallback _readCallback { get; set; }
+
+        public TerminalBuffer(TerminalManager.ReadCallback readCallBack) 
+        {
+            this._readCallback = readCallBack;
+        }
+
+        public void Push(string line)
+        {
+            //Debug.WriteLine(terminalMessage);
+            terminalMessage += line;
+        }
+
+        public void Flush()
+        {
+            //Debug.WriteLine(terminalMessage);
+            if(terminalMessage is not null && terminalMessage is not "" && terminalMessage is not "\n")
+            {
+                string[] middleman = terminalMessage.Split("\n");
+                middleman = middleman.Distinct().ToArray();
+                _readCallback(string.Join("\n", middleman));
+                terminalMessage = string.Empty;
+            }
         }
     }
 }

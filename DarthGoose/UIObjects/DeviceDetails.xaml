@@ -5,25 +5,29 @@
       xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
       xmlns:local="clr-namespace:DarthGoose"
       mc:Ignorable="d" 
-      d:DesignHeight="450" d:DesignWidth="800"
-      Title="DeviceDetails">
+      Height="450" Width="800"
+      Title="DeviceDetails" Icon="..\Images\sidars.png">
 
     <Grid>
-        <TabControl>
+        <TabControl x:Name="DeviceDetailsTabs">
             <TabItem x:Name="Statistics" Header="Statistics">
                 <Grid x:Name="StatsGrid" Background="Black">
-                    <TextBox x:Name="Name" Width="200" Height="20" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="10,10"/>
-                    <TextBox x:Name="V4Address" Width="200" Height="20" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="10,50"/>
+                    
                 </Grid>
             </TabItem>
             <TabItem x:Name="Settings" Header="Settings">
                 <Grid Background="Black">
-                    
+                    <TextBox x:Name="Name" Width="200" Height="20" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="10,10"/>
+                    <TextBox x:Name="V4Address" Width="200" Height="20" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="10,50"/>
+                    <Button x:Name="DeleteDevice" Width="200" Height="20" HorizontalAlignment="Left" VerticalAlignment="Bottom" Content="Delete Device" Margin="10,10" Background="Red" Foreground="White"/>
                 </Grid>
             </TabItem>
             <TabItem x:Name="SshTerminal" Header="SSH Terminal">
                 <Grid Background="#FFE5E5E5">
-                    <TextBlock x:Name="TerminalTextBox" TextWrapping="Wrap" Background="Black" Foreground="GreenYellow"/>
+                    <ScrollViewer x:Name="TerminalScroller">
+                        <TextBlock x:Name="TerminalTextBox" TextWrapping="Wrap" Background="Black" Foreground="GreenYellow"/>
+                    </ScrollViewer>
+                    
                 </Grid>
             </TabItem>
         </TabControl>

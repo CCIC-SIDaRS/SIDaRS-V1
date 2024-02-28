@@ -8,10 +8,72 @@
       d:DesignHeight="450" d:DesignWidth="800"
       Title="Page1">
 
+    <Page.Resources>
+        <Style TargetType="Button">
+            <Setter Property="Background" Value="{StaticResource Color1}"/>
+            <Setter Property="Foreground" Value="{StaticResource TextColor}"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="FontFamily" Value="Arial Black"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Grid Width="{TemplateBinding Width}" Height="{TemplateBinding Height}" ClipToBounds="False" >
+                            <Rectangle x:Name="innerRectangle"    
+                                HorizontalAlignment="Stretch"    
+                                VerticalAlignment="Stretch" Stroke="Transparent"    
+                                StrokeThickness="20"    
+                                Fill="{TemplateBinding Background}"    
+                                RadiusX="10" RadiusY="10"   />
+                            <DockPanel Name="myContentPresenterDockPanel">
+                                <ContentPresenter x:Name="myContentPresenter" HorizontalAlignment="Center" VerticalAlignment="Center"   
+                                Content="{TemplateBinding  Content}" />
+                            </DockPanel>
+                        </Grid>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style TargetType="TextBox">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Foreground" Value="{StaticResource TextColor}"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="FontFamily" Value="Arial Black"/>
+            <Setter Property="CaretBrush" Value="{StaticResource TextColor}"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="TextBox">
+                        <Border CornerRadius="10" BorderThickness="3" BorderBrush="{StaticResource Highlight}">
+                            <ScrollViewer Margin="5,0" x:Name="PART_ContentHost" HorizontalAlignment="Left" VerticalAlignment="Center"/>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style TargetType="PasswordBox">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Foreground" Value="{StaticResource TextColor}"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="FontFamily" Value="Arial Black"/>
+            <Setter Property="CaretBrush" Value="{StaticResource TextColor}"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="PasswordBox">
+                        <Border CornerRadius="10" BorderThickness="3" BorderBrush="{StaticResource Highlight}">
+                            <ScrollViewer x:Name="PART_ContentHost" VerticalAlignment="Center" Margin="5,0"/>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Page.Resources>
+
     <Grid>
         <PasswordBox x:Name="LoginPassword" HorizontalAlignment="Center" Margin="0,276,0,0" VerticalAlignment="Top" Width="308" Height="35" />
         <TextBox x:Name="LoginUsername" HorizontalAlignment="Center" Margin="0,217,0,0" TextWrapping="Wrap" Text="User Name" VerticalAlignment="Top" Width="308" Height="35" />
-        <TextBlock HorizontalAlignment="Center" Margin="0,52,0,0" TextWrapping="Wrap" Text="Login" VerticalAlignment="Top" FontSize="100" Foreground="White"/>
-        <Button x:Name="LoginButton" Content="GO" HorizontalAlignment="Center" Margin="0,337,0,0" VerticalAlignment="Top" RenderTransformOrigin="0.145,-0.178" Width="100" Height="25"/>
+        <TextBlock x:Name="LoginTitle" HorizontalAlignment="Center" Margin="0,52,0,0" TextWrapping="NoWrap" Text="Welcome" VerticalAlignment="Top" FontSize="100" Foreground="White" FontWeight="Bold" FontFamily="Arial Black"/>
+        <Button x:Name="LoginButton" Content="Sign In" HorizontalAlignment="Center" Margin="0,337,0,0" VerticalAlignment="Top" RenderTransformOrigin="0.145,-0.178" Width="150" Height="55"/>
+        <Button x:Name="CreateAccountButton" Content="Create Account" HorizontalAlignment="Center" Margin="0,392,0,0" VerticalAlignment="Top" RenderTransformOrigin="-0.448,0.44" Width="150" Height="55"/>
     </Grid>
 </Page>

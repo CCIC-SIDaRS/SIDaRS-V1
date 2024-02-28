@@ -1,12 +1,17 @@
-﻿using System.Text.Json;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Net;
+using System.Text;
 using System.IO;
+using System.Text.Json;
+using System.Threading.Tasks;
 using Backend.CredentialManager;
 using SSHBackend;
-using System.Diagnostics;
 
 namespace Backend.NetworkDeviceManager
 {
-    enum ManagementProtocol 
+    enum ManagementProtocol
     {
         SSH = 0,
         SSHNoExe = 1,
@@ -16,51 +21,55 @@ namespace Backend.NetworkDeviceManager
     class TerminalManager
     {
         public delegate void ReadCallback(string output);
-        private string _assetsDir { get; set; }
-        private Dictionary<string, object> _catalystCommands { get; set; }
-        private string _v4address { get; set; }
-        private ManagementProtocol _protocol { get; set; }
-        private Credentials _credentials { get; set; }
-        private SSHManager? _sshManager { get; set; }
-        private ReadCallback _readCallback { get; set; }
+        private string assetsDir { get; set; }
+        private static Dictionary<string, object> catalystCommands { get; set; }
+        private string v4address { get; set; }
+        private ManagementProtocol protocol { get; set; }
+        private Credentials credentials { get; set; }
+        private SSHManager? sshManager { get; set; }
+        private ReadCallback readCallback { get; set; }
 
-        public TerminalManager(string assetsDir, string v4address, ManagementProtocol protocol, Credentials credentials, ReadCallback readCallback) 
+        private bool connectionEstablished { get; set; }
+
+        public TerminalManager(string assetsDir, string v4address, ManagementProtocol protocol, Credentials credentials, ReadCallback readCallback)
         {
-            this._assetsDir = assetsDir;
-            Debug.WriteLine(assetsDir);
-            this._catalystCommands = JsonSerializer.Deserialize<Dictionary<string, object>>(File.ReadAllText(this._assetsDir + @"\CiscoCommandTree.json")) ?? new Dictionary<string, object>();
-            this._v4address = v4address;
-            this._credentials = credentials;
-            this._readCallback = readCallback;
+            this.assetsDir = assetsDir;
+            catalystCommands = JsonSerializer.Deserialize<Dictionary<string, object>>(File.ReadAllText(this.assetsDir + @"\CiscoCommandTree.json")) ?? new Dictionary<string, object>();
+            this.v4address = v4address;
+            this.credentials = credentials;
+            this.readCallback = readCallback;
 
             if (protocol == ManagementProtocol.SSH)
             {
-                _sshManager = new SSHManager(this._v4address, this._credentials, this._readCallback);
-                _sshManager.Connect();
-                var task = new Task(() => { _sshManager.ExecuteExecChannel("show version"); });
+                sshManager = new SSHManager(this.v4address, this.credentials, this.readCallback);
+                sshManager.Connect();
+                var task = new Task(() => { sshManager.ExecuteExecChannel("ls"); });
 
                 readCallback("Attempting SSH (Exec)...");
 
-                if (task.Wait(TimeSpan.FromSeconds(5)))
+                task.Wait(TimeSpan.FromSeconds(5));
+
+                if (connectionEstablished)
                 {
-                    this._protocol = ManagementProtocol.SSH;
-                } else
+                    this.protocol = ManagementProtocol.SSH;
+                }
+                else
                 {
                     readCallback("SSH (Exec) unavailable\nAttempting SSHNoExec...");
-                    this._protocol = ManagementProtocol.SSHNoExe;
-                    _sshManager.sshType = ManagementProtocol.SSHNoExe;
+                    this.protocol = ManagementProtocol.SSHNoExe;
+                    sshManager.sshType = ManagementProtocol.SSHNoExe;
                 }
-                _sshManager.Disconnect();
+                sshManager.Disconnect();
             }
         }
 
-        public string[] CiscoCommandCompletion(string[] currentCommand)
+        public static string CiscoCommandCompletion(string[] currentCommand)
         {
             IEnumerable<string> matchingValues;
 
             if (currentCommand.Length > 1)
             {
-                Dictionary<string, object> currentCommandDictionary = _catalystCommands;
+                Dictionary<string, object> currentCommandDictionary = catalystCommands;
                 try
                 {
                     for (int i = 0; i <= currentCommand.Length - 2; i++)
@@ -81,51 +90,65 @@ namespace Backend.NetworkDeviceManager
             }
             else
             {
-                matchingValues = _catalystCommands.Keys
+                matchingValues = catalystCommands.Keys
                                     .Where(x => x.StartsWith(currentCommand[0]));
             }
-
-            return matchingValues.ToArray();
+            matchingValues = from arrElement in matchingValues.Distinct()
+                             orderby arrElement.Length
+                             select arrElement;
+            string[] updatedCommand = currentCommand;
+            updatedCommand[currentCommand.Length - 1] = matchingValues.ToArray()[0];
+            return string.Join(" ", updatedCommand);
         }
 
         public void SendCommand(string command)
         {
-            if ((int) _protocol <= 1)
+            if ((int)protocol <= 1)
             {
-                if (_protocol == ManagementProtocol.SSH)
+                if (protocol == ManagementProtocol.SSH)
                 {
-                    _sshManager.ExecuteExecChannel(command);
-                }else if (_protocol == ManagementProtocol.SSHNoExe)
-                {
-                    _sshManager.ExecuteShellStream(command);
-                }else
-                {
-                    this._readCallback("Failed to send SSH command.");
+                    sshManager.ExecuteExecChannel(command);
                 }
-            } else
+                else if (protocol == ManagementProtocol.SSHNoExe)
+                {
+                    sshManager.ExecuteShellStream(command);
+                }
+                else
+                {
+                    this.readCallback("Failed to send SSH command.");
+                }
+            }
+            else
             {
                 throw new Exception("SSH MUST EXIST YOU FOOL");
             }
         }
         public void Connect()
         {
-            if ((int) _protocol <= 1)
+            if ((int)protocol <= 1)
             {
-                _sshManager.Connect();
-            }else
+                sshManager.Connect();
+            }
+            else
             {
                 throw new Exception("FU");
             }
         }
         public void Disconnect()
         {
-            if ((int) _protocol <= 1)
+            if ((int)protocol <= 1)
             {
-                _sshManager.Disconnect();
-            }else
+                sshManager.Disconnect();
+            }
+            else
             {
                 throw new Exception("FU");
             }
+        }
+
+        public void checkConnection(string output)
+        {
+            connectionEstablished = true;
         }
     }
 }

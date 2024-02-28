@@ -1,55 +1,67 @@
-﻿/*using System.IO;
+﻿using System.IO;
 using System.Text.Json;
+using System.Windows.Controls;
+using System.Windows.Media.Imaging;
+using System.Windows.Media;
+using System.Windows;
 using Backend.CredentialManager;
-using Backend.NetworkDeviceManager;
+using DarthGoose.Frontend;
+using System.Windows.Shapes;
+using System.IO.Packaging;
+using System.Diagnostics;
 
 
-namespace SaveManager
+namespace Backend.SaveManager
 {
-    // Need to deserialize the uids and find common connections
      static class SaveSystem
      {
-        public static void Save(string saveFile, NetworkDevice[] networkDevices, Credentials masterCredentials)
+        public static void Save(string saveFile, UINetDevice[] netDevices, EndpointDevice[] endpointDevices, Credentials masterCredentials)
         {
             
             Dictionary<string, object> saveDict = new();
-            saveDict["MasterCredentials"] = masterCredentials.Save();
+            saveDict["MasterCredentials"] = JsonSerializer.Serialize(masterCredentials);
 
             List<string> serializedNetDevices = new();
-            foreach (NetworkDevice netDevice in networkDevices)
+            foreach (UINetDevice netDevice in netDevices)
             {
-                serializedNetDevices.Add(netDevice.Save());
+                serializedNetDevices.Add(JsonSerializer.Serialize(netDevice));
+            }
+            List<string> serializedEndpointDevices = new();
+            foreach (EndpointDevice endpointDevice in endpointDevices)
+            {
+                serializedEndpointDevices.Add(JsonSerializer.Serialize(endpointDevice));
             }
 
             saveDict["NetworkDevices"] = serializedNetDevices;
-            Console.WriteLine(JsonSerializer.Serialize(saveDict));
+            saveDict["EndpointDevices"] = serializedEndpointDevices;   
+            // Debug.WriteLine(JsonSerializer.Serialize(saveDict));
             File.WriteAllText(saveFile, JsonSerializer.Serialize(saveDict));
         }
-        public static void Load(string saveFile, out NetworkDevice[] networkDevices, out Credentials masterCredentials)
+        public static void Load(string saveFile)
         {
-            string data = File.ReadAllText(saveFile);
-            Dictionary<string, string> dict = JsonSerializer.Deserialize<Dictionary<string, string>>(data);
-            masterCredentials = new Credentials (JsonSerializer.Deserialize<Dictionary<string,string>>(dict["MasterCredentials"]));
-            List<string> serializedDevices = JsonSerializer.Deserialize<List<string>>(dict["NetworkDevices"]); 
-            List<NetworkDevice> tempDevices = new();
-            foreach (string device in serializedDevices)
+            Dictionary<string, object> saveDict = JsonSerializer.Deserialize<Dictionary<string, object>>(File.ReadAllText(saveFile));
+
+            FrontendManager.masterCredentials = JsonSerializer.Deserialize<Credentials>(saveDict["MasterCredentials"].ToString());
+
+            foreach (string device in JsonSerializer.Deserialize<List<string>>(saveDict["NetworkDevices"].ToString()))
             {
-                tempDevices.Add(new NetworkDevice(JsonSerializer.Deserialize<Dictionary<string,object>>(device)));
+                UINetDevice tempDevice = JsonSerializer.Deserialize<UINetDevice>(device);
+                FrontendManager.devices[tempDevice.uid] = tempDevice;
             }
-            for (int i = 0; i < tempDevices.Count; i++)
+
+            foreach(string device in JsonSerializer.Deserialize<List<string>>(saveDict["EndpointDevices"].ToString()))
             {
-                List<string> uids = JsonSerializer.Deserialize<List<string>>(JsonSerializer.Deserialize<Dictionary<string, string>>(serializedDevices[i])["connections"]);
-                List<NetworkDevice> thisConnections = new();
-                foreach (NetworkDevice device in tempDevices)
+                EndpointDevice tempDevice = JsonSerializer.Deserialize<EndpointDevice>(device);
+                FrontendManager.devices[tempDevice.uid] = tempDevice;
+            }
+
+            foreach(string device in FrontendManager.devices.Keys)
+            {
+                foreach (string connection in FrontendManager.devices[device].connections)
                 {
-                    if (uids.Contains(device.name))
-                    {
-                        thisConnections.Add(device);
-                    }
+                    FrontendManager.drawConnection(new List<Label>() { FrontendManager.devices[device].image, FrontendManager.devices[connection].image }, new List<string>() { device, connection });
                 }
-                tempDevices[i].SetConnections(thisConnections);
             }
-            networkDevices = tempDevices.ToArray();
         }
-     }
-}*/
+    }
+}
