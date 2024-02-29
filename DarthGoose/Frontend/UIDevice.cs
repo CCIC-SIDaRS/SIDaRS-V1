@@ -35,6 +35,7 @@ namespace DarthGoose.Frontend
 
         protected string currentCommand = "";
         protected bool commandComplete = false;
+        protected TextBlock caption;
 
         private bool _drag;
         [JsonInclude]
@@ -71,12 +72,14 @@ namespace DarthGoose.Frontend
             FrontendManager.CreateLabel(deviceType, location, out label, out caption, out tempUid);
             this.uid = uid;
             this.image = label;
+            this.caption = caption;
             this.cables = new List<Line>();
             this._currentLocation = location;
             this._deviceType = deviceType;
 
             caption = null;
             label = null;
+            tempUid = null;
 
             this.deviceMenu = new DeviceDetails();
             this.image.MouseDown += DeviceMouseDown;
@@ -184,6 +187,7 @@ namespace DarthGoose.Frontend
             deviceMenu.Name.TextChanged += OnNameChange;
             deviceMenu.V4Address.TextChanged += OnAddressChanged;
             deviceMenu.SshTerminal.Visibility = Visibility.Hidden;
+            caption.Text = name + "\n" + v4Address;
         }
 
         private void OnNameChange(object sender, TextChangedEventArgs e)
@@ -206,7 +210,6 @@ namespace DarthGoose.Frontend
         // private readonly Task _terminalTask = new Task(RunTerminal);
 
         private bool _shiftDown { get; set; }
-        private string lastCommand = string.Empty;
 
         private static readonly Dictionary<Key, string> _keyboard = new Dictionary<Key, string>
         {
@@ -356,6 +359,7 @@ namespace DarthGoose.Frontend
             deviceMenu.DeviceDetailsTabs.SelectionChanged += OnTabChanged;
             deviceMenu.KeyDown += KeyDown;
             deviceMenu.KeyUp += KeyUp;
+            caption.Text = _networkDevice.name + "\n" + _networkDevice.v4address;
             _networkDevice.SetCallBack(ReadCallback);
         }
         // This should probably be changed so that there is a confirmation but that's Roman's problem :)
@@ -394,8 +398,16 @@ namespace DarthGoose.Frontend
                 //{
                 //    return;
                 //}
-                deviceMenu.TerminalTextBox.Text += input; 
-                deviceMenu.TerminalScroller.ScrollToBottom();
+                
+                if (deviceMenu.TerminalScroller.VerticalOffset == deviceMenu.TerminalScroller.ScrollableHeight)
+                {
+                    deviceMenu.TerminalTextBox.Text += input;
+                    deviceMenu.TerminalScroller.ScrollToBottom();
+                }
+                else
+                {
+                    deviceMenu.TerminalTextBox.Text += input;
+                }
             });
         }
 
@@ -434,9 +446,9 @@ namespace DarthGoose.Frontend
             }
             else if (e.Key == Key.Return || e.Key == Key.Enter)
             {
+                deviceMenu.TerminalTextBox.Text = deviceMenu.TerminalTextBox.Text.Substring(0, deviceMenu.TerminalTextBox.Text.Length - currentCommand.Length);
                 _networkDevice.terminal.SendCommand(currentCommand);
-                lastCommand = currentCommand;
-                currentCommand = string.Empty;
+                currentCommand = "";
             }
             else if (e.Key == Key.Tab)
             {

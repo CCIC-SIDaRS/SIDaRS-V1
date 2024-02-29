@@ -144,13 +144,12 @@ namespace SSHBackend
 
         public void Flush()
         {
-            //Debug.WriteLine(terminalMessage);
-            if(terminalMessage is not null && terminalMessage is not "" && terminalMessage is not "\n")
+            if(terminalMessage != null && terminalMessage != "" && terminalMessage != "\n")
             {
                 string[] middleman = terminalMessage.Split("\n");
                 middleman = middleman.Distinct().ToArray();
                 _readCallback(string.Join("\n", middleman));
-                terminalMessage = string.Empty;
+                terminalMessage = "";
             }
         }
     }
