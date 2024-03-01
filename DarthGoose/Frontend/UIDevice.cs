@@ -193,13 +193,13 @@ namespace DarthGoose.Frontend
         private void OnNameChange(object sender, TextChangedEventArgs e)
         {
             name = deviceMenu.Name.Text;
-            image.Content = name + "\n" + v4Address;
+            base.caption.Text = name + "\n" + v4Address;
         }
 
         private void OnAddressChanged(object sender, TextChangedEventArgs e)
         {
             v4Address = deviceMenu.V4Address.Text;
-            image.Content = name + "\n" + v4Address;
+            base.caption.Text = name + "\n" + v4Address;
         }
     }
 
@@ -366,12 +366,12 @@ namespace DarthGoose.Frontend
         private void OnNameChange(object sender, TextChangedEventArgs e)
         {
             _networkDevice.ChangeName(deviceMenu.Name.Text);
-            image.Content = deviceMenu.Name.Text + "\n" + deviceMenu.V4Address.Text;
+            base.caption.Text = deviceMenu.Name.Text + "\n" + deviceMenu.V4Address.Text;
         }
         private void OnAddressChange(object sender, TextChangedEventArgs e)
         {
             _networkDevice.ChangeAddress(deviceMenu.V4Address.Text);
-            image.Content = deviceMenu.Name.Text + "\n" + deviceMenu.V4Address.Text;
+            base.caption.Text = deviceMenu.Name.Text + "\n" + deviceMenu.V4Address.Text;
         }
         private void OnTabChanged(object sender, SelectionChangedEventArgs e)
         {
