@@ -54,6 +54,12 @@ namespace DarthGoose.Frontend
 
         private static void SetupNetworkMap()
         {
+            mainWindow.Top = SystemParameters.PrimaryScreenHeight / 2 - 360;
+            mainWindow.Left = SystemParameters.PrimaryScreenWidth / 2 - 640;
+            mainWindow.Height = 720;
+            mainWindow.Width = 1280;
+            mainWindow.ResizeMode = ResizeMode.CanResizeWithGrip;
+
             networkMap.GooseSupport.Click += new RoutedEventHandler(GetGooseSupport);
             networkMap.InsertRouter.Click += new RoutedEventHandler(InsertDeviceClick);
             networkMap.InsertFirewall.Click += new RoutedEventHandler(InsertDeviceClick);
@@ -66,6 +72,7 @@ namespace DarthGoose.Frontend
             networkMap.Load.Click += new RoutedEventHandler(OnLoadClick);
             networkMap.CancelConnection.Click += new RoutedEventHandler(OnCancelConnection);
             _deviceSetupWindow.FinishedSetup.Click += new RoutedEventHandler(OnFinishedSetup);
+
             mainWindow.MainFrame.Navigate(networkMap);
         }
 
