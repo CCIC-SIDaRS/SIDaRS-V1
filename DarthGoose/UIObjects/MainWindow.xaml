@@ -5,6 +5,6 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:DarthGoose"
         mc:Ignorable="d"
-        Title="SIDaRS" Height="720" Width="1280" Background="Black" Foreground="White" Icon="..\Images\SIDaRS.png">
+        Title="SIDaRS" Height="550" Width="550" Background="Black" Foreground="White" Icon="..\Images\SIDaRS.png" ResizeMode="NoResize">
     <Frame x:Name="MainFrame"/>
 </Window>
