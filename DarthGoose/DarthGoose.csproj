@@ -7,6 +7,8 @@
     <ImplicitUsings>enable</ImplicitUsings>
 	<LangVersion>latest</LangVersion>
     <UseWPF>true</UseWPF>
+	<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+	<GenerateTargetFrameworkAttribute>false</GenerateTargetFrameworkAttribute>
   </PropertyGroup>
 
 	<ItemGroup>
