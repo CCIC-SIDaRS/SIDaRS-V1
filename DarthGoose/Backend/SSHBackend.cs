@@ -146,7 +146,18 @@ namespace SSHBackend
         {
             if(terminalMessage != null && terminalMessage != "" && terminalMessage != "\n")
             {
-                string[] middleman = terminalMessage.Split("\n");
+                List<string> testing = terminalMessage.Split("[").ToList();
+                int max = testing.Count;
+                for (int i = 0; i < max; ++i)
+                {
+                    if (testing[i][2] == 'X' || testing[i].StartsWith("2J") || testing[i].StartsWith("25h") || testing[i].StartsWith("]"))
+                    {
+                        testing.Remove(testing[i]);
+                        --max;
+                    }
+                }
+
+                string[] middleman = string.Join("", testing).Split("\n");
                 middleman = middleman.Distinct().ToArray();
                 _readCallback(string.Join("\n", middleman));
                 terminalMessage = "";
