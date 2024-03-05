@@ -3,7 +3,7 @@ using System.IO;
 using Backend.CredentialManager;
 using Backend.NetworkDeviceManager;
 using System.Diagnostics;
-using System.Security;
+using System.Text.RegularExpressions;
 
 namespace SSHBackend
 {
@@ -142,22 +142,37 @@ namespace SSHBackend
             terminalMessage += line;
         }
 
+        static string FilterSSHCursorCodes(string text)
+        {
+            // Regular expression pattern to match SSH cursor codes
+            string cursorPattern = @"\x1b\[[0-9;]*[a-zA-Z]";
+
+            // Replace all occurrences of the cursor codes with an empty string
+            string filteredText = Regex.Replace(text, cursorPattern, string.Empty);
+
+            return filteredText;
+        }
+
         public void Flush()
         {
             if(terminalMessage != null && terminalMessage != "" && terminalMessage != "\n")
             {
-                List<string> testing = terminalMessage.Split("[").ToList();
+                /*List<string> testing = terminalMessage.Split("[").ToList();
                 int max = testing.Count;
+                Debug.WriteLine(string.Join("    |||||    ", testing));
                 for (int i = 0; i < max; ++i)
                 {
-                    if (testing[i][2] == 'X' || testing[i].StartsWith("2J") || testing[i].StartsWith("25h") || testing[i].StartsWith("]"))
+                    if ((testing[i].Length > 2 && testing[i][2] == 'X') || testing[i].StartsWith("2J") || testing[i].StartsWith("25h") || testing[i].StartsWith("]"))
                     {
                         testing.Remove(testing[i]);
                         --max;
                     }
-                }
+                }*/
+                Debug.WriteLine(terminalMessage);
 
-                string[] middleman = string.Join("", testing).Split("\n");
+                terminalMessage = FilterSSHCursorCodes(terminalMessage);
+
+                string[] middleman = terminalMessage.Split("\n");//string.Join("", testing).Split("\n");
                 middleman = middleman.Distinct().ToArray();
                 _readCallback(string.Join("\n", middleman));
                 terminalMessage = "";
