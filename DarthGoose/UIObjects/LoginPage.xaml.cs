@@ -11,5 +11,10 @@ namespace DarthGoose
         {
             InitializeComponent();
         }
+
+        private void LoginButton_Click(object sender, System.Windows.RoutedEventArgs e)
+        {
+
+        }
     }
 }
