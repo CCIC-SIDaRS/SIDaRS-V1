@@ -7,7 +7,6 @@
       mc:Ignorable="d" 
       Height="450" Width="800"
       Title="DeviceDetails" Icon="..\Images\sidars.png">
-
     <Grid>
         <TabControl x:Name="DeviceDetailsTabs">
             <TabItem x:Name="Statistics" Header="Statistics">
@@ -27,10 +26,8 @@
                     <ScrollViewer x:Name="TerminalScroller">
                         <TextBlock x:Name="TerminalTextBox" TextWrapping="Wrap" Background="Black" Foreground="GreenYellow"/>
                     </ScrollViewer>
-                    
                 </Grid>
             </TabItem>
         </TabControl>
-
     </Grid>
 </Window>

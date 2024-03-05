@@ -55,13 +55,26 @@ namespace Backend.SaveManager
                 FrontendManager.devices[tempDevice.uid] = tempDevice;
             }
 
-            foreach(string device in FrontendManager.devices.Keys)
+            Dictionary<string, List<string>> connected = new();
+
+            foreach (string device in FrontendManager.devices.Keys)
             {
+                connected[device] = new();
                 foreach (string connection in FrontendManager.devices[device].connections)
                 {
-                    FrontendManager.drawConnection(new List<Label>() { FrontendManager.devices[device].image, FrontendManager.devices[connection].image }, new List<string>() { device, connection });
+                    try
+                    {
+                        if (!connected[connection].Contains(device))
+                        {
+                            connected[device].Add(connection);
+                            FrontendManager.drawConnection(new List<Label>() { FrontendManager.devices[device].image, FrontendManager.devices[connection].image }, new List<string>() { device, connection });
+                        }
+                    }
+                    catch { }
                 }
             }
+
+            connected = null;
         }
     }
 }

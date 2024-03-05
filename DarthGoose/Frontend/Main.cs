@@ -171,6 +171,7 @@ namespace DarthGoose.Frontend
             label.Width = 125;
             label.Height = 150;
             label.Foreground = new SolidColorBrush(Colors.White);
+            label.Background = new SolidColorBrush(Colors.Black);
             label.HorizontalContentAlignment = HorizontalAlignment.Left;
             label.VerticalContentAlignment = VerticalAlignment.Top;
 
