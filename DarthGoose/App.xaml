@@ -67,5 +67,38 @@
                 </Setter.Value>
             </Setter>
         </Style>
+
+        <Style TargetType="TabControl">
+            <Setter Property="BorderBrush" Value="#2a2c30"/>
+            <Setter Property="BorderThickness" Value="3,10,3,3"/>
+            <Setter Property="Background" Value="Black"/>
+        </Style>
+
+        <Style TargetType="TabItem">
+            <Setter Property="Foreground" Value="{StaticResource TextColor}"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="TabItem">
+                        <Border BorderBrush="{StaticResource Highlight}" BorderThickness="3,3,3,0" CornerRadius="4,4,0,0" Background="Black" x:Name="TabBorder">
+                            <ContentPresenter x:Name="ContentSite"
+                                        VerticalAlignment="Center"
+                                        HorizontalAlignment="Center"
+                                        ContentSource="Header"
+                                        Margin="10,2"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsSelected" Value="True">
+                                <Setter TargetName="TabBorder" Property="Background" Value="#2a2c30"/>
+                                <Setter TargetName="TabBorder" Property="BorderBrush" Value="#2a2c30"/>
+                            </Trigger>
+                            <Trigger Property="IsSelected" Value="False">
+                                <Setter TargetName="TabBorder" Property="Background" Value="Black"/>
+                                <Setter TargetName="TabBorder" Property="BorderBrush" Value="Black"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
     </Application.Resources>
 </Application>

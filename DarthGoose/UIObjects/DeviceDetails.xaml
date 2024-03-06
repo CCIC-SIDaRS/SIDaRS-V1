@@ -6,25 +6,33 @@
       xmlns:local="clr-namespace:DarthGoose"
       mc:Ignorable="d" 
       Height="450" Width="800"
-      Title="DeviceDetails" Icon="..\Images\sidars.png">
+      Title="DeviceDetails" Icon="..\Images\sidars.png" Background="Black">
     <Grid>
         <TabControl x:Name="DeviceDetailsTabs">
             <TabItem x:Name="Statistics" Header="Statistics">
                 <Grid x:Name="StatsGrid" Background="Black">
-                    
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="149*"/>
+                        <ColumnDefinition Width="248*"/>
+                    </Grid.ColumnDefinitions>
+
                 </Grid>
             </TabItem>
             <TabItem x:Name="Settings" Header="Settings">
                 <Grid Background="Black">
-                    <TextBox x:Name="Name" Width="200" Height="30" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="10,10"/>
-                    <TextBox x:Name="V4Address" Width="200" Height="30" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="10,50"/>
-                    <Button x:Name="DeleteDevice" Width="200" Height="45" HorizontalAlignment="Left" VerticalAlignment="Bottom" Content="Delete Device" Margin="10,10" Background="Red" Foreground="White"/>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="97*"/>
+                        <ColumnDefinition Width="298*"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBox x:Name="Name" Width="200" Height="30" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="10,10,0,0" Grid.ColumnSpan="2"/>
+                    <TextBox x:Name="V4Address" Width="200" Height="30" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="10,50,0,0" Grid.ColumnSpan="2"/>
+                    <Button x:Name="DeleteDevice" Width="200" Height="45" HorizontalAlignment="Left" VerticalAlignment="Bottom" Content="Delete Device" Margin="10,0,0,10" Background="Red" Foreground="White" Grid.ColumnSpan="2"/>
                 </Grid>
             </TabItem>
-            <TabItem x:Name="SshTerminal" Header="SSH Terminal">
+            <TabItem x:Name="SshTerminal" Header="SSH Terminal" Height="23" VerticalAlignment="Top">
                 <Grid Background="#FFE5E5E5">
                     <ScrollViewer x:Name="TerminalScroller">
-                        <TextBlock x:Name="TerminalTextBox" TextWrapping="Wrap" Background="Black" Foreground="GreenYellow"/>
+                        <TextBlock x:Name="TerminalTextBox" TextWrapping="Wrap" Background="Black" Foreground="#00FF33"/>
                     </ScrollViewer>
                 </Grid>
             </TabItem>

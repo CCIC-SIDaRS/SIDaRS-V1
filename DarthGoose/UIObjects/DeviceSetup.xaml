@@ -12,13 +12,13 @@
             <LineBreak/>
             Device Name*
         </TextBlock>
-        <TextBox x:Name="SetupNameBox" Width="200" Height="20" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="10,45"/>
+        <TextBox x:Name="SetupNameBox" Width="200" Height="25" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="10,45"/>
         <TextBlock Foreground="White" Text="IP V4 Address" Margin="50,70"/>
-        <TextBox x:Name="SetupV4AddressBox" Width="200" Height="20" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="10,90"/>
+        <TextBox x:Name="SetupV4AddressBox" Width="200" Height="25" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="10,90"/>
         <TextBlock Foreground="White" Text="SSH Username" Margin="50,115"/>
-        <TextBox x:Name="SetupSSHUsernameBox" Width="200" Height="20" HorizontalAlignment="Center" VerticalAlignment="Top" Margin= "10,135"/>
+        <TextBox x:Name="SetupSSHUsernameBox" Width="200" Height="25" HorizontalAlignment="Center" VerticalAlignment="Top" Margin= "10,135"/>
         <TextBlock Foreground="White" Text="SSH Password" Margin="50,160"/>
-        <PasswordBox x:Name="SetupSSHPasswordBox" Width="200" Height="20" HorizontalAlignment="Center" VerticalAlignment="Top" Margin= "10,180"/>
-        <Button x:Name="FinishedSetup" Width="200" Height="20" Content="Submit" Margin="50,85,50,50"/>
+        <PasswordBox x:Name="SetupSSHPasswordBox" Width="200" Height="25" HorizontalAlignment="Center" VerticalAlignment="Top" Margin= "10,180"/>
+        <Button x:Name="FinishedSetup" Width="220" Height="45" Content="Submit" Margin="40,210,40,179"/>
     </Grid>
 </Window>
