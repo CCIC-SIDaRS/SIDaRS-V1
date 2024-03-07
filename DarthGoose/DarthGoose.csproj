@@ -9,6 +9,7 @@
     <UseWPF>true</UseWPF>
 	<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
 	<GenerateTargetFrameworkAttribute>false</GenerateTargetFrameworkAttribute>
+	<ApplicationManifest>Backend\app.manifest</ApplicationManifest>
   </PropertyGroup>
 
 	<ItemGroup>
@@ -21,6 +22,10 @@
 		<Content Include="Backend\Assets\**">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</Content>
+	</ItemGroup>
+
+	<ItemGroup>
+	  <Compile Remove="Backend\SSHBackend.cs" />
 	</ItemGroup>
 
 	<ItemGroup>

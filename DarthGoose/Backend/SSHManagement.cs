@@ -168,7 +168,7 @@ namespace SSHBackend
                         --max;
                     }
                 }*/
-                Debug.WriteLine(terminalMessage);
+                //Debug.WriteLine(terminalMessage);
 
                 terminalMessage = FilterSSHCursorCodes(terminalMessage);
 

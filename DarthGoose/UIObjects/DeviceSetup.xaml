@@ -5,7 +5,8 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:DarthGoose.UIObjects"
         mc:Ignorable="d"
-        Title="Device Setup" Height="450" Width="300" Icon="..\Images\sidars.png">
+        Title="Device Setup" Height="450" Width="300" Icon="..\Images\sidars.png"
+        ResizeMode="NoResize">
     <Grid Background="Black">
         <TextBlock Foreground="White" Margin="50, 10">
             Optional Items are Followed by a *
@@ -19,6 +20,6 @@
         <TextBox x:Name="SetupSSHUsernameBox" Width="200" Height="25" HorizontalAlignment="Center" VerticalAlignment="Top" Margin= "10,135"/>
         <TextBlock Foreground="White" Text="SSH Password" Margin="50,160"/>
         <PasswordBox x:Name="SetupSSHPasswordBox" Width="200" Height="25" HorizontalAlignment="Center" VerticalAlignment="Top" Margin= "10,180"/>
-        <Button x:Name="FinishedSetup" Width="220" Height="45" Content="Submit" Margin="40,210,40,179"/>
+        <Button x:Name="FinishedSetup" Content="Submit" Margin="30,210,30,160"/>
     </Grid>
 </Window>

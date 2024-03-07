@@ -393,7 +393,7 @@ namespace DarthGoose.Frontend
         public void ReadCallback(string input)
         {
             Application.Current.Dispatcher.Invoke(() => { 
-                Debug.WriteLine(input);
+                //Debug.WriteLine(input);
                 //if (lastCommand != "" && input.Contains(lastCommand))
                 //{
                 //    return;

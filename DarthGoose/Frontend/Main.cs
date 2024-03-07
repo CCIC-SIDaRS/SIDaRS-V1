@@ -3,16 +3,14 @@ using System.Windows;
 using System.Diagnostics;
 using System.Windows.Controls;
 using System.Windows.Media.Imaging;
-using System.Windows.Input;
 using System.IO;
 using System.Windows.Shapes;
 using System.ComponentModel;
-using System.Diagnostics.SymbolStore;
 using Backend.CredentialManager;
 using DarthGoose.UIObjects;
-using System.Windows.Media.Animation;
 using System.Windows.Media;
 using Backend.SaveManager;
+using Backend.MonitorManager;
 
 namespace DarthGoose.Frontend
 {
@@ -40,6 +38,8 @@ namespace DarthGoose.Frontend
             _loginPage.LoginButton.Click += new RoutedEventHandler(OnLoginEnter);
             _loginPage.CreateAccountButton.Click += new RoutedEventHandler(OnCreateNewAccount);
             _loginPage.LoginButton.IsDefault = true;
+
+            // new MonitorSystem("192.168.1.110");
         }
 
         private static void OnWindowSizeChanged(object sender, SizeChangedEventArgs e)
