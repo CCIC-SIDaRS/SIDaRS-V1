@@ -60,7 +60,7 @@ namespace SSHBackend
             {
                 ReadStream(reader);
                 _buff.Flush();
-                Thread.Sleep(500);
+                Thread.Sleep(250);
             }
         }
 
@@ -171,6 +171,12 @@ namespace SSHBackend
                 //Debug.WriteLine(terminalMessage);
 
                 terminalMessage = FilterSSHCursorCodes(terminalMessage);
+
+                //while (true)
+                //{
+                //    int start = terminalMessage.IndexOf("]0;");
+                //    if (start)
+                //}
 
                 string[] middleman = terminalMessage.Split("\n");//string.Join("", testing).Split("\n");
                 middleman = middleman.Distinct().ToArray();
