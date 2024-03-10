@@ -40,6 +40,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
+	  <PackageReference Include="SharpPcap" Version="6.3.0" />
 	  <PackageReference Include="SSH.NET" Version="2023.0.1" />
 	  <PackageReference Include="System.Management" Version="8.0.0" />
 	</ItemGroup>

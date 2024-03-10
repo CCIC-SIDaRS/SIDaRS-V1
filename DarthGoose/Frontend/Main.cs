@@ -39,7 +39,7 @@ namespace DarthGoose.Frontend
             _loginPage.CreateAccountButton.Click += new RoutedEventHandler(OnCreateNewAccount);
             _loginPage.LoginButton.IsDefault = true;
 
-            // new MonitorSystem("192.168.1.110");
+            new MonitorSystem("192.168.1.90");
         }
 
         private static void OnWindowSizeChanged(object sender, SizeChangedEventArgs e)

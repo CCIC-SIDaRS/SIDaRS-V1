@@ -3,6 +3,8 @@ using System.Net.Sockets;
 using System.Diagnostics;
 using System.Text;
 using System.Threading;
+using SharpPcap;
+using SharpPcap.LibPcap;
 
 namespace Backend.MonitorManager
 {
@@ -15,47 +17,32 @@ namespace Backend.MonitorManager
 
         public MonitorSystem(string monitorAddress)
         {
-            _monitorAddress = IPAddress.Parse(monitorAddress);
-            _captureSocket = new Socket(AddressFamily.InterNetwork, SocketType.Raw, ProtocolType.IP);
+            //_monitorAddress = IPAddress.Parse(monitorAddress);
+            // _captureSocket = new Socket(AddressFamily.InterNetwork, SocketType.Raw, ProtocolType.IP);
 
             SetupCapture();
         }
 
         public void SetupCapture()
         {
-            IPEndPoint endPoint = new IPEndPoint(IPAddress.Any, 0);
-            _captureSocket.Bind(endPoint);
-            // _captureSocket.IOControl(IOControlCode.ReceiveAll, null, null);
-
-            _captureSocket.BeginReceive(new byte[] {}, 0, 10000, SocketFlags.None, new AsyncCallback(Capture), null);
-
-            //_captureThread = new Thread(Capture);
-            //_captureThread.IsBackground = true;
-            //_captureThread.Start();
+            var devices = CaptureDeviceList.Instance;
+            for (int i = 0; i < devices.Count; i++)
+            {
+                Debug.WriteLine(i + "\n" + devices[i].ToString());
+            }
+            using var device = devices[9];
+            device.Open(mode: DeviceModes.Promiscuous | DeviceModes.DataTransferUdp | DeviceModes.NoCaptureLocal, read_timeout: 1000);
+            device.OnPacketArrival += new PacketArrivalEventHandler(device_OnPacketArrival);
+            Debug.WriteLine("Something");
+            device.StartCapture();
+            Debug.WriteLine("Something");
         }
 
-        public void Capture(IAsyncResult res)
+        public void device_OnPacketArrival(object s, PacketCapture e)
         {
-            while (_runCapture)
-            {
-                string data = "";
-                byte[] bytes = new byte[2048];
-
-                Socket client = _captureSocket.Accept();
-
-                while (true)
-                {
-                    int numBytes = client.Receive(bytes);
-                    data += Encoding.ASCII.GetString(bytes, 0, numBytes);
-
-                    if (data.IndexOf("\r\n") > -1)
-                    {
-                        break;
-                    }
-                }
-
-                Debug.WriteLine(data);
-            }
+            var rawPacket = e.GetPacket();
+            Debug.WriteLine(rawPacket.ToString());
+            Debug.WriteLine("Something");
         }
     }
 }

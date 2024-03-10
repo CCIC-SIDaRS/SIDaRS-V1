@@ -70,7 +70,7 @@ namespace Backend.SaveManager
                             FrontendManager.drawConnection(new List<Label>() { FrontendManager.devices[device].image, FrontendManager.devices[connection].image }, new List<string>() { device, connection });
                         }
                     }
-                    catch { }
+                    catch (KeyNotFoundException) { }
                 }
             }
 
