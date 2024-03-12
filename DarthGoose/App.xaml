@@ -184,5 +184,17 @@
         <Style TargetType="ScrollBar">
             <Setter Property="Template" Value="{StaticResource VerticalScrollBar}"/>
         </Style>
+
+        <Style TargetType="Menu">
+            <Setter Property="Background" Value="#2a2c30"/>
+            <Setter Property="Foreground" Value="{StaticResource TextColor}"/>
+            <Setter Property="Height" Value="19"/>
+        </Style>
+
+        <Style TargetType="MenuItem">
+            <Setter Property="Background" Value="#2a2c30"/>
+            <Setter Property="Height" Value="19"/>
+            <Setter Property="BorderThickness" Value="0"/>
+        </Style>
     </Application.Resources>
 </Application>

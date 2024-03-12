@@ -3,21 +3,19 @@ using System;
 using SharpPcap;
 using SharpPcap.LibPcap;
 using System.Windows;
+using System.Windows.Controls;
 
 namespace Backend.MonitorManager
 {
     class MonitorSystem
     {
-
-        public MonitorSystem(string monitorAddress)
+        private ILiveDevice wifi_device;
+        public MonitorSystem()
         {
-            //_monitorAddress = IPAddress.Parse(monitorAddress);
-            // _captureSocket = new Socket(AddressFamily.InterNetwork, SocketType.Raw, ProtocolType.IP);
-
-            SetupCapture();
+            
         }
 
-        public static void SetupCapture()
+        public void SetupCapture()
         {
             // Print SharpPcap version
             var ver = Pcap.SharpPcapVersion;
@@ -50,35 +48,39 @@ namespace Backend.MonitorManager
 
             Debug.WriteLine("");
             Debug.Write("-- Please choose a device to capture: ");
-            i = 4;
+            i = 5;
 
-            using var device = devices[i];
+            wifi_device = devices[i];
 
             // Register our handler function to the 'packet arrival' event
-            device.OnPacketArrival +=
+            wifi_device.OnPacketArrival +=
                 new PacketArrivalEventHandler(device_OnPacketArrival);
 
             // Open the device for capturing
-            int readTimeoutMilliseconds = 1000;
-            device.Open(mode: DeviceModes.Promiscuous | DeviceModes.DataTransferUdp | DeviceModes.NoCaptureLocal, read_timeout: readTimeoutMilliseconds);
-
-            Debug.WriteLine("");
-            Debug.WriteLine("-- Listening on {0} {1}, hit 'Enter' to stop...",
-                device.Name, device.Description);
-
-            // Start the capturing process
-            device.StartCapture();
-            Debug.WriteLine(device.Started.ToString());
+            Thread sniffing = new Thread(new ThreadStart(sniffing_Proccess));
+            sniffing.IsBackground = true;
+            sniffing.Start();
         }
 
-        private static void device_OnPacketArrival(object sender, PacketCapture e)
+        private void device_OnPacketArrival(object sender, PacketCapture e)
         {
             var time = e.Header.Timeval.Date;
             var len = e.Data.Length;
             var rawPacket = e.GetPacket();
             Debug.WriteLine("{0}:{1}:{2},{3} Len={4}",
                 time.Hour, time.Minute, time.Second, time.Millisecond, len);
-            MessageBox.Show(rawPacket.ToString());
+            Debug.WriteLine(rawPacket.ToString());
+        }
+
+        private void sniffing_Proccess()
+        {
+            // Open the device for capturing
+            int readTimeoutMilliseconds = 1000;
+            wifi_device.Open(DeviceModes.Promiscuous, readTimeoutMilliseconds);
+
+            // Start the capturing process
+            
+            wifi_device.Capture();
         }
     }
 }

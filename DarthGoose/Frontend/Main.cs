@@ -12,6 +12,7 @@ using System.Windows.Media;
 using Backend.SaveManager;
 using Backend.MonitorManager;
 using SharpPcap;
+using System.Windows.Data;
 
 namespace DarthGoose.Frontend
 {
@@ -41,8 +42,8 @@ namespace DarthGoose.Frontend
             _loginPage.CreateAccountButton.Click += new RoutedEventHandler(OnCreateNewAccount);
             _loginPage.LoginButton.IsDefault = true;
 
-            //packetCapture = new MonitorSystem("192.168.1.90");
-            MonitorSystem.SetupCapture();
+            packetCapture = new MonitorSystem();
+            packetCapture.SetupCapture();
         }
 
         private static void device_OnPacketArrival(object sender, PacketCapture e)
