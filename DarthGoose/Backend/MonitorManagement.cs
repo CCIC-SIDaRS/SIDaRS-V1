@@ -1,19 +1,13 @@
-﻿using System.Net;
-using System.Net.Sockets;
-using System.Diagnostics;
-using System.Text;
-using System.Threading;
+﻿using System.Diagnostics;
+using System;
 using SharpPcap;
 using SharpPcap.LibPcap;
+using System.Windows;
 
 namespace Backend.MonitorManager
 {
     class MonitorSystem
     {
-        private IPAddress _monitorAddress { get; set; }
-        private Socket _captureSocket { get; set; }
-        private Thread _captureThread { get; set; }
-        private bool _runCapture { get; set; }
 
         public MonitorSystem(string monitorAddress)
         {
@@ -23,26 +17,68 @@ namespace Backend.MonitorManager
             SetupCapture();
         }
 
-        public void SetupCapture()
+        public static void SetupCapture()
         {
+            // Print SharpPcap version
+            var ver = Pcap.SharpPcapVersion;
+            Debug.WriteLine("SharpPcap {0}, Example3.BasicCap.cs", ver);
+
+            // Retrieve the device list
             var devices = CaptureDeviceList.Instance;
-            for (int i = 0; i < devices.Count; i++)
+
+            // If no devices were found print an error
+            if (devices.Count < 1)
             {
-                Debug.WriteLine(i + "\n" + devices[i].ToString());
+                Debug.WriteLine("No devices were found on this machine");
+                return;
             }
-            using var device = devices[9];
-            device.Open(mode: DeviceModes.Promiscuous | DeviceModes.DataTransferUdp | DeviceModes.NoCaptureLocal, read_timeout: 1000);
-            device.OnPacketArrival += new PacketArrivalEventHandler(device_OnPacketArrival);
-            Debug.WriteLine("Something");
+
+            Debug.WriteLine("");
+            Debug.WriteLine("The following devices are available on this machine:");
+            Debug.WriteLine("----------------------------------------------------");
+            Debug.WriteLine("");
+
+            int i = 0;
+
+            // Print out the devices
+            foreach (var dev in devices)
+            {
+                /* Description */
+                Debug.WriteLine("{0}) {1} {2}", i, dev.Name, dev.Description);
+                i++;
+            }
+
+            Debug.WriteLine("");
+            Debug.Write("-- Please choose a device to capture: ");
+            i = 4;
+
+            using var device = devices[i];
+
+            // Register our handler function to the 'packet arrival' event
+            device.OnPacketArrival +=
+                new PacketArrivalEventHandler(device_OnPacketArrival);
+
+            // Open the device for capturing
+            int readTimeoutMilliseconds = 1000;
+            device.Open(mode: DeviceModes.Promiscuous | DeviceModes.DataTransferUdp | DeviceModes.NoCaptureLocal, read_timeout: readTimeoutMilliseconds);
+
+            Debug.WriteLine("");
+            Debug.WriteLine("-- Listening on {0} {1}, hit 'Enter' to stop...",
+                device.Name, device.Description);
+
+            // Start the capturing process
             device.StartCapture();
-            Debug.WriteLine("Something");
+            Debug.WriteLine(device.Started.ToString());
         }
 
-        public void device_OnPacketArrival(object s, PacketCapture e)
+        private static void device_OnPacketArrival(object sender, PacketCapture e)
         {
+            var time = e.Header.Timeval.Date;
+            var len = e.Data.Length;
             var rawPacket = e.GetPacket();
-            Debug.WriteLine(rawPacket.ToString());
-            Debug.WriteLine("Something");
+            Debug.WriteLine("{0}:{1}:{2},{3} Len={4}",
+                time.Hour, time.Minute, time.Second, time.Millisecond, len);
+            MessageBox.Show(rawPacket.ToString());
         }
     }
 }

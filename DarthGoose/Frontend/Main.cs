@@ -11,6 +11,7 @@ using DarthGoose.UIObjects;
 using System.Windows.Media;
 using Backend.SaveManager;
 using Backend.MonitorManager;
+using SharpPcap;
 
 namespace DarthGoose.Frontend
 {
@@ -26,6 +27,7 @@ namespace DarthGoose.Frontend
         
         private static DeviceSetup _deviceSetupWindow = new();
         public static Credentials masterCredentials;
+        public static MonitorSystem packetCapture;
 
         public static void FrontendMain(MainWindow window)
         {
@@ -39,7 +41,18 @@ namespace DarthGoose.Frontend
             _loginPage.CreateAccountButton.Click += new RoutedEventHandler(OnCreateNewAccount);
             _loginPage.LoginButton.IsDefault = true;
 
-            new MonitorSystem("192.168.1.90");
+            //packetCapture = new MonitorSystem("192.168.1.90");
+            MonitorSystem.SetupCapture();
+        }
+
+        private static void device_OnPacketArrival(object sender, PacketCapture e)
+        {
+            var time = e.Header.Timeval.Date;
+            var len = e.Data.Length;
+            var rawPacket = e.GetPacket();
+            Console.WriteLine("{0}:{1}:{2},{3} Len={4}",
+                time.Hour, time.Minute, time.Second, time.Millisecond, len);
+            Console.WriteLine(rawPacket.ToString());
         }
 
         private static void OnWindowSizeChanged(object sender, SizeChangedEventArgs e)
