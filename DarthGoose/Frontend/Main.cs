@@ -42,8 +42,30 @@ namespace DarthGoose.Frontend
             _loginPage.CreateAccountButton.Click += new RoutedEventHandler(OnCreateNewAccount);
             _loginPage.LoginButton.IsDefault = true;
 
-            packetCapture = new MonitorSystem();
-            packetCapture.SetupCapture();
+
+            var devices = CaptureDeviceList.Instance;
+
+            // If no devices were found print an error
+            if (devices.Count < 1)
+            {
+                Console.WriteLine("No devices were found on this machine");
+                return;
+            }
+
+            Debug.WriteLine("The following devices are available on this machine:");
+            Debug.WriteLine("----------------------------------------------------");
+
+            int i = 0;
+
+            // Print out the devices
+            foreach (var dev in devices)
+            {
+                /* Description */
+                Debug.WriteLine("{0}) {1} {2}", i, dev.Name, dev.Description);
+                i++;
+            }
+
+            packetCapture = new MonitorSystem(devices[5]);
         }
 
         private static void device_OnPacketArrival(object sender, PacketCapture e)
