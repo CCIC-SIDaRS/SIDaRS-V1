@@ -1,25 +1,40 @@
-﻿using System.IO;
+﻿using System.Diagnostics;
+using System.IO;
 using System.Text.Json;
 using System.Windows.Controls;
-using System.Windows.Media.Imaging;
 using System.Windows.Media;
-using System.Windows;
 using Backend.CredentialManager;
 using DarthGoose.Frontend;
-using System.Windows.Shapes;
-using System.IO.Packaging;
-using System.Diagnostics;
+using PacketDotNet.Lldp;
 
 
 namespace Backend.SaveManager
 {
      static class SaveSystem
      {
+        public static void SaveUsers(Credentials[] masterCredentials, string assets)
+        {
+            Debug.WriteLine(masterCredentials.Length);
+            File.WriteAllText(assets, JsonSerializer.Serialize(masterCredentials));
+        }
+
+        public static Credentials[]? LoadUsers(string assets)
+        {
+            string file = File.ReadAllText(assets);
+            if (File.Exists(assets) && file.Length > 0)
+            {
+                return JsonSerializer.Deserialize<Credentials[]>(file);
+            } else
+            {
+                return Array.Empty<Credentials>();
+            }
+            
+        }
         public static void Save(string saveFile, UINetDevice[] netDevices, EndpointDevice[] endpointDevices, Credentials masterCredentials)
         {
             
             Dictionary<string, object> saveDict = new();
-            saveDict["MasterCredentials"] = JsonSerializer.Serialize(masterCredentials);
+            
 
             List<string> serializedNetDevices = new();
             foreach (UINetDevice netDevice in netDevices)

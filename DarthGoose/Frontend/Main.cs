@@ -13,6 +13,7 @@ using Backend.SaveManager;
 using Backend.MonitorManager;
 using SharpPcap;
 using System.Windows.Data;
+using System.Diagnostics.Eventing.Reader;
 
 namespace DarthGoose.Frontend
 {
@@ -27,6 +28,7 @@ namespace DarthGoose.Frontend
         public static MonitorSystem packetCapture;
 
         private static LoginPage _loginPage = new();
+        private static CreateAccountPage _createAccPage = new();
         private static DeviceSetup _deviceSetupWindow = new();
 
         public static void FrontendMain(MainWindow window)
@@ -38,11 +40,16 @@ namespace DarthGoose.Frontend
             mainWindow.SizeChanged += OnWindowSizeChanged;
             mainWindow.Closing += new CancelEventHandler(MainWindowClosing);
             _loginPage.LoginButton.Click += new RoutedEventHandler(OnLoginEnter);
-            _loginPage.CreateAccountButton.Click += new RoutedEventHandler(OnCreateNewAccount);
+            _loginPage.CreateAccountButton.Click += new RoutedEventHandler(NavCreateNewAccount);
             _loginPage.LoginButton.IsDefault = true;
 
+            _createAccPage.LoginButton.Click += new RoutedEventHandler(NavLogin);
+            _createAccPage.CreateButton.Click += new RoutedEventHandler(OnCreateAccount);
+            _createAccPage.CreateButton.IsDefault = true;
 
-            var devices = CaptureDeviceList.Instance;
+            mainWindow.MainFrame.Navigate(_loginPage);
+
+            CaptureDeviceList devices = CaptureDeviceList.Instance;
 
             // If no devices were found print an error
             if (devices.Count < 1)
@@ -64,17 +71,7 @@ namespace DarthGoose.Frontend
                 i++;
             }
 
-            packetCapture = new MonitorSystem(devices[5]);
-        }
-
-        private static void device_OnPacketArrival(object sender, PacketCapture e)
-        {
-            var time = e.Header.Timeval.Date;
-            var len = e.Data.Length;
-            var rawPacket = e.GetPacket();
-            Console.WriteLine("{0}:{1}:{2},{3} Len={4}",
-                time.Hour, time.Minute, time.Second, time.Millisecond, len);
-            Console.WriteLine(rawPacket.ToString());
+            packetCapture = new MonitorSystem(devices[4]);
         }
 
         private static void OnWindowSizeChanged(object sender, SizeChangedEventArgs e)
@@ -113,21 +110,65 @@ namespace DarthGoose.Frontend
 
         private static void OnLoginEnter(object sender, RoutedEventArgs e)
         {
-            SymmetricEncryption.SetMaster("PhatWalrus123");
-            if (_loginPage.LoginTitle.Text == "Welcome")
+            Credentials[]? allCreds = SaveSystem.LoadUsers(@".\Backend\Assets\Users.sidars");
+            if (allCreds == null)
             {
-                _loginPage = null;
-                SetupNetworkMap();
-            }else if(_loginPage.LoginTitle.Text == "Create New Account")
+                MessageBox.Show("Something went wrong, please make an account or contact goose support");
+            }
+            foreach (Credentials cred in allCreds)
             {
-                SymmetricEncryption.SetMaster(_loginPage.LoginPassword.Password);
-                masterCredentials = new Credentials(_loginPage.LoginUsername.Text, _loginPage.LoginPassword.Password, false);
+                if (cred.GetCreds()[0] == _loginPage.LoginUsername.Text && cred.GetCreds()[1] == _loginPage.LoginPassword.Password)
+                {
+                    _loginPage = null;
+                    _createAccPage = null;
+                    SetupNetworkMap();
+                    return;
+                } else
+                {
+                    MessageBox.Show("Invalid Username or Password.");
+                    _loginPage.LoginUsername.Text = "";
+                    _loginPage.LoginPassword.Password = "";
+                    return;
+                }
             }
         }
 
-        private static void OnCreateNewAccount(object sender, RoutedEventArgs e)
+        private static void OnCreateAccount(object sender, RoutedEventArgs e)
         {
-            _loginPage.LoginTitle.Text = "Create New Account";
+            if(_createAccPage.CreateUsername.Text != "" && _createAccPage.CreatePassword.Password != "" && _createAccPage.CreatePassword.Password == _createAccPage.ConfirmPassword.Password)
+            {
+                Credentials[]? allCreds = SaveSystem.LoadUsers(@".\Backend\Assets\Users.sidars");
+                foreach (Credentials cred in allCreds)
+                {
+                    if (cred.GetCreds()[0] == _createAccPage.CreateUsername.Text)
+                    {
+                        MessageBox.Show("This username already exists. Log in instead.");
+                        return;
+                    }
+                }
+
+                SymmetricEncryption.SetMaster(_createAccPage.CreatePassword.Password);
+                masterCredentials = new Credentials(_createAccPage.CreateUsername.Text, _createAccPage.CreatePassword.Password);
+                allCreds = allCreds.Concat([masterCredentials]).ToArray();
+                SaveSystem.SaveUsers(allCreds, @".\Backend\Assets\Users.sidars");
+
+                _loginPage = null;
+                _createAccPage = null;
+                SetupNetworkMap();
+            } else
+            {
+                MessageBox.Show("YOU FOOL. YOU DID SOMETHING WRONG.");
+            }
+        }
+
+        private static void NavCreateNewAccount(object sender, RoutedEventArgs e)
+        {
+            mainWindow.MainFrame.Navigate(_createAccPage);
+        }
+
+        private static void NavLogin(object sender, RoutedEventArgs e)
+        {
+            mainWindow.MainFrame.Navigate(_loginPage);
         }
 
         private static void GetGooseSupport(object sender, RoutedEventArgs e)
@@ -139,6 +180,7 @@ namespace DarthGoose.Frontend
                 UseShellExecute = true
             });
         }
+
         private static bool _finishedSetup = false;
         private static async void InsertDeviceClick(object sender, RoutedEventArgs e)
         {

@@ -45,6 +45,11 @@ namespace Backend.CredentialManager
         {
             return [_username, SymmetricEncryption.Decrypt(_password, SymmetricEncryption.master)];
         }
+
+        public string[] GetEncrypted()
+        {
+            return [_username, _password];
+        }
         public string Save()
         {
             Dictionary<string, object> properties = new();

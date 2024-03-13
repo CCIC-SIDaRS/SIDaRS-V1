@@ -32,9 +32,9 @@ namespace Backend.MonitorManager
             DateTime time = e.Header.Timeval.Date;
             int len = e.Data.Length;
             RawCapture rawPacket = e.GetPacket();
-            Debug.WriteLine("{0}:{1}:{2},{3} Len={4}",
-                time.Hour, time.Minute, time.Second, time.Millisecond, len);
-            Debug.WriteLine(rawPacket.ToString());
+            //Debug.WriteLine("{0}:{1}:{2},{3} Len={4}",
+                //time.Hour, time.Minute, time.Second, time.Millisecond, len);
+            //Debug.WriteLine(rawPacket.ToString());
         }
 
         private void sniffing_Proccess()

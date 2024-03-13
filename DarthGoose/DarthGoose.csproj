@@ -45,4 +45,10 @@
 	  <PackageReference Include="System.Management" Version="8.0.0" />
 	</ItemGroup>
 
+	<ItemGroup>
+	  <Compile Update="UIObjects\CreateAccountPage.xaml.cs">
+	    <SubType>Code</SubType>
+	  </Compile>
+	</ItemGroup>
+
 </Project>
