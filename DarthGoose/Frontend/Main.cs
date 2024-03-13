@@ -23,12 +23,11 @@ namespace DarthGoose.Frontend
         public static NetworkMap networkMap = new();
         public static Point windowSize;
         public static Dictionary<string, UIDevice> devices = new();
-
-        private static LoginPage _loginPage = new();
-        
-        private static DeviceSetup _deviceSetupWindow = new();
         public static Credentials masterCredentials;
         public static MonitorSystem packetCapture;
+
+        private static LoginPage _loginPage = new();
+        private static DeviceSetup _deviceSetupWindow = new();
 
         public static void FrontendMain(MainWindow window)
         {
