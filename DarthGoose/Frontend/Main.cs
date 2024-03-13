@@ -14,6 +14,8 @@ using Backend.MonitorManager;
 using SharpPcap;
 using System.Windows.Data;
 using System.Diagnostics.Eventing.Reader;
+using System.Runtime.CompilerServices;
+using Microsoft.Win32;
 
 namespace DarthGoose.Frontend
 {
@@ -101,6 +103,7 @@ namespace DarthGoose.Frontend
             networkMap.InsertServer.Click += new RoutedEventHandler(InsertDeviceClick);
             networkMap.InsertConnection.Click += new RoutedEventHandler(OnInsertConnection);
             networkMap.Save.Click += new RoutedEventHandler(OnSaveClick);
+            networkMap.SaveAs.Click += new RoutedEventHandler(OnSaveAsClick);
             networkMap.Load.Click += new RoutedEventHandler(OnLoadClick);
             networkMap.CancelConnection.Click += new RoutedEventHandler(OnCancelConnection);
             _deviceSetupWindow.FinishedSetup.Click += new RoutedEventHandler(OnFinishedSetup);
@@ -293,26 +296,45 @@ namespace DarthGoose.Frontend
             networkMap.CancelConnection.Visibility = Visibility.Hidden;
         }
 
+
         private static void OnSaveClick(object sender, RoutedEventArgs e)
         {
-            var netDevices = new List<UINetDevice>();
-            var endDevices = new List<EndpointDevice>();
-            foreach (UIDevice device in devices.Values)
-            {
-                if (device.GetType() ==  typeof(UINetDevice))
-                {
-                    netDevices.Add(device as UINetDevice);
-                }else
-                {
-                    endDevices.Add(device as EndpointDevice);
-                }
-            }
-            SaveSystem.Save(@".\Backend\Assets\SaveFile.sidars",netDevices.ToArray(), endDevices.ToArray(), new Credentials("walrus","12345678!Aa", false));
+            
         }
 
         private static void OnLoadClick (object sender, RoutedEventArgs e)
         {
-            SaveSystem.Load(@".\Backend\Assets\SaveFile.sidars");
+            OpenFileDialog dialog = new OpenFileDialog();
+            dialog.Filter = "*sidars files (*.sidars)|*.sidars";
+            bool? result = dialog.ShowDialog();
+            if (result == true)
+            {
+                SaveSystem.Load(dialog.FileName);
+            }
+        }
+
+        private static void OnSaveAsClick(object sender, RoutedEventArgs e)
+        {
+            SaveFileDialog saveFileDialog = new SaveFileDialog();
+            saveFileDialog.Filter = "*sidars files (*.sidars)|*.sidars";
+            bool? result = saveFileDialog.ShowDialog();
+            if(result == true)
+            {
+                var netDevices = new List<UINetDevice>();
+                var endDevices = new List<EndpointDevice>();
+                foreach (UIDevice device in devices.Values)
+                {
+                    if (device.GetType() == typeof(UINetDevice))
+                    {
+                        netDevices.Add(device as UINetDevice);
+                    }
+                    else
+                    {
+                        endDevices.Add(device as EndpointDevice);
+                    }
+                }
+                SaveSystem.Save(saveFileDialog.FileName, netDevices.ToArray(), endDevices.ToArray());
+            }
         }
 
         public static void AddToPendingConnections(Label sender)

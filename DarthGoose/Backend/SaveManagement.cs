@@ -31,7 +31,7 @@ namespace Backend.SaveManager
             }
             
         }
-        public static void Save(string saveFile, UINetDevice[] netDevices, EndpointDevice[] endpointDevices, Credentials masterCredentials)
+        public static void Save(string saveFile, UINetDevice[] netDevices, EndpointDevice[] endpointDevices)
         {
             Dictionary<string, object> saveDict = new();
             
