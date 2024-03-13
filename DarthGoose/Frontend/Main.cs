@@ -117,7 +117,7 @@ namespace DarthGoose.Frontend
             }
             foreach (Credentials cred in allCreds)
             {
-                if (cred.GetCreds()[0] == _loginPage.LoginUsername.Text && cred.GetCreds()[1] == _loginPage.LoginPassword.Password)
+                if (cred.GetEncrypted()[0] == _loginPage.LoginUsername.Text && cred.GetEncrypted()[1] == _loginPage.LoginPassword.Password)
                 {
                     _loginPage = null;
                     _createAccPage = null;

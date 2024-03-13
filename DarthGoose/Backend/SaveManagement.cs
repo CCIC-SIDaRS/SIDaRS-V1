@@ -5,6 +5,7 @@ using System.Windows.Controls;
 using System.Windows.Media;
 using Backend.CredentialManager;
 using DarthGoose.Frontend;
+using Microsoft.Win32;
 using PacketDotNet.Lldp;
 
 
@@ -32,7 +33,6 @@ namespace Backend.SaveManager
         }
         public static void Save(string saveFile, UINetDevice[] netDevices, EndpointDevice[] endpointDevices, Credentials masterCredentials)
         {
-            
             Dictionary<string, object> saveDict = new();
             
 
@@ -56,7 +56,7 @@ namespace Backend.SaveManager
         {
             Dictionary<string, object> saveDict = JsonSerializer.Deserialize<Dictionary<string, object>>(File.ReadAllText(saveFile));
 
-            FrontendManager.masterCredentials = JsonSerializer.Deserialize<Credentials>(saveDict["MasterCredentials"].ToString());
+            // FrontendManager.masterCredentials = JsonSerializer.Deserialize<Credentials>(saveDict["MasterCredentials"].ToString());
 
             foreach (string device in JsonSerializer.Deserialize<List<string>>(saveDict["NetworkDevices"].ToString()))
             {
