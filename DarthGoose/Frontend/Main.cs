@@ -32,6 +32,7 @@ namespace DarthGoose.Frontend
         private static LoginPage _loginPage = new();
         private static CreateAccountPage _createAccPage = new();
         private static DeviceSetup _deviceSetupWindow = new();
+        private static string? _saveFile = null;
 
         public static void FrontendMain(MainWindow window)
         {
@@ -123,7 +124,7 @@ namespace DarthGoose.Frontend
                 if (cred.GetUsername() == _loginPage.LoginUsername.Text && cred.GetPassword() == System.Text.Encoding.Unicode.GetString(SymmetricEncryption.Hash(_loginPage.LoginPassword.Password, "DARTHGOOSE!!!!")))
                 {
                     masterCredentials = new Users(_loginPage.LoginUsername.Text, _loginPage.LoginPassword.Password, false);
-                    SymmetricEncryption.SetMaster(_loginPage.LoginPassword.Password);
+                    SymmetricEncryption.SetMaster(_loginPage.LoginPassword.Password, _loginPage.LoginUsername.Text);
                     _loginPage = null;
                     _createAccPage = null;
                     SetupNetworkMap();
@@ -152,7 +153,7 @@ namespace DarthGoose.Frontend
                     }
                 }
 
-                SymmetricEncryption.SetMaster(_createAccPage.CreatePassword.Password);
+                SymmetricEncryption.SetMaster(_createAccPage.CreatePassword.Password, _createAccPage.CreateUsername.Text);
                 masterCredentials = new Users(_createAccPage.CreateUsername.Text, _createAccPage.CreatePassword.Password, false);
                 allCreds = allCreds.Concat([masterCredentials]).ToArray();
                 SaveSystem.SaveUsers(allCreds, @".\Backend\Assets\Users.sidars");
@@ -301,7 +302,27 @@ namespace DarthGoose.Frontend
 
         private static void OnSaveClick(object sender, RoutedEventArgs e)
         {
-            
+            if (_saveFile == null)
+            {
+                MessageBox.Show("Please load a file or save as before trying to save");
+            }else
+            {
+                var netDevices = new List<UINetDevice>();
+                var endDevices = new List<EndpointDevice>();
+                foreach (UIDevice device in devices.Values)
+                {
+                    if (device.GetType() == typeof(UINetDevice))
+                    {
+                        netDevices.Add(device as UINetDevice);
+                    }
+                    else
+                    {
+                        endDevices.Add(device as EndpointDevice);
+                    }
+                }
+
+                SaveSystem.Save(_saveFile, netDevices.ToArray(), endDevices.ToArray());
+            }
         }
 
         private static void OnLoadClick (object sender, RoutedEventArgs e)
@@ -312,6 +333,7 @@ namespace DarthGoose.Frontend
             if (result == true)
             {
                 SaveSystem.Load(dialog.FileName);
+                _saveFile = dialog.FileName;
             }
         }
 
@@ -336,6 +358,7 @@ namespace DarthGoose.Frontend
                     }
                 }
                 SaveSystem.Save(saveFileDialog.FileName, netDevices.ToArray(), endDevices.ToArray());
+                _saveFile = saveFileDialog.FileName;
             }
         }
 

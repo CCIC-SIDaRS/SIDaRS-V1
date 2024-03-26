@@ -149,9 +149,9 @@ namespace Backend.CredentialManager
                 throw new Exception("Unknown decryption error " + ex);
             }
         }
-        public static void SetMaster(string master)
+        public static void SetMaster(string master, string username)
         {
-            SymmetricEncryption.master = Hash(master, "PHATWALRUS!!!");
+            SymmetricEncryption.master = Hash(username + master, "PHATWALRUS!!!");
         }
     }
 }
