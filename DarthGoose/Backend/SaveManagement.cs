@@ -13,21 +13,21 @@ namespace Backend.SaveManager
 {
      static class SaveSystem
      {
-        public static void SaveUsers(Credentials[] masterCredentials, string assets)
+        public static void SaveUsers(Users[] masterCredentials, string assets)
         {
             Debug.WriteLine(masterCredentials.Length);
             File.WriteAllText(assets, JsonSerializer.Serialize(masterCredentials));
         }
 
-        public static Credentials[]? LoadUsers(string assets)
+        public static Users[]? LoadUsers(string assets)
         {
             string file = File.ReadAllText(assets);
             if (File.Exists(assets) && file.Length > 0)
             {
-                return JsonSerializer.Deserialize<Credentials[]>(file);
+                return JsonSerializer.Deserialize<Users[]>(file);
             } else
             {
-                return Array.Empty<Credentials>();
+                return Array.Empty<Users>();
             }
             
         }

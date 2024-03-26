@@ -5,9 +5,45 @@ using System.Reflection;
 using System.Text.RegularExpressions;
 using System.IO;
 using System.Text.Json.Serialization;
+using System.Security;
 
 namespace Backend.CredentialManager
 {
+    class Users
+    {
+        [JsonInclude]
+        private string username { get; set; }
+
+        [JsonInclude]
+        private string password { get; set; }
+
+        [JsonInclude]
+        private bool hashed {  get; set; }
+
+        [JsonConstructor]
+        public Users(string username, string password, bool hashed = true) 
+        {
+            this.username = username;
+            if (!hashed)
+            {
+                this.password = Encoding.Unicode.GetString(SymmetricEncryption.Hash(password, "DARTHGOOSE!!!!"));
+            }else
+            {
+                this.password = password;
+            }
+            this.hashed = true;
+        }
+
+        public string GetPassword()
+        {
+            return password;
+        }
+
+        public string GetUsername()
+        {
+            return username;
+        }
+    }
     class Credentials
     {
         [JsonInclude]

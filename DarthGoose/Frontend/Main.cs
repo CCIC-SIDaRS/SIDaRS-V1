@@ -26,7 +26,7 @@ namespace DarthGoose.Frontend
         public static NetworkMap networkMap = new();
         public static Point windowSize;
         public static Dictionary<string, UIDevice> devices = new();
-        public static Credentials masterCredentials;
+        public static Users masterCredentials;
         public static MonitorSystem packetCapture;
 
         private static LoginPage _loginPage = new();
@@ -113,15 +113,17 @@ namespace DarthGoose.Frontend
 
         private static void OnLoginEnter(object sender, RoutedEventArgs e)
         {
-            Credentials[]? allCreds = SaveSystem.LoadUsers(@".\Backend\Assets\Users.sidars");
+            Users[]? allCreds = SaveSystem.LoadUsers(@".\Backend\Assets\Users.sidars");
             if (allCreds == null)
             {
                 MessageBox.Show("Something went wrong, please make an account or contact goose support");
             }
-            foreach (Credentials cred in allCreds)
+            foreach (Users cred in allCreds)
             {
-                if (cred.GetEncrypted()[0] == _loginPage.LoginUsername.Text && cred.GetEncrypted()[1] == _loginPage.LoginPassword.Password)
+                if (cred.GetUsername() == _loginPage.LoginUsername.Text && cred.GetPassword() == System.Text.Encoding.Unicode.GetString(SymmetricEncryption.Hash(_loginPage.LoginPassword.Password, "DARTHGOOSE!!!!")))
                 {
+                    masterCredentials = new Users(_loginPage.LoginUsername.Text, _loginPage.LoginPassword.Password, false);
+                    SymmetricEncryption.SetMaster(_loginPage.LoginPassword.Password);
                     _loginPage = null;
                     _createAccPage = null;
                     SetupNetworkMap();
@@ -140,10 +142,10 @@ namespace DarthGoose.Frontend
         {
             if(_createAccPage.CreateUsername.Text != "" && _createAccPage.CreatePassword.Password != "" && _createAccPage.CreatePassword.Password == _createAccPage.ConfirmPassword.Password)
             {
-                Credentials[]? allCreds = SaveSystem.LoadUsers(@".\Backend\Assets\Users.sidars");
-                foreach (Credentials cred in allCreds)
+                Users[]? allCreds = SaveSystem.LoadUsers(@".\Backend\Assets\Users.sidars");
+                foreach (Users cred in allCreds)
                 {
-                    if (cred.GetCreds()[0] == _createAccPage.CreateUsername.Text)
+                    if (cred.GetUsername() == _createAccPage.CreateUsername.Text)
                     {
                         MessageBox.Show("This username already exists. Log in instead.");
                         return;
@@ -151,7 +153,7 @@ namespace DarthGoose.Frontend
                 }
 
                 SymmetricEncryption.SetMaster(_createAccPage.CreatePassword.Password);
-                masterCredentials = new Credentials(_createAccPage.CreateUsername.Text, _createAccPage.CreatePassword.Password);
+                masterCredentials = new Users(_createAccPage.CreateUsername.Text, _createAccPage.CreatePassword.Password, false);
                 allCreds = allCreds.Concat([masterCredentials]).ToArray();
                 SaveSystem.SaveUsers(allCreds, @".\Backend\Assets\Users.sidars");
 
