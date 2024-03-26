@@ -12,9 +12,6 @@ using System.Windows.Media;
 using Backend.SaveManager;
 using Backend.MonitorManager;
 using SharpPcap;
-using System.Windows.Data;
-using System.Diagnostics.Eventing.Reader;
-using System.Runtime.CompilerServices;
 using Microsoft.Win32;
 
 namespace DarthGoose.Frontend
@@ -170,6 +167,7 @@ namespace DarthGoose.Frontend
         private static void NavCreateNewAccount(object sender, RoutedEventArgs e)
         {
             mainWindow.MainFrame.Navigate(_createAccPage);
+            mainWindow.Width = 800;
         }
 
         private static void NavLogin(object sender, RoutedEventArgs e)
