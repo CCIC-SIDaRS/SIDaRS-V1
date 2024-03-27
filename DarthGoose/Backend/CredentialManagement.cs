@@ -5,7 +5,7 @@ using System.Reflection;
 using System.Text.RegularExpressions;
 using System.IO;
 using System.Text.Json.Serialization;
-using System.Security;
+using System.Windows;
 
 namespace Backend.CredentialManager
 {
@@ -125,7 +125,7 @@ namespace Backend.CredentialManager
                 throw new Exception("Error during encrpytion " + ex);
             }
         }
-        public static string Decrypt(string encryptedText, byte[] _password)
+        public static string? Decrypt(string encryptedText, byte[] _password)
         {
             try
             {
@@ -142,7 +142,8 @@ namespace Backend.CredentialManager
             }
             catch (CryptographicException ex)
             {
-                throw new Exception("Decryption error - It is likely the correct password was not entered " + ex);
+                MessageBox.Show("You have selected a save file that was not created by the user you are currently logged in as");
+                return null;
             }
             catch (Exception ex)
             {

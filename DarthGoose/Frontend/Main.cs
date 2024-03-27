@@ -126,14 +126,11 @@ namespace DarthGoose.Frontend
                     _createAccPage = null;
                     SetupNetworkMap();
                     return;
-                } else
-                {
-                    MessageBox.Show("Invalid Username or Password.");
-                    _loginPage.LoginUsername.Text = "";
-                    _loginPage.LoginPassword.Password = "";
-                    return;
                 }
             }
+            MessageBox.Show("Invalid Username or Password.");
+            _loginPage.LoginUsername.Text = "";
+            _loginPage.LoginPassword.Password = "";
         }
 
         private static void OnCreateAccount(object sender, RoutedEventArgs e)
