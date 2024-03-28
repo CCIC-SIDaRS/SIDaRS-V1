@@ -8,6 +8,8 @@ using System.Text.Json;
 using System.Threading.Tasks;
 using Backend.CredentialManager;
 using SSHBackend;
+using System.Windows;
+using System.Windows.Media.Animation;
 
 namespace Backend.NetworkDeviceManager
 {
@@ -42,24 +44,34 @@ namespace Backend.NetworkDeviceManager
             if (protocol == ManagementProtocol.SSH)
             {
                 sshManager = new SSHManager(this.v4address, this.credentials, this.readCallback);
-                sshManager.Connect();
-                var task = new Task(() => { sshManager.ExecuteExecChannel("ls"); });
-
-                readCallback("Attempting SSH (Exec)...");
-
-                task.Wait(TimeSpan.FromSeconds(5));
-
-                if (connectionEstablished)
+                try
                 {
-                    this.protocol = ManagementProtocol.SSH;
+                    sshManager.Connect();
+                    var task = new Task(() => { sshManager.ExecuteExecChannel("ls"); });
+
+                    readCallback("Attempting SSH (Exec)...");
+
+                    task.Wait(TimeSpan.FromSeconds(5));
+
+                    if (connectionEstablished)
+                    {
+                        this.protocol = ManagementProtocol.SSH;
+                    }
+                    else
+                    {
+                        readCallback("SSH (Exec) unavailable\nAttempting SSHNoExec...");
+                        this.protocol = ManagementProtocol.SSHNoExe;
+                        sshManager.sshType = ManagementProtocol.SSHNoExe;
+                    }
+                    sshManager.Disconnect();
+                    connectionEstablished = true;
                 }
-                else
+                catch
                 {
-                    readCallback("SSH (Exec) unavailable\nAttempting SSHNoExec...");
-                    this.protocol = ManagementProtocol.SSHNoExe;
-                    sshManager.sshType = ManagementProtocol.SSHNoExe;
+                    MessageBox.Show(this.v4address + " could not be connected to using ssh,\n network management features will be disabled for this device until the address is corrected or the device is connected");
+                    connectionEstablished = false;
                 }
-                sshManager.Disconnect();
+                
             }
         }
 
@@ -125,9 +137,12 @@ namespace Backend.NetworkDeviceManager
         }
         public void Connect()
         {
-            if ((int)protocol <= 1)
+            if ((int)protocol <= 1 && connectionEstablished)
             {
                 sshManager.Connect();
+            }else if (!connectionEstablished)
+            {
+                MessageBox.Show("Please connect the device before attempting to establish a connection");
             }
             else
             {
