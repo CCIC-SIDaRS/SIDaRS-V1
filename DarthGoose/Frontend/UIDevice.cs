@@ -174,7 +174,7 @@ namespace DarthGoose.Frontend
             deviceMenu.V4Address.Text = v4Address;
             deviceMenu.Name.TextChanged += OnNameChange;
             deviceMenu.V4Address.TextChanged += OnAddressChanged;
-            deviceMenu.SshTerminal.Visibility = Visibility.Hidden;
+            deviceMenu.RetryConnection.Visibility = Visibility.Visible;
         }
 
         [JsonConstructor]
@@ -342,6 +342,8 @@ namespace DarthGoose.Frontend
             deviceMenu.V4Address.Text = v4Address;
             deviceMenu.V4Address.TextChanged += OnAddressChange;
             deviceMenu.DeviceDetailsTabs.SelectionChanged += OnTabChanged;
+            deviceMenu.RetryConnection.Click += RetryConnectionClick;
+            deviceMenu.RetryConnection.Visibility = Visibility.Visible;
 
 
             deviceMenu.KeyDown += KeyDown;
@@ -357,6 +359,8 @@ namespace DarthGoose.Frontend
             deviceMenu.V4Address.Text = _networkDevice.v4address;
             deviceMenu.V4Address.TextChanged += OnAddressChange;
             deviceMenu.DeviceDetailsTabs.SelectionChanged += OnTabChanged;
+            deviceMenu.RetryConnection.Click += RetryConnectionClick;
+            deviceMenu.RetryConnection.Visibility = Visibility.Visible;
             deviceMenu.KeyDown += KeyDown;
             deviceMenu.KeyUp += KeyUp;
             caption.Text = _networkDevice.name + "\n" + _networkDevice.v4address;
@@ -465,6 +469,11 @@ namespace DarthGoose.Frontend
             {
                 _shiftDown = false;
             }
+        }
+
+        private void RetryConnectionClick (object sender, RoutedEventArgs e)
+        {
+            _networkDevice.terminal.AttemptConnection();
         }
     }
 }

@@ -27,6 +27,7 @@
                     <TextBox x:Name="Name" Width="200" Height="30" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="10,10,0,0" Grid.ColumnSpan="2"/>
                     <TextBox x:Name="V4Address" Width="200" Height="30" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="10,50,0,0" Grid.ColumnSpan="2"/>
                     <Button x:Name="DeleteDevice" Width="200" Height="45" HorizontalAlignment="Left" VerticalAlignment="Bottom" Content="Delete Device" Margin="10,0,0,10" Background="Red" Foreground="White" Grid.ColumnSpan="2"/>
+                    <Button x:Name="RetryConnection" Width="200" Height="45" HorizontalAlignment="Left" VerticalAlignment="Center" Content="Retry Connection" Margin="10,10,10,10" Grid.ColumnSpan="2" Visibility="Hidden"/>
                 </Grid>
             </TabItem>
             <TabItem x:Name="SshTerminal" Header="SSH Terminal" Height="23" VerticalAlignment="Top">

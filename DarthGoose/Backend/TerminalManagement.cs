@@ -23,6 +23,7 @@ namespace Backend.NetworkDeviceManager
     class TerminalManager
     {
         public delegate void ReadCallback(string output);
+        public bool connectionEstablished { get; set; }
         private string assetsDir { get; set; }
         private static Dictionary<string, object> catalystCommands { get; set; }
         private string v4address { get; set; }
@@ -30,8 +31,6 @@ namespace Backend.NetworkDeviceManager
         private Credentials credentials { get; set; }
         private SSHManager? sshManager { get; set; }
         private ReadCallback readCallback { get; set; }
-
-        private bool connectionEstablished { get; set; }
 
         public TerminalManager(string assetsDir, string v4address, ManagementProtocol protocol, Credentials credentials, ReadCallback readCallback)
         {
@@ -44,34 +43,38 @@ namespace Backend.NetworkDeviceManager
             if (protocol == ManagementProtocol.SSH)
             {
                 sshManager = new SSHManager(this.v4address, this.credentials, this.readCallback);
-                try
+                AttemptConnection();
+            }
+        }
+
+        public void AttemptConnection()
+        {
+            try
+            {
+                sshManager.Connect();
+                var task = new Task(() => { sshManager.ExecuteExecChannel("ls"); });
+
+                readCallback("Attempting SSH (Exec)...");
+
+                task.Wait(TimeSpan.FromSeconds(5));
+
+                if (connectionEstablished)
                 {
-                    sshManager.Connect();
-                    var task = new Task(() => { sshManager.ExecuteExecChannel("ls"); });
-
-                    readCallback("Attempting SSH (Exec)...");
-
-                    task.Wait(TimeSpan.FromSeconds(5));
-
-                    if (connectionEstablished)
-                    {
-                        this.protocol = ManagementProtocol.SSH;
-                    }
-                    else
-                    {
-                        readCallback("SSH (Exec) unavailable\nAttempting SSHNoExec...");
-                        this.protocol = ManagementProtocol.SSHNoExe;
-                        sshManager.sshType = ManagementProtocol.SSHNoExe;
-                    }
-                    sshManager.Disconnect();
-                    connectionEstablished = true;
+                    this.protocol = ManagementProtocol.SSH;
                 }
-                catch
+                else
                 {
-                    MessageBox.Show(this.v4address + " could not be connected to using ssh,\n network management features will be disabled for this device until the address is corrected or the device is connected");
-                    connectionEstablished = false;
+                    readCallback("SSH (Exec) unavailable\nAttempting SSHNoExec...");
+                    this.protocol = ManagementProtocol.SSHNoExe;
+                    sshManager.sshType = ManagementProtocol.SSHNoExe;
                 }
-                
+                sshManager.Disconnect();
+                connectionEstablished = true;
+            }
+            catch
+            {
+                MessageBox.Show(this.v4address + " could not be connected to using ssh,\n network management features will be disabled for this device until the address is corrected or the device is connected");
+                connectionEstablished = false;
             }
         }
 
