@@ -4,9 +4,26 @@ using SharpPcap;
 using SharpPcap.LibPcap;
 using System.Windows;
 using System.Windows.Controls;
+using System.Text;
+using System.Net;
 
 namespace Backend.MonitorManager
 {
+    struct Packet
+    {
+        public Packet(string sourcePacket, string destinationPacket, string protocol, DateTime arrivalTime)
+        {
+            this.sourceAddress = sourcePacket;
+            this.destinationAddress = destinationPacket;
+            this.protocol = protocol;
+            this.arrivalTime = arrivalTime;
+        }
+        public string sourceAddress { get; }
+        public string destinationAddress { get; }
+        public string protocol { get; }
+        public DateTime arrivalTime { get; }
+
+    }
     class MonitorSystem
     {
         private ILiveDevice _sniffingDevice { get; set; }
@@ -29,12 +46,10 @@ namespace Backend.MonitorManager
 
         private void device_OnPacketArrival(object sender, PacketCapture e)
         {
-            DateTime time = e.Header.Timeval.Date;
-            int len = e.Data.Length;
             RawCapture rawPacket = e.GetPacket();
-            //Debug.WriteLine("{0}:{1}:{2},{3} Len={4}",
-                //time.Hour, time.Minute, time.Second, time.Millisecond, len);
-            //Debug.WriteLine(rawPacket.ToString());
+            PacketDotNet.Packet packet = PacketDotNet.Packet.ParsePacket(rawPacket.LinkLayerType, rawPacket.Data);
+            DateTime time = DateTime.Now;
+            PacketAnalysis.addPacket(new Packet(packet.Extract<PacketDotNet.IPPacket>().SourceAddress.ToString(), packet.Extract<PacketDotNet.IPPacket>().DestinationAddress.ToString(), packet.Extract<PacketDotNet.IPPacket>().Protocol.ToString(), time));
         }
 
         private void sniffing_Proccess()
@@ -46,6 +61,36 @@ namespace Backend.MonitorManager
             // Start the capturing process
             
             _sniffingDevice.Capture();
+        }
+    }
+    static class PacketAnalysis
+    {
+        public static Dictionary<IPAddress, List<Packet>> packetDict = new Dictionary<IPAddress, List<Packet>>();
+
+        public static void addPacket(Packet packet)
+        {
+            if (packetDict.ContainsKey(IPAddress.Parse(packet.sourceAddress)))
+            {
+                packetDict[IPAddress.Parse(packet.sourceAddress)].Add(packet);
+            }else
+            {
+                packetDict[IPAddress.Parse(packet.sourceAddress)] = new List<Packet>() { packet };
+            }
+        }
+
+        public static void lifeExpiration()
+        {
+            TimeSpan TTL = new TimeSpan(0, 0, 30);
+            foreach (List<Packet> packets in packetDict.Values)
+            {
+                foreach (Packet packet in packets)
+                {
+                    if (DateTime.Now <= packet.arrivalTime.Add(TTL))
+                    {
+                        
+                    }
+                }
+            }
         }
     }
 }
