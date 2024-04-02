@@ -11,10 +11,10 @@ namespace Backend.MonitorManager
 {
     struct Packet
     {
-        public Packet(string sourcePacket, string destinationPacket, string protocol, DateTime arrivalTime)
+        public Packet(string sourceAddress, string destinationAddress, string protocol, DateTime arrivalTime)
         {
-            this.sourceAddress = sourcePacket;
-            this.destinationAddress = destinationPacket;
+            this.sourceAddress = sourceAddress;
+            this.destinationAddress = destinationAddress;
             this.protocol = protocol;
             this.arrivalTime = arrivalTime;
         }
@@ -50,16 +50,13 @@ namespace Backend.MonitorManager
             PacketDotNet.Packet packet = PacketDotNet.Packet.ParsePacket(rawPacket.LinkLayerType, rawPacket.Data);
             DateTime time = DateTime.Now;
             PacketAnalysis.addPacket(new Packet(packet.Extract<PacketDotNet.IPPacket>().SourceAddress.ToString(), packet.Extract<PacketDotNet.IPPacket>().DestinationAddress.ToString(), packet.Extract<PacketDotNet.IPPacket>().Protocol.ToString(), time));
+            new Task(PacketAnalysis.lifeExpiration).Start();
         }
 
         private void sniffing_Proccess()
         {
-            // Open the device for capturing
             int readTimeoutMilliseconds = 1000;
             _sniffingDevice.Open(DeviceModes.Promiscuous, readTimeoutMilliseconds);
-
-            // Start the capturing process
-            
             _sniffingDevice.Capture();
         }
     }
@@ -83,11 +80,11 @@ namespace Backend.MonitorManager
             TimeSpan TTL = new TimeSpan(0, 0, 30);
             foreach (List<Packet> packets in packetDict.Values)
             {
-                foreach (Packet packet in packets)
+                for(int i = packets.Count - 1; i >= 0; i--)
                 {
-                    if (DateTime.Now <= packet.arrivalTime.Add(TTL))
+                    if (DateTime.Now <= packets[i].arrivalTime.Add(TTL))
                     {
-                        
+                        packets.RemoveAt(i);
                     }
                 }
             }

@@ -86,13 +86,6 @@ namespace Backend.CredentialManager
         {
             return [_username, _password];
         }
-        public string Save()
-        {
-            Dictionary<string, object> properties = new();
-            foreach (PropertyInfo prop in this.GetType().GetProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic))
-                properties.Add(prop.Name, prop.GetValue(this));
-            return Regex.Replace(JsonSerializer.Serialize(properties), @"[^\u0000-\u007F]+", string.Empty);
-        }
     }
     static class SymmetricEncryption
     {
