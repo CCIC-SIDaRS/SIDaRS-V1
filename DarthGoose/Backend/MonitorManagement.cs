@@ -68,7 +68,7 @@ namespace Backend.MonitorManager
                 Task task = new Task(PacketAnalysis.lifeExpiration);
                 task.Start();
                 task.Wait();
-                Debug.WriteLine(PacketAnalysis.packetDict.Count());
+                //Debug.WriteLine(PacketAnalysis.packetDict.Count());
             }
         }
 
@@ -108,9 +108,12 @@ namespace Backend.MonitorManager
                 var packetsCopy = packets.Value;
                 for(int i = 0; i < packets.Value.Count - 1; i++)
                 {
-                    if (DateTime.Now <= packets.Value[i].arrivalTime.Add(TTL))
+                    //Debug.WriteLine(DateTime.Now <= packets.Value[i].arrivalTime.Add(TTL));
+                    //Debug.WriteLine(DateTime.Now >= packets.Value[i].arrivalTime.Add(TTL));
+                    if (DateTime.Now >= packets.Value[i].arrivalTime.Add(TTL))
                     {
                         packetsCopy.RemoveAt(i);
+                        //Debug.WriteLine("Removed");
                     }
                 }
                 packetDict[packets.Key] = packetsCopy;
