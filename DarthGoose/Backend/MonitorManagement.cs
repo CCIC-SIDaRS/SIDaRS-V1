@@ -6,7 +6,8 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Text;
 using System.Net;
-
+using System.Net.Sockets;
+using System.Collections.Concurrent;
 namespace Backend.MonitorManager
 {
     struct Packet
@@ -42,15 +43,33 @@ namespace Backend.MonitorManager
             Thread sniffing = new Thread(new ThreadStart(sniffing_Proccess));
             sniffing.IsBackground = true;
             sniffing.Start();
+            new Task(PacketClean).Start();
         }
 
         private void device_OnPacketArrival(object sender, PacketCapture e)
         {
             RawCapture rawPacket = e.GetPacket();
             PacketDotNet.Packet packet = PacketDotNet.Packet.ParsePacket(rawPacket.LinkLayerType, rawPacket.Data);
-            DateTime time = DateTime.Now;
-            PacketAnalysis.addPacket(new Packet(packet.Extract<PacketDotNet.IPPacket>().SourceAddress.ToString(), packet.Extract<PacketDotNet.IPPacket>().DestinationAddress.ToString(), packet.Extract<PacketDotNet.IPPacket>().Protocol.ToString(), time));
-            new Task(PacketAnalysis.lifeExpiration).Start();
+            if (packet is PacketDotNet.EthernetPacket eth)
+            {
+                PacketDotNet.IPPacket ip = packet.Extract<PacketDotNet.IPPacket>();
+                if (ip != null)
+                {
+                    DateTime time = DateTime.Now;
+                    PacketAnalysis.addPacket(new Packet(ip.SourceAddress.ToString(), ip.DestinationAddress.ToString(), ip.Protocol.ToString(), time));
+                }
+            }
+        }
+
+        private void PacketClean()
+        {
+            while (true)
+            {
+                Task task = new Task(PacketAnalysis.lifeExpiration);
+                task.Start();
+                task.Wait();
+                Debug.WriteLine(PacketAnalysis.packetDict.Count());
+            }
         }
 
         private void sniffing_Proccess()
@@ -62,7 +81,7 @@ namespace Backend.MonitorManager
     }
     static class PacketAnalysis
     {
-        public static Dictionary<IPAddress, List<Packet>> packetDict = new Dictionary<IPAddress, List<Packet>>();
+        public static ConcurrentDictionary<IPAddress, List<Packet>> packetDict = new ConcurrentDictionary<IPAddress, List<Packet>>();
 
         public static void addPacket(Packet packet)
         {
@@ -78,15 +97,23 @@ namespace Backend.MonitorManager
         public static void lifeExpiration()
         {
             TimeSpan TTL = new TimeSpan(0, 0, 30);
-            foreach (List<Packet> packets in packetDict.Values)
+            ConcurrentDictionary<IPAddress, List<Packet>> dictCopy = packetDict;
+            foreach (KeyValuePair<IPAddress, List<Packet>> packets in dictCopy)
             {
-                for(int i = packets.Count - 1; i >= 0; i--)
+                if (packets.Value.Count <= 0)
                 {
-                    if (DateTime.Now <= packets[i].arrivalTime.Add(TTL))
+                    packetDict.TryRemove(packets);
+                    continue;
+                }
+                var packetsCopy = packets.Value;
+                for(int i = 0; i < packets.Value.Count - 1; i++)
+                {
+                    if (DateTime.Now <= packets.Value[i].arrivalTime.Add(TTL))
                     {
-                        packets.RemoveAt(i);
+                        packetsCopy.RemoveAt(i);
                     }
                 }
+                packetDict[packets.Key] = packetsCopy;
             }
         }
     }
