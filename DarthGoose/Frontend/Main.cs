@@ -85,7 +85,7 @@ namespace DarthGoose.Frontend
             _deviceSetupWindow.FinishedSetup.Click += new RoutedEventHandler(OnFinishedSetup);
             networkMap.CaptureDeviceDropDown.SelectionChanged += new SelectionChangedEventHandler(OnCaptureDeviceSelectionChanged);
 
-            if (devices.Count < 1)
+            if (captureDevices.Count < 1)
             {
                 MessageBox.Show("No viable capture devices were found on this machine");
             }else
