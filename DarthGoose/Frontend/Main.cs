@@ -82,6 +82,7 @@ namespace DarthGoose.Frontend
             networkMap.Load.Click += new RoutedEventHandler(OnLoadClick);
             networkMap.CancelConnection.Click += new RoutedEventHandler(OnCancelConnection);
             networkMap.SidePanelToggle.Click += new RoutedEventHandler(OnSidePanelToggleClick);
+            networkMap.SidePanelCloseButton.Click += new RoutedEventHandler(OnSidePanelCloseClick);
             _deviceSetupWindow.FinishedSetup.Click += new RoutedEventHandler(OnFinishedSetup);
             networkMap.CaptureDeviceDropDown.SelectionChanged += new SelectionChangedEventHandler(OnCaptureDeviceSelectionChanged);
 
@@ -322,14 +323,6 @@ namespace DarthGoose.Frontend
             }
         }
 
-        private static void OnSidePanelToggleClick(object sender, RoutedEventArgs e)
-        {
-            networkMap.SidePanelToggle.Visibility = Visibility.Hidden;
-            networkMap.DragBorder.SetValue(Grid.ColumnSpanProperty, 1);
-            networkMap.DragBorder.SetValue(Grid.ColumnProperty, 1);
-            networkMap.SideMenuBorder.Visibility = Visibility.Visible;
-        }
-
         private static void OnSaveAsClick(object sender, RoutedEventArgs e)
         {
             SaveFileDialog saveFileDialog = new SaveFileDialog();
@@ -353,6 +346,22 @@ namespace DarthGoose.Frontend
                 SaveSystem.Save(saveFileDialog.FileName, netDevices.ToArray(), endDevices.ToArray());
                 _saveFile = saveFileDialog.FileName;
             }
+        }
+
+        private static void OnSidePanelToggleClick(object sender, RoutedEventArgs e)
+        {
+            networkMap.SidePanelToggle.Visibility = Visibility.Hidden;
+            networkMap.DragBorder.SetValue(Grid.ColumnSpanProperty, 1);
+            networkMap.DragBorder.SetValue(Grid.ColumnProperty, 1);
+            networkMap.SideMenuBorder.Visibility = Visibility.Visible;
+        }
+
+        private static void OnSidePanelCloseClick(object sender, RoutedEventArgs e)
+        {
+            networkMap.SidePanelToggle.Visibility = Visibility.Visible;
+            networkMap.DragBorder.SetValue(Grid.ColumnSpanProperty, 2);
+            networkMap.DragBorder.SetValue(Grid.ColumnProperty, 0);
+            networkMap.SideMenuBorder.Visibility = Visibility.Hidden;
         }
 
         private static void OnCaptureDeviceSelectionChanged(object sender, SelectionChangedEventArgs e)
