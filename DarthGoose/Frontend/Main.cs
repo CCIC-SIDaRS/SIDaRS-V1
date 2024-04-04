@@ -81,6 +81,7 @@ namespace DarthGoose.Frontend
             networkMap.SaveAs.Click += new RoutedEventHandler(OnSaveAsClick);
             networkMap.Load.Click += new RoutedEventHandler(OnLoadClick);
             networkMap.CancelConnection.Click += new RoutedEventHandler(OnCancelConnection);
+            networkMap.SidePanelToggle.Click += new RoutedEventHandler(OnSidePanelToggleClick);
             _deviceSetupWindow.FinishedSetup.Click += new RoutedEventHandler(OnFinishedSetup);
             networkMap.CaptureDeviceDropDown.SelectionChanged += new SelectionChangedEventHandler(OnCaptureDeviceSelectionChanged);
 
@@ -319,6 +320,14 @@ namespace DarthGoose.Frontend
                 SaveSystem.Load(dialog.FileName);
                 _saveFile = dialog.FileName;
             }
+        }
+
+        private static void OnSidePanelToggleClick(object sender, RoutedEventArgs e)
+        {
+            networkMap.SidePanelToggle.Visibility = Visibility.Hidden;
+            networkMap.DragBorder.SetValue(Grid.ColumnSpanProperty, 1);
+            networkMap.DragBorder.SetValue(Grid.ColumnProperty, 1);
+            networkMap.SideMenuBorder.Visibility = Visibility.Visible;
         }
 
         private static void OnSaveAsClick(object sender, RoutedEventArgs e)
