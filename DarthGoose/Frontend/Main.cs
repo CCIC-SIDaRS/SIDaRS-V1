@@ -419,6 +419,9 @@ namespace DarthGoose.Frontend
             Point dev1Location = new Point(Canvas.GetLeft(device1), Canvas.GetTop(device1));
             Point dev2Location = new Point(Canvas.GetLeft(device2), Canvas.GetTop(device2));
 
+            //Point dev1Location = device1.TransformToAncestor(Application.Current.MainWindow).Transform(new Point(0,0));
+            //Point dev2Location = device1.TransformToAncestor(Application.Current.MainWindow).Transform(new Point(0, 0));
+
             line.X1 = dev1Location.X - device1.Width / 2;
             line.Y1 = dev1Location.Y + device1.Height / 2;
 
