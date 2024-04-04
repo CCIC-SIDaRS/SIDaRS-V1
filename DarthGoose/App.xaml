@@ -202,5 +202,15 @@
             <Setter Property="Height" Value="19"/>
             <Setter Property="BorderThickness" Value="0"/>
         </Style>
+
+        <Style TargetType="ComboBox">
+            <Setter Property="Background" Value="#2a2c30"/>
+            
+        </Style>
+
+        <Style TargetType="ComboBoxItem">
+            <Setter Property="Background" Value="#2a2c30"/>
+            <Setter Property="BorderThickness" Value="0.5"/>
+        </Style>
     </Application.Resources>
 </Application>
