@@ -358,7 +358,7 @@ namespace DarthGoose.Frontend
         private static void OnCaptureDeviceSelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             int selectedIndex = networkMap.CaptureDeviceDropDown.SelectedIndex;
-            if (selectedIndex != -1)
+            if (selectedIndex == -1)
             {
                 MessageBox.Show("Please select a network device");
             }else
