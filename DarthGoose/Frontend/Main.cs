@@ -30,6 +30,7 @@ namespace DarthGoose.Frontend
         private static CreateAccountPage _createAccPage = new();
         private static DeviceSetup _deviceSetupWindow = new();
         private static string? _saveFile = null;
+        private static CaptureDeviceList captureDevices = CaptureDeviceList.Instance;
 
         public static void FrontendMain(MainWindow window)
         {
@@ -48,30 +49,6 @@ namespace DarthGoose.Frontend
             _createAccPage.CreateButton.IsDefault = true;
 
             mainWindow.MainFrame.Navigate(_loginPage);
-
-            CaptureDeviceList devices = CaptureDeviceList.Instance;
-
-            // If no devices were found print an error
-            if (devices.Count < 1)
-            {
-                Console.WriteLine("No devices were found on this machine");
-                return;
-            }
-
-            Debug.WriteLine("The following devices are available on this machine:");
-            Debug.WriteLine("----------------------------------------------------");
-
-            int i = 0;
-
-            // Print out the devices
-            foreach (var dev in devices)
-            {
-                /* Description */
-                Debug.WriteLine("{0}) {1} {2}", i, dev.Name, dev.Description);
-                i++;
-            }
-
-            packetCapture = new MonitorSystem(devices[4]);
         }
 
         private static void OnWindowSizeChanged(object sender, SizeChangedEventArgs e)
@@ -104,7 +81,20 @@ namespace DarthGoose.Frontend
             networkMap.SaveAs.Click += new RoutedEventHandler(OnSaveAsClick);
             networkMap.Load.Click += new RoutedEventHandler(OnLoadClick);
             networkMap.CancelConnection.Click += new RoutedEventHandler(OnCancelConnection);
+            networkMap.SidePanelToggle.Click += new RoutedEventHandler(OnSidePanelToggleClick);
             _deviceSetupWindow.FinishedSetup.Click += new RoutedEventHandler(OnFinishedSetup);
+            networkMap.CaptureDeviceDropDown.SelectionChanged += new SelectionChangedEventHandler(OnCaptureDeviceSelectionChanged);
+
+            if (captureDevices.Count < 1)
+            {
+                MessageBox.Show("No viable capture devices were found on this machine");
+            }else
+            {
+                foreach (var dev in captureDevices)
+                {
+                    networkMap.CaptureDeviceDropDown.Items.Add(dev.Name);
+                }
+            }
 
             mainWindow.MainFrame.Navigate(networkMap);
         }
@@ -323,7 +313,7 @@ namespace DarthGoose.Frontend
         private static void OnLoadClick (object sender, RoutedEventArgs e)
         {
             OpenFileDialog dialog = new OpenFileDialog();
-            dialog.Filter = "*sidars files (*.sidars)|*.sidars";
+            dialog.Filter = "*sidars configuration files (*.sidars)|*.sidars";
             bool? result = dialog.ShowDialog();
             if (result == true)
             {
@@ -332,10 +322,18 @@ namespace DarthGoose.Frontend
             }
         }
 
+        private static void OnSidePanelToggleClick(object sender, RoutedEventArgs e)
+        {
+            networkMap.SidePanelToggle.Visibility = Visibility.Hidden;
+            networkMap.DragBorder.SetValue(Grid.ColumnSpanProperty, 1);
+            networkMap.DragBorder.SetValue(Grid.ColumnProperty, 1);
+            networkMap.SideMenuBorder.Visibility = Visibility.Visible;
+        }
+
         private static void OnSaveAsClick(object sender, RoutedEventArgs e)
         {
             SaveFileDialog saveFileDialog = new SaveFileDialog();
-            saveFileDialog.Filter = "*sidars files (*.sidars)|*.sidars";
+            saveFileDialog.Filter = "*sidars configuration files (*.sidars)|*.sidars";
             bool? result = saveFileDialog.ShowDialog();
             if(result == true)
             {
@@ -354,6 +352,19 @@ namespace DarthGoose.Frontend
                 }
                 SaveSystem.Save(saveFileDialog.FileName, netDevices.ToArray(), endDevices.ToArray());
                 _saveFile = saveFileDialog.FileName;
+            }
+        }
+
+        private static void OnCaptureDeviceSelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            int selectedIndex = networkMap.CaptureDeviceDropDown.SelectedIndex;
+            if (selectedIndex == -1)
+            {
+                MessageBox.Show("Please select a network device");
+            }else
+            {
+                packetCapture = new MonitorSystem(captureDevices[selectedIndex]);
+                packetCapture.StartCapture();
             }
         }
 
