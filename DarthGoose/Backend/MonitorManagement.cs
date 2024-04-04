@@ -6,6 +6,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Text;
 using System.Net;
+using System.Windows.Data;
 
 namespace Backend.MonitorManager
 {
@@ -30,14 +31,11 @@ namespace Backend.MonitorManager
         public MonitorSystem(ILiveDevice sniffingDevice)
         {
             _sniffingDevice = sniffingDevice;
-            SetupCapture();
+            _sniffingDevice.OnPacketArrival += new PacketArrivalEventHandler(device_OnPacketArrival);
         }
 
-        private void SetupCapture()
+        public void StartCapture()
         {
-            // Register our handler function to the 'packet arrival' event
-            _sniffingDevice.OnPacketArrival += new PacketArrivalEventHandler(device_OnPacketArrival);
-
             // Open the device for capturing
             Thread sniffing = new Thread(new ThreadStart(sniffing_Proccess));
             sniffing.IsBackground = true;
