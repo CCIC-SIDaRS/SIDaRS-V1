@@ -93,7 +93,7 @@ namespace DarthGoose.Frontend
             {
                 foreach (var dev in captureDevices)
                 {
-                    networkMap.CaptureDeviceDropDown.Items.Add(dev.Name);
+                    networkMap.CaptureDeviceDropDown.Items.Add(dev.Description);
                 }
             }
 

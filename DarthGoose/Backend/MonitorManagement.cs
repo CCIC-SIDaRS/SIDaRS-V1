@@ -46,16 +46,19 @@ namespace Backend.MonitorManager
         private void device_OnPacketArrival(object sender, PacketCapture e)
         {
             RawCapture rawPacket = e.GetPacket();
-            PacketDotNet.Packet packet = PacketDotNet.Packet.ParsePacket(rawPacket.LinkLayerType, rawPacket.Data);
-            if (packet is PacketDotNet.EthernetPacket eth)
+            new Task(() =>
             {
-                PacketDotNet.IPPacket ip = packet.Extract<PacketDotNet.IPPacket>();
-                if (ip != null)
+                PacketDotNet.Packet packet = PacketDotNet.Packet.ParsePacket(rawPacket.LinkLayerType, rawPacket.Data);
+                if (packet is PacketDotNet.EthernetPacket eth)
                 {
-                    DateTime time = DateTime.Now;
-                    PacketAnalysis.addPacket(new Packet(ip.SourceAddress.ToString(), ip.DestinationAddress.ToString(), ip.Protocol.ToString(), time));
+                    PacketDotNet.IPPacket ip = packet.Extract<PacketDotNet.IPPacket>();
+                    if (ip != null)
+                    {
+                        DateTime time = DateTime.Now;
+                        PacketAnalysis.addPacket(new Packet(ip.SourceAddress.ToString(), ip.DestinationAddress.ToString(), ip.Protocol.ToString(), time));
+                    }
                 }
-            }
+            }).Start();
         }
 
         private void PacketClean()
@@ -72,7 +75,13 @@ namespace Backend.MonitorManager
         private void sniffing_Proccess()
         {
             int readTimeoutMilliseconds = 1000;
-            _sniffingDevice.Open(DeviceModes.Promiscuous, readTimeoutMilliseconds);
+            if(_sniffingDevice.Description.ToLower().Contains("wireless"))
+            {
+                _sniffingDevice.Open(DeviceModes.Promiscuous, readTimeoutMilliseconds);
+            }else
+            {
+                _sniffingDevice.Open(DeviceModes.None, readTimeoutMilliseconds);
+            }
             _sniffingDevice.Capture();
         }
     }
@@ -95,15 +104,23 @@ namespace Backend.MonitorManager
         {
             TimeSpan TTL = new TimeSpan(0, 0, 30);
             ConcurrentDictionary<IPAddress, List<Packet>> dictCopy = packetDict;
-            foreach (KeyValuePair<IPAddress, List<Packet>> packets in dictCopy)
+            if(packetDict.Count > 0)
+            {
+                Debug.WriteLine(packetDict.OrderByDescending(m => m.Value.Count()).First().Value.Count);
+            }
+            Parallel.ForEach(dictCopy, packets =>
             {
                 if (packets.Value.Count <= 0)
                 {
                     packetDict.TryRemove(packets);
-                    continue;
+                    return;
+                }
+                if (packets.Value.Count() > 18200)
+                {
+                    MessageBox.Show("WARNING ATTACK DETECTED!!!!!");
                 }
                 var packetsCopy = packets.Value;
-                for(int i = 0; i < packets.Value.Count - 1; i++)
+                for (int i = 0; i < packets.Value.Count - 1; i++)
                 {
                     //Debug.WriteLine(DateTime.Now <= packets.Value[i].arrivalTime.Add(TTL));
                     //Debug.WriteLine(DateTime.Now >= packets.Value[i].arrivalTime.Add(TTL));
@@ -114,7 +131,7 @@ namespace Backend.MonitorManager
                     }
                 }
                 packetDict[packets.Key] = packetsCopy;
-            }
+            });
         }
     }
 }
