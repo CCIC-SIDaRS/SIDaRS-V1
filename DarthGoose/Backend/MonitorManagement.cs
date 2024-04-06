@@ -6,25 +6,45 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Text;
 using System.Net;
-using System.Net.Sockets;
-using System.Collections.Concurrent;
+using Backend.ThreadSafety;
+using System.Security;
+using System.CodeDom.Compiler;
 namespace Backend.MonitorManager
 {
     struct Packet
     {
-        public Packet(string sourceAddress, string destinationAddress, string protocol, DateTime arrivalTime)
+        public Packet(IPAddress destinationAddress, string protocol, DateTime arrivalTime, int packetSize)
         {
-            this.sourceAddress = sourceAddress;
             this.destinationAddress = destinationAddress;
             this.protocol = protocol;
             this.arrivalTime = arrivalTime;
+            this.packetSize = packetSize;
         }
-        public string sourceAddress { get; }
-        public string destinationAddress { get; }
+        public IPAddress destinationAddress { get; }
         public string protocol { get; }
         public DateTime arrivalTime { get; }
+        public int packetSize { get; }
 
     }
+
+    struct Host
+    {
+        public Host(IPAddress address)
+        {
+            this.address = address;
+            this.packets = new List<Packet>();
+            this.packetCount = 0;
+            this.trafficContributed = 0;
+            this.trafficContributedReset = DateTime.Now;
+        }
+        public IPAddress address { get; }
+        // This is in BYTES!!!!!!
+        public int trafficContributed { get; set; }
+        public DateTime trafficContributedReset { get; set; }
+        public int packetCount { get; set;  }
+        public List<Packet> packets { get; set; }
+    }
+
     class MonitorSystem
     {
         private ILiveDevice _sniffingDevice { get; set; }
@@ -54,8 +74,13 @@ namespace Backend.MonitorManager
                     PacketDotNet.IPPacket ip = packet.Extract<PacketDotNet.IPPacket>();
                     if (ip != null)
                     {
+                        int packetSize = 0;
+                        if (ip.PayloadPacket.PayloadData != null)
+                        {
+                            packetSize = ip.PayloadPacket.PayloadData.Length;
+                        }
                         DateTime time = DateTime.Now;
-                        PacketAnalysis.addPacket(new Packet(ip.SourceAddress.ToString(), ip.DestinationAddress.ToString(), ip.Protocol.ToString(), time));
+                        PacketAnalysis.addPacket(new Packet(ip.DestinationAddress, ip.Protocol.ToString(), time, packetSize), ip.SourceAddress);
                     }
                 }
             }).Start();
@@ -87,50 +112,73 @@ namespace Backend.MonitorManager
     }
     static class PacketAnalysis
     {
-        public static ConcurrentDictionary<IPAddress, List<Packet>> packetDict = new ConcurrentDictionary<IPAddress, List<Packet>>();
+        public static ConcurrentList<Host> hosts = new ConcurrentList<Host>();
 
-        public static void addPacket(Packet packet)
+        public static void addPacket(Packet packet, IPAddress sourceAddress)
         {
-            if (packetDict.ContainsKey(IPAddress.Parse(packet.sourceAddress)))
+            int host = -1;
+            for (int i = 0; i < hosts.Count; i++)
             {
-                packetDict[IPAddress.Parse(packet.sourceAddress)].Add(packet);
+                if (hosts[i].address == sourceAddress)
+                {
+                    host = i;
+                    break;
+                }
+            }
+            if (host == -1)
+            {
+                Host addingHost = new Host(sourceAddress);
+                addingHost.packets.Add(packet);
+                addingHost.packetCount++;
+                Debug.WriteLine(packet.packetSize);
+                addingHost.trafficContributed += packet.packetSize;
+                hosts.Add(addingHost);
             }else
             {
-                packetDict[IPAddress.Parse(packet.sourceAddress)] = new List<Packet>() { packet };
+                Host modifyingHost = hosts[host];
+                modifyingHost.packets.Add(packet);
+                modifyingHost.packetCount++;
+                Debug.WriteLine(packet.packetSize);
+                modifyingHost.trafficContributed += packet.packetSize;
+                hosts[host] = modifyingHost;
             }
         }
 
         public static void lifeExpiration()
         {
-            TimeSpan TTL = new TimeSpan(0, 0, 30);
-            ConcurrentDictionary<IPAddress, List<Packet>> dictCopy = packetDict;
-            if(packetDict.Count > 0)
+            TimeSpan packetLife = new TimeSpan(0, 0, 30);
+            TimeSpan trafficContributedLife = new TimeSpan(0, 10, 0);
+            ConcurrentList<Host> hostsCopy = hosts;
+            if(hosts.Count > 0)
             {
-                Debug.WriteLine(packetDict.OrderByDescending(m => m.Value.Count()).First().Value.Count);
+                //Debug.WriteLine(hostsCopy.OrderByDescending(m => m.trafficContributed).First().packets.Count);
             }
-            Parallel.ForEach(dictCopy, packets =>
+            Parallel.ForEach(hostsCopy, host =>
             {
-                if (packets.Value.Count <= 0)
+                if (host.packets.Count <= 0)
                 {
-                    packetDict.TryRemove(packets);
+                    hostsCopy.Remove(host);
                     return;
                 }
-                if (packets.Value.Count() > 18200)
+                if(DateTime.Now >= host.trafficContributedReset.Add(trafficContributedLife))
                 {
-                    MessageBox.Show("WARNING ATTACK DETECTED!!!!!");
+                    host.trafficContributedReset = DateTime.Now;
+                    host.trafficContributed = 0;
                 }
-                var packetsCopy = packets.Value;
-                for (int i = 0; i < packets.Value.Count - 1; i++)
+                List<Packet> packetsCopy = host.packets;
+                for (int i = 0; i < host.packets.Count - 1; i++)
                 {
                     //Debug.WriteLine(DateTime.Now <= packets.Value[i].arrivalTime.Add(TTL));
                     //Debug.WriteLine(DateTime.Now >= packets.Value[i].arrivalTime.Add(TTL));
-                    if (DateTime.Now >= packets.Value[i].arrivalTime.Add(TTL))
+                    if (DateTime.Now >= host.packets[i].arrivalTime.Add(packetLife))
                     {
                         packetsCopy.RemoveAt(i);
+                        host.packetCount--;
+                        continue;
                         //Debug.WriteLine("Removed");
                     }
                 }
-                packetDict[packets.Key] = packetsCopy;
+                host.packets = packetsCopy;
             });
         }
     }
