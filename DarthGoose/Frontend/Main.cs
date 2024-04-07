@@ -91,7 +91,7 @@ namespace DarthGoose.Frontend
                 MessageBox.Show("No viable capture devices were found on this machine");
             }else
             {
-                foreach (var dev in captureDevices)
+                foreach (ILiveDevice dev in captureDevices)
                 {
                     networkMap.CaptureDeviceDropDown.Items.Add(dev.Description);
                 }
