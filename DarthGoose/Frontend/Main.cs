@@ -25,12 +25,12 @@ namespace DarthGoose.Frontend
         public static Dictionary<string, UIDevice> devices = new();
         public static Users masterCredentials;
         public static MonitorSystem packetCapture;
+        public static CaptureDeviceList captureDevices = CaptureDeviceList.Instance;
 
         private static LoginPage _loginPage = new();
         private static CreateAccountPage _createAccPage = new();
         private static DeviceSetup _deviceSetupWindow = new();
         private static string? _saveFile = null;
-        private static CaptureDeviceList captureDevices = CaptureDeviceList.Instance;
 
         public static void FrontendMain(MainWindow window)
         {
@@ -249,6 +249,7 @@ namespace DarthGoose.Frontend
             caption.HorizontalAlignment = HorizontalAlignment.Center;
             caption.VerticalAlignment = VerticalAlignment.Top;
             caption.TextWrapping = TextWrapping.Wrap;
+            caption.TextAlignment = TextAlignment.Center;
 
             StackPanel stackPanel = new StackPanel();
             stackPanel.Children.Add(image);

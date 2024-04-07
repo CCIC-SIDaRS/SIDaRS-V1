@@ -9,6 +9,7 @@ using System.Net;
 using Backend.ThreadSafety;
 using System.Security;
 using System.CodeDom.Compiler;
+using PacketDotNet;
 namespace Backend.MonitorManager
 {
     struct Packet
@@ -66,7 +67,9 @@ namespace Backend.MonitorManager
         private void device_OnPacketArrival(object sender, PacketCapture e)
         {
             RawCapture rawPacket = e.GetPacket();
-            new Task(() =>
+            int packetSize = e.Data.Length;
+            // Debug.WriteLine(packetSize);
+            Task.Run(() =>
             {
                 PacketDotNet.Packet packet = PacketDotNet.Packet.ParsePacket(rawPacket.LinkLayerType, rawPacket.Data);
                 if (packet is PacketDotNet.EthernetPacket eth)
@@ -74,16 +77,11 @@ namespace Backend.MonitorManager
                     PacketDotNet.IPPacket ip = packet.Extract<PacketDotNet.IPPacket>();
                     if (ip != null)
                     {
-                        int packetSize = 0;
-                        if (ip.PayloadPacket.PayloadData != null)
-                        {
-                            packetSize = ip.PayloadPacket.PayloadData.Length;
-                        }
                         DateTime time = DateTime.Now;
                         PacketAnalysis.addPacket(new Packet(ip.DestinationAddress, ip.Protocol.ToString(), time, packetSize), ip.SourceAddress);
                     }
                 }
-            }).Start();
+            });
         }
 
         private void PacketClean()
@@ -107,6 +105,7 @@ namespace Backend.MonitorManager
             {
                 _sniffingDevice.Open(DeviceModes.None, readTimeoutMilliseconds);
             }
+            //Debug.WriteLine(_sniffingDevice);
             _sniffingDevice.Capture();
         }
     }
@@ -119,7 +118,8 @@ namespace Backend.MonitorManager
             int host = -1;
             for (int i = 0; i < hosts.Count; i++)
             {
-                if (hosts[i].address == sourceAddress)
+                //Debug.WriteLine(hosts[i].address.ToString() == sourceAddress.ToString());
+                if (hosts[i].address.ToString() == sourceAddress.ToString())
                 {
                     host = i;
                     break;
@@ -130,7 +130,7 @@ namespace Backend.MonitorManager
                 Host addingHost = new Host(sourceAddress);
                 addingHost.packets.Add(packet);
                 addingHost.packetCount++;
-                Debug.WriteLine(packet.packetSize);
+                //Debug.WriteLine(packet.packetSize + " " + sourceAddress.ToString());
                 addingHost.trafficContributed += packet.packetSize;
                 hosts.Add(addingHost);
             }else
@@ -138,7 +138,7 @@ namespace Backend.MonitorManager
                 Host modifyingHost = hosts[host];
                 modifyingHost.packets.Add(packet);
                 modifyingHost.packetCount++;
-                Debug.WriteLine(packet.packetSize);
+                //Debug.WriteLine(packet.packetSize);
                 modifyingHost.trafficContributed += packet.packetSize;
                 hosts[host] = modifyingHost;
             }
@@ -148,20 +148,24 @@ namespace Backend.MonitorManager
         {
             TimeSpan packetLife = new TimeSpan(0, 0, 30);
             TimeSpan trafficContributedLife = new TimeSpan(0, 10, 0);
-            ConcurrentList<Host> hostsCopy = hosts;
-            if(hosts.Count > 0)
-            {
-                //Debug.WriteLine(hostsCopy.OrderByDescending(m => m.trafficContributed).First().packets.Count);
-            }
-            Parallel.ForEach(hostsCopy, host =>
+            //if(hosts.Count > 0)
+            //{
+                
+            //}
+            Parallel.ForEach(hosts, host =>
             {
                 if (host.packets.Count <= 0)
                 {
-                    hostsCopy.Remove(host);
+                    hosts.Remove(host);
                     return;
+                }
+                if(host.trafficContributed > 500000000 || host.packetCount > 300000)
+                {
+                    MessageBox.Show("DOS Attack Detected!!!!");
                 }
                 if(DateTime.Now >= host.trafficContributedReset.Add(trafficContributedLife))
                 {
+                    //Debug.WriteLine(hosts.Max(m => m.trafficContributed));
                     host.trafficContributedReset = DateTime.Now;
                     host.trafficContributed = 0;
                 }
@@ -172,10 +176,11 @@ namespace Backend.MonitorManager
                     //Debug.WriteLine(DateTime.Now >= packets.Value[i].arrivalTime.Add(TTL));
                     if (DateTime.Now >= host.packets[i].arrivalTime.Add(packetLife))
                     {
+                        //Debug.WriteLine(hosts.Max(m => m.packetCount));
                         packetsCopy.RemoveAt(i);
                         host.packetCount--;
-                        continue;
                         //Debug.WriteLine("Removed");
+                        continue;
                     }
                 }
                 host.packets = packetsCopy;

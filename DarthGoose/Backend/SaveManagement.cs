@@ -4,9 +4,12 @@ using System.Text.Json;
 using System.Windows.Controls;
 using System.Windows.Media;
 using Backend.CredentialManager;
+using Backend.MonitorManager;
 using DarthGoose.Frontend;
 using Microsoft.Win32;
 using PacketDotNet.Lldp;
+using SharpPcap;
+using System.Linq;
 
 
 namespace Backend.SaveManager
