@@ -36,7 +36,7 @@
             </Menu>
         </DockPanel>
         <TextBlock x:Name="InfoText" HorizontalAlignment="Left" VerticalAlignment="Bottom" FontSize="12" Margin="3,0" Panel.ZIndex="2" Foreground="White"/>
-        <Button x:Name="CancelConnection" Content="Cancel" Width="100" Height="40" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="10,20" Panel.ZIndex="2" FontSize="12" Visibility="Hidden"/>
+        <Button x:Name="CancelConnection" Content="Cancel" Width="100" Height="40" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="10,20" Panel.ZIndex="2" FontSize="12" Grid.Column="1" Visibility="Hidden"/>
         <Button x:Name="SidePanelToggle" Height="75" Width="45" VerticalAlignment="Top" HorizontalAlignment="Left" Margin="-15,50" Panel.ZIndex="2">
             <Image Source="\Images\RightArrow.png" Stretch="Fill" RenderOptions.BitmapScalingMode="Fant" Width="20" Height="40"/>
         </Button>

@@ -18,7 +18,7 @@ namespace Backend.SaveManager
      {
         public static void SaveUsers(Users[] masterCredentials, string assets)
         {
-            Debug.WriteLine(masterCredentials.Length);
+            //Debug.WriteLine(masterCredentials.Length);
             File.WriteAllText(assets, JsonSerializer.Serialize(masterCredentials));
         }
 
