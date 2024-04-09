@@ -10,6 +10,7 @@ using Backend.ThreadSafety;
 using System.Security;
 using System.CodeDom.Compiler;
 using PacketDotNet;
+using System.Text.Json.Serialization;
 namespace Backend.MonitorManager
 {
     struct Packet
@@ -68,15 +69,31 @@ namespace Backend.MonitorManager
         {
             RawCapture rawPacket = e.GetPacket();
             int packetSize = e.Data.Length;
+
             // Debug.WriteLine(packetSize);
             Task.Run(() =>
             {
                 PacketDotNet.Packet packet = PacketDotNet.Packet.ParsePacket(rawPacket.LinkLayerType, rawPacket.Data);
+                
                 if (packet is PacketDotNet.EthernetPacket eth)
                 {
-                    PacketDotNet.IPPacket ip = packet.Extract<PacketDotNet.IPPacket>();
+                    IPPacket ip = packet.Extract<IPPacket>();
+                    
                     if (ip != null)
                     {
+                        if(ip.Protocol == ProtocolType.Udp)
+                        {
+                            UdpPacket udp = ip.Extract<UdpPacket>();
+                            if (udp != null)
+                            {
+                                byte[] something = udp.PayloadData;
+                                Debug.WriteLine(Encoding.Unicode.GetString(something));
+                                if (ip.SourceAddress == IPAddress.Parse("10.235.99.251"))
+                                {
+                                    MessageBox.Show("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA");
+                                }
+                            }
+                        }
                         DateTime time = DateTime.Now;
                         PacketAnalysis.addPacket(new Packet(ip.DestinationAddress, ip.Protocol.ToString(), time, packetSize), ip.SourceAddress);
                     }
@@ -159,7 +176,7 @@ namespace Backend.MonitorManager
                     hosts.Remove(host);
                     return;
                 }
-                if(host.trafficContributed > 500000000 || host.packetCount > 300000)
+                if(host.trafficContributed > 500000000 || host.packetCount > 30000)
                 {
                     MessageBox.Show("DOS Attack Detected!!!!");
                 }
