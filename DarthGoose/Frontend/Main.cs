@@ -18,6 +18,10 @@ namespace DarthGoose.Frontend
 {
     static class FrontendManager
     {
+        /// <summary>
+        /// declares public variables for use whena interfacing with the front end control logic
+        /// and objects
+        /// </summary>
         public static bool connecting = false;
         public static MainWindow mainWindow;
         public static NetworkMap networkMap = new();
@@ -27,11 +31,18 @@ namespace DarthGoose.Frontend
         public static MonitorSystem packetCapture;
         public static CaptureDeviceList captureDevices = CaptureDeviceList.Instance;
 
+        /// <summary>
+        /// decalres private variables for use in local processes
+        /// </summary>
         private static LoginPage _loginPage = new();
         private static CreateAccountPage _createAccPage = new();
         private static DeviceSetup _deviceSetupWindow = new();
         private static string? _saveFile = null;
 
+        /// <summary>
+        /// Runs on startup to setup the main application and the login page
+        /// </summary>
+        /// <param name="window"></param>
         public static void FrontendMain(MainWindow window)
         {
             mainWindow = window;
@@ -51,16 +62,32 @@ namespace DarthGoose.Frontend
             mainWindow.MainFrame.Navigate(_loginPage);
         }
 
+        /// <summary>
+        /// updates the window size for use with bounding
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private static void OnWindowSizeChanged(object sender, SizeChangedEventArgs e)
         {
             windowSize = new Point(e.NewSize.Width, e.NewSize.Height);
         }
 
+        /// <summary>
+        /// ensures the application is fully shutdown when closed
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private static void MainWindowClosing(object sender, CancelEventArgs e)
         {
             Application.Current.Shutdown();
         }
-
+   
+        /// <summary>
+        /// Prepares the mainwindow for use with the network map
+        /// Adds even handlers for the ui objects in the network map
+        /// Gathers he availible network devices for capture and adds them to a combobox
+        /// navigates to the network map page
+        /// </summary>
         private static void SetupNetworkMap()
         {
             mainWindow.Top = SystemParameters.PrimaryScreenHeight / 2 - 360;
@@ -100,6 +127,17 @@ namespace DarthGoose.Frontend
             mainWindow.MainFrame.Navigate(networkMap);
         }
 
+        /// <summary>
+        /// reads existing uernames and passwords from the Users.sidars file
+        /// checks to make sure an account exists
+        /// reads from the username box and ensures something has been entered
+        /// reads from the password box and hashes the password using the same algorithm used to encrypt the passwords before storing them
+        /// finds the username in the list of existing accounts and compares the stored password with the hashed password from the password box
+        /// resets if passwords do not match
+        /// uses a different hashing algorithm to set the master password for the device passwords
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private static void OnLoginEnter(object sender, RoutedEventArgs e)
         {
             Users[]? allCreds = SaveSystem.LoadUsers(@".\Backend\Assets\Users.sidars");
@@ -124,6 +162,15 @@ namespace DarthGoose.Frontend
             _loginPage.LoginPassword.Password = "";
         }
 
+        /// <summary>
+        /// reads from the users.sidars file, the username box, and the password box
+        /// checks the username against the existing usernames to make sure it doesn't already exist
+        /// hashes and stores the username and passwords
+        /// set the master using the same method as above
+        /// naivgates to the networkmap
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private static void OnCreateAccount(object sender, RoutedEventArgs e)
         {
             if(_createAccPage.CreateUsername.Text != "" && _createAccPage.CreatePassword.Password != "" && _createAccPage.CreatePassword.Password == _createAccPage.ConfirmPassword.Password)
@@ -152,17 +199,32 @@ namespace DarthGoose.Frontend
             }
         }
 
+        /// <summary>
+        /// navigates to cthe create account page from the login page
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private static void NavCreateNewAccount(object sender, RoutedEventArgs e)
         {
             mainWindow.MainFrame.Navigate(_createAccPage);
             mainWindow.Width = 800;
         }
 
+        /// <summary>
+        /// navigates from the create account page to the login page
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private static void NavLogin(object sender, RoutedEventArgs e)
         {
             mainWindow.MainFrame.Navigate(_loginPage);
         }
 
+        /// <summary>
+        /// Navigates to our technical support website
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private static void GetGooseSupport(object sender, RoutedEventArgs e)
         {
             MessageBox.Show("GOOSE SUPPORT STARTING...");
