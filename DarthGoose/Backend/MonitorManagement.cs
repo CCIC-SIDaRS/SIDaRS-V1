@@ -74,7 +74,9 @@ namespace Backend.MonitorManager
             Task.Run(() =>
             {
                 PacketDotNet.Packet packet = PacketDotNet.Packet.ParsePacket(rawPacket.LinkLayerType, rawPacket.Data);
-                
+
+                Debug.WriteLine(Encoding.Unicode.GetString(packet.PayloadPacket.PayloadData));
+
                 if (packet is PacketDotNet.EthernetPacket eth)
                 {
                     IPPacket ip = packet.Extract<IPPacket>();
@@ -87,10 +89,10 @@ namespace Backend.MonitorManager
                             if (udp != null)
                             {
                                 byte[] something = udp.PayloadData;
-                                Debug.WriteLine(Encoding.Unicode.GetString(something));
+                                // Debug.WriteLine(Encoding.Unicode.GetString(something));
                                 if (ip.SourceAddress == IPAddress.Parse("10.235.99.251"))
                                 {
-                                    MessageBox.Show("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA");
+                                    // MessageBox.Show("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA");
                                 }
                             }
                         }
