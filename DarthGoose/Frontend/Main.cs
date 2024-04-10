@@ -16,6 +16,9 @@ using Microsoft.Win32;
 
 namespace DarthGoose.Frontend
 {
+    /// <summary>
+    /// Controls dthe UIElements for the main window and the device setup window
+    /// </summary>
     static class FrontendManager
     {
         /// <summary>
@@ -498,7 +501,9 @@ namespace DarthGoose.Frontend
         }
 
         /// <summary>
-        /// 
+        /// Executes when the user selects the arrow button on the side of the network map
+        /// Changes the columnspan definitions to move UI elements away from the side panel
+        /// Makes the side panel visible
         /// </summary>
         /// <param name="sender" Type="object"></param>
         /// <param name="e" Type="RoutedEventArgs"></param>
@@ -511,7 +516,9 @@ namespace DarthGoose.Frontend
         }
 
         /// <summary>
-        /// 
+        /// Executes when the user selects the x button on the side panel
+        /// hides the side panel
+        /// resets column definitions so that ui elements use the whole screen again
         /// </summary>
         /// <param name="sender" Type="object"></param>
         /// <param name="e" Type="RoutedEventArgs"></param>
@@ -524,7 +531,7 @@ namespace DarthGoose.Frontend
         }
 
         /// <summary>
-        /// 
+        /// Stars a new capture session with the selected device assuming the user has actually made a selection
         /// </summary>
         /// <param name="sender" Type="object"></param>
         /// <param name="e" Type="RoutedEventArgs"></param>
@@ -542,7 +549,10 @@ namespace DarthGoose.Frontend
         }
 
         /// <summary>
-        /// 
+        /// Collects the uids of the devices to be connected
+        /// Adds the keys of the device being connected to to each devices UIDevice object if 2 devices have been selected
+        /// If 2 devices have been selected then it also reset the UI from the connection state
+        /// If only one device has been selected then it updates the info text on the bottom of the screen
         /// </summary>
         /// <param name="sender" Type="System.Windows.Control.Label"></param>
         public static void AddToPendingConnections(Label sender)
@@ -567,14 +577,15 @@ namespace DarthGoose.Frontend
         }
 
         /// <summary>
-        /// 
+        /// If this is a new connection (existingConnection = null):
+        ///     Creates a new System.Windows.Shapes.Line object for the connection
+        ///     Childs the line object to the ConnectionCanvas
+        /// If a connection already exists (existing connection != null)
+        ///     sets the current line object to the existing connection line
+        /// Draws the line between the center of the 2 devices based on the positions of the label objects provided
         /// </summary>
-        /// <param name="connectedDevices" Type="List<Label>">
-        /// 
-        /// </param>
-        /// <param name="connectedUids" Type="List<string>">
-        /// 
-        /// </param>
+        /// <param name="connectedDevices" Type="List<Label>"></param>
+        /// <param name="connectedUids" Type="List<string>"></param>
         /// <param name="existingConnection" Type="System.Windows.Shapes.Line">
         /// only used for when a device is moved on screen and an existing line/ connection needs to be redrawn
         /// </param>
