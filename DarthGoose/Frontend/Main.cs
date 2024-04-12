@@ -13,6 +13,7 @@ using Backend.SaveManager;
 using Backend.MonitorManager;
 using SharpPcap;
 using Microsoft.Win32;
+using System.Windows.Input;
 
 namespace DarthGoose.Frontend
 {
@@ -31,7 +32,7 @@ namespace DarthGoose.Frontend
         public static Point windowSize;
         public static Dictionary<string, UIDevice> devices = new();
         public static Users masterCredentials;
-        public static MonitorSystem packetCapture;
+        public static MonitorSystem? packetCapture = null;
         public static CaptureDeviceList captureDevices = CaptureDeviceList.Instance;
 
         /// <summary>
@@ -56,10 +57,14 @@ namespace DarthGoose.Frontend
             mainWindow.Closing += new CancelEventHandler(MainWindowClosing);
             _loginPage.LoginButton.Click += new RoutedEventHandler(OnLoginEnter);
             _loginPage.CreateAccountButton.Click += new RoutedEventHandler(NavCreateNewAccount);
+            _loginPage.LoginUsername.MouseLeftButtonDown += new MouseButtonEventHandler(OnTextBoxSelected);
+            _loginPage.LoginUsername.Focus();
             _loginPage.LoginButton.IsDefault = true;
 
             _createAccPage.LoginButton.Click += new RoutedEventHandler(NavLogin);
             _createAccPage.CreateButton.Click += new RoutedEventHandler(OnCreateAccount);
+            _createAccPage.CreateUsername.MouseLeftButtonDown += new MouseButtonEventHandler(OnTextBoxSelected);
+            _createAccPage.CreateUsername.Focus();
             _createAccPage.CreateButton.IsDefault = true;
 
             mainWindow.MainFrame.Navigate(_loginPage);
@@ -115,6 +120,9 @@ namespace DarthGoose.Frontend
             networkMap.CancelConnection.Click += new RoutedEventHandler(OnCancelConnection);
             networkMap.SidePanelToggle.Click += new RoutedEventHandler(OnSidePanelToggleClick);
             networkMap.SidePanelCloseButton.Click += new RoutedEventHandler(OnSidePanelCloseClick);
+            networkMap.StartCaptureButton.Click += new RoutedEventHandler(OnStartCaptureClick);
+            networkMap.StopCaptureButton.Click += new RoutedEventHandler(OnStopCaptureClick);
+            networkMap.TakeBaselineButton.Click += new RoutedEventHandler(OnTakeBaselineClick);
             _deviceSetupWindow.FinishedSetup.Click += new RoutedEventHandler(OnFinishedSetup);
             networkMap.CaptureDeviceDropDown.SelectionChanged += new SelectionChangedEventHandler(OnCaptureDeviceSelectionChanged);
 
@@ -541,10 +549,49 @@ namespace DarthGoose.Frontend
             if (selectedIndex == -1)
             {
                 MessageBox.Show("Please select a network device");
-            }else
+            }
+            else if (packetCapture == null)
             {
                 packetCapture = new MonitorSystem(captureDevices[selectedIndex]);
+            }else
+            {
+                packetCapture.ChangeCaptureDevice(captureDevices[selectedIndex]);
+            }
+        }
+
+        private static void OnStartCaptureClick(object sender, RoutedEventArgs e)
+        {
+            if(networkMap.CaptureDeviceDropDown.SelectedIndex == -1 || packetCapture == null)
+            {
+                MessageBox.Show("Please select a network device before attempting to start capture");
+            }else
+            {
                 packetCapture.StartCapture();
+            }
+        }
+
+        private static void OnStopCaptureClick(object sender, RoutedEventArgs e)
+        {
+            if (networkMap.CaptureDeviceDropDown.SelectedIndex == -1 || packetCapture == null)
+            {
+                MessageBox.Show("Please select a network device and start capture before attempting to stop capture");
+            }else
+            {
+                packetCapture.StopCapture();
+            }
+        }
+
+        private static void OnTakeBaselineClick(object sender, RoutedEventArgs e)
+        {
+            // TODO
+        }
+
+        private static void OnTextBoxSelected(object sender, MouseButtonEventArgs e)
+        {
+            TextBox? box = sender as TextBox;
+            if (box != null)
+            {
+                box.Focus();
             }
         }
 

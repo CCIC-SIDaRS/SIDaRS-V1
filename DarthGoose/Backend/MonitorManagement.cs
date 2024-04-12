@@ -11,6 +11,8 @@ using System.Security;
 using System.CodeDom.Compiler;
 using PacketDotNet;
 using System.Text.Json.Serialization;
+using System.Diagnostics.Eventing.Reader;
+using System.Printing;
 namespace Backend.MonitorManager
 {
     struct Packet
@@ -50,10 +52,21 @@ namespace Backend.MonitorManager
     class MonitorSystem
     {
         private ILiveDevice _sniffingDevice { get; set; }
+        private Task _packetClean { get; set; }
+        private bool _stopClean = false;
+        private bool _captureRunning = false;
         public MonitorSystem(ILiveDevice sniffingDevice)
         {
             _sniffingDevice = sniffingDevice;
             _sniffingDevice.OnPacketArrival += new PacketArrivalEventHandler(device_OnPacketArrival);
+            _packetClean = new Task(PacketClean);
+        }
+
+        public void ChangeCaptureDevice(ILiveDevice device)
+        {
+            StopCapture();
+            _sniffingDevice = device;
+            StartCapture();
         }
 
         public void StartCapture()
@@ -62,7 +75,19 @@ namespace Backend.MonitorManager
             Thread sniffing = new Thread(new ThreadStart(sniffing_Proccess));
             sniffing.IsBackground = true;
             sniffing.Start();
-            new Task(PacketClean).Start();
+            _packetClean.Start();
+            _captureRunning = true;
+        }
+
+        public void StopCapture()
+        {
+            if(!_captureRunning)
+            {
+                return;
+            }
+            _stopClean = true;
+            _sniffingDevice.StopCapture();
+            _captureRunning = false;
         }
 
         private void device_OnPacketArrival(object sender, PacketCapture e)
@@ -75,37 +100,13 @@ namespace Backend.MonitorManager
             {
                 PacketDotNet.Packet packet = PacketDotNet.Packet.ParsePacket(rawPacket.LinkLayerType, rawPacket.Data);
 
-                Debug.WriteLine(Encoding.Unicode.GetString(packet.PayloadPacket.PayloadData));
-
-                if (packet is PacketDotNet.EthernetPacket eth)
-                {
-                    IPPacket ip = packet.Extract<IPPacket>();
-                    
-                    if (ip != null)
-                    {
-                        if(ip.Protocol == ProtocolType.Udp)
-                        {
-                            UdpPacket udp = ip.Extract<UdpPacket>();
-                            if (udp != null)
-                            {
-                                byte[] something = udp.PayloadData;
-                                // Debug.WriteLine(Encoding.Unicode.GetString(something));
-                                if (ip.SourceAddress == IPAddress.Parse("10.235.99.251"))
-                                {
-                                    // MessageBox.Show("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA");
-                                }
-                            }
-                        }
-                        DateTime time = DateTime.Now;
-                        PacketAnalysis.addPacket(new Packet(ip.DestinationAddress, ip.Protocol.ToString(), time, packetSize), ip.SourceAddress);
-                    }
-                }
+                
             });
         }
 
         private void PacketClean()
         {
-            while (true)
+            while (!_stopClean)
             {
                 Task task = new Task(PacketAnalysis.lifeExpiration);
                 task.Start();
@@ -177,10 +178,6 @@ namespace Backend.MonitorManager
                 {
                     hosts.Remove(host);
                     return;
-                }
-                if(host.trafficContributed > 500000000 || host.packetCount > 30000)
-                {
-                    MessageBox.Show("DOS Attack Detected!!!!");
                 }
                 if(DateTime.Now >= host.trafficContributedReset.Add(trafficContributedLife))
                 {
