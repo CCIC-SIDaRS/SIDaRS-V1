@@ -16,12 +16,17 @@ namespace Backend.SaveManager
 {
      static class SaveSystem
      {
+        /// <summary>
+        /// Saves user credentials to a file in JSON
+        /// </summary>
         public static void SaveUsers(Users[] masterCredentials, string assets)
         {
             //Debug.WriteLine(masterCredentials.Length);
             File.WriteAllText(assets, JsonSerializer.Serialize(masterCredentials));
         }
-
+        /// <summary>
+        /// Reads user credentials from a file, returns as an array of "Users", creates empty array if empty or doesn't exist 
+        /// </summary>
         public static Users[]? LoadUsers(string assets)
         {
             string file = File.ReadAllText(assets);
@@ -34,6 +39,9 @@ namespace Backend.SaveManager
             }
             
         }
+       /// <summary>
+       /// Organizes devices into a dictionary, dictionary is saved as a JSON file
+       /// </summary>
         public static void Save(string saveFile, UINetDevice[] netDevices, EndpointDevice[] endpointDevices)
         {
             Dictionary<string, object> saveDict = new();
