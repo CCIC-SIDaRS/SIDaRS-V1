@@ -1,4 +1,5 @@
 ﻿using System;
+using System.CodeDom;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics.Contracts;
@@ -104,7 +105,14 @@ namespace Backend.ThreadSafety
         {
             lock(_lock)
             {
-                _internalList.RemoveAt(index);
+                try
+                {
+                    _internalList.RemoveAt(index);
+                }catch(ArgumentOutOfRangeException)
+                {
+                    throw new IndexOutOfRangeException();
+                }
+                
             }
         }
 

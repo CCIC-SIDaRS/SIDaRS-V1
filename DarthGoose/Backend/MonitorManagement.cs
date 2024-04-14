@@ -13,44 +13,36 @@ using PacketDotNet;
 using System.Text.Json.Serialization;
 using System.Diagnostics.Eventing.Reader;
 using System.Printing;
+using System.Windows.Data;
+using System.ComponentModel.Design.Serialization;
+using System.Runtime.CompilerServices;
 namespace Backend.MonitorManager
 {
-    struct Packet
+    class Node
     {
-        public Packet(IPAddress destinationAddress, string protocol, DateTime arrivalTime, int packetSize)
-        {
-            this.destinationAddress = destinationAddress;
-            this.protocol = protocol;
-            this.arrivalTime = arrivalTime;
-            this.packetSize = packetSize;
-        }
-        public IPAddress destinationAddress { get; }
-        public string protocol { get; }
-        public DateTime arrivalTime { get; }
-        public int packetSize { get; }
+        public NodeRecord? parentRecord { get; set; }
+        public Node? previousNode { get; set; }
+        public Node? nextNode { get; set; }
+
+        public NodeRecord[] records = new NodeRecord[256];
 
     }
-
-    struct Host
+    class NodeRecord
     {
-        public Host(IPAddress address)
+        public ExponentiallyWeightedMovingAverage fromRate { get; set; }
+        public ExponentiallyWeightedMovingAverage toRate { get; set; }
+        public ExponentiallyWeightedMovingAverage ratioAverage { get; set; }
+        public Node? child { get; set; }
+        public NodeRecord(float alpha)
         {
-            this.address = address;
-            this.packets = new List<Packet>();
-            this.packetCount = 0;
-            this.trafficContributed = 0;
-            this.trafficContributedReset = DateTime.Now;
+            fromRate = new ExponentiallyWeightedMovingAverage(alpha);
+            toRate = new ExponentiallyWeightedMovingAverage(alpha);
+            ratioAverage = new ExponentiallyWeightedMovingAverage(alpha);
         }
-        public IPAddress address { get; }
-        // This is in BYTES!!!!!!
-        public int trafficContributed { get; set; }
-        public DateTime trafficContributedReset { get; set; }
-        public int packetCount { get; set;  }
-        public List<Packet> packets { get; set; }
     }
-
     class MonitorSystem
     {
+        public IPAddress gateway = IPAddress.Parse("192.168.1.1");
         private ILiveDevice _sniffingDevice { get; set; }
         private Task _packetClean { get; set; }
         private bool _stopClean = false;
@@ -75,7 +67,7 @@ namespace Backend.MonitorManager
             Thread sniffing = new Thread(new ThreadStart(sniffing_Proccess));
             sniffing.IsBackground = true;
             sniffing.Start();
-            _packetClean.Start();
+            //_packetClean.Start();
             _captureRunning = true;
         }
 
@@ -98,21 +90,29 @@ namespace Backend.MonitorManager
             // Debug.WriteLine(packetSize);
             Task.Run(() =>
             {
-                PacketDotNet.Packet packet = PacketDotNet.Packet.ParsePacket(rawPacket.LinkLayerType, rawPacket.Data);
-
-                
+                Packet packet = Packet.ParsePacket(rawPacket.LinkLayerType, rawPacket.Data);
+                IPPacket ip = packet.Extract<IPPacket>();
+                if(ip != null)
+                {
+                    if (ip.DestinationAddress.AddressFamily != System.Net.Sockets.AddressFamily.InterNetworkV6 && ip.SourceAddress.AddressFamily != System.Net.Sockets.AddressFamily.InterNetworkV6) 
+                    {
+                        PacketAnalysis.addPacket(ip);
+                        //Debug.WriteLine("source " + ip.SourceAddress + " destination: " + ip.DestinationAddress + " protocol: " + ip.Protocol);
+                    }
+                }
+                //PacketAnalysis.lifeExpiration();
             });
         }
 
         private void PacketClean()
         {
-            while (!_stopClean)
-            {
-                Task task = new Task(PacketAnalysis.lifeExpiration);
-                task.Start();
-                task.Wait();
-                //Debug.WriteLine(PacketAnalysis.packetDict.Count());
-            }
+            //while (!_stopClean)
+            //{
+            //    Task task = new Task(PacketAnalysis.lifeExpiration);
+            //    task.Start();
+            //    task.Wait();
+            //    //Debug.WriteLine(PacketAnalysis.packetDict.Count());
+            //}
         }
 
         private void sniffing_Proccess()
@@ -131,76 +131,176 @@ namespace Backend.MonitorManager
     }
     static class PacketAnalysis
     {
-        public static ConcurrentList<Host> hosts = new ConcurrentList<Host>();
+        //public static ConcurrentList<Host> hosts = new ConcurrentList<Host>();
+        // This will be reset whenever we clear the packet counter
 
-        public static void addPacket(Packet packet, IPAddress sourceAddress)
+        // Will be reset after x amount of time
+        private static int _foldTime = 30000;
+
+        // This represents entries for all addresses
+        private static Node _rootNode = new Node();
+
+        private static int expansionThreshhold = 10; // Packets per Millisecond
+
+        public static void addPacket(IPPacket packet)
         {
-            int host = -1;
-            for (int i = 0; i < hosts.Count; i++)
+            
+            byte[] sourceAddress = packet.SourceAddress.GetAddressBytes();
+            byte[] destinationAddress = packet.DestinationAddress.GetAddressBytes();
+            Node currentBase = _rootNode;
+            NodeRecord? currentSourceNodeRecord = null;
+            NodeRecord? currentDestinationNodeRecord = null;
+            bool SourceComplete = false;
+            bool DestinationComplete = false;
+            int deepestSourceLevel = 0;
+            int deepestDestinationLevel = 0;
+            for (int i = 0; i < 4; i++)
             {
-                //Debug.WriteLine(hosts[i].address.ToString() == sourceAddress.ToString());
-                if (hosts[i].address.ToString() == sourceAddress.ToString())
+                if(!SourceComplete)
                 {
-                    host = i;
+                    byte currentSourceByte = sourceAddress[i];
+                    currentSourceNodeRecord = _rootNode.records[currentSourceByte];
+
+                    if (currentSourceNodeRecord == null)
+                    {
+                        currentSourceNodeRecord = new NodeRecord(0.01f);
+                        currentBase.records[currentSourceByte] = currentSourceNodeRecord;
+                    }
+                    currentSourceNodeRecord.fromRate.AddPacketToRateList();
+                    float currentAverage = Convert.ToSingle(currentSourceNodeRecord.toRate.exponentialMovingAverage / currentSourceNodeRecord.fromRate.exponentialMovingAverage);
+                    if(currentAverage > 0 && currentAverage != float.PositiveInfinity)
+                    {
+                        currentSourceNodeRecord.ratioAverage.AddValueToRateList(currentAverage);
+                    }
+                    if((currentSourceNodeRecord.ratioAverage.exponentialMovingAverage > 2.3 || currentSourceNodeRecord.ratioAverage.exponentialMovingAverage < 0.3) 
+                        && currentSourceNodeRecord.ratioAverage.exponentialMovingAverage > 0)
+                    {
+                        Debug.WriteLine("Source " + packet.SourceAddress.ToString() + " " + packet.DestinationAddress.ToString() + " " + currentSourceNodeRecord.ratioAverage.exponentialMovingAverage);
+                    }
+                    
+                    if (currentSourceNodeRecord.child == null)
+                    {
+                        SourceComplete = true;
+                    }else
+                    {
+                        currentBase = currentSourceNodeRecord.child;
+                        deepestSourceLevel++;
+                    }
+                }
+                if(!DestinationComplete)
+                {
+                    byte currentDestinationByte = destinationAddress[i];
+                    currentDestinationNodeRecord = _rootNode.records[currentDestinationByte];
+                    if (currentDestinationNodeRecord == null && !DestinationComplete)
+                    {
+                        currentDestinationNodeRecord = new NodeRecord(0.01f);
+                        currentBase.records[currentDestinationByte] = currentDestinationNodeRecord;
+                    }
+                    currentDestinationNodeRecord.toRate.AddPacketToRateList();
+                    float currentAverage = Convert.ToSingle(currentDestinationNodeRecord.toRate.exponentialMovingAverage / currentDestinationNodeRecord.fromRate.exponentialMovingAverage);
+                    if(currentAverage > 0 && currentAverage != float.PositiveInfinity)
+                    {
+                        currentDestinationNodeRecord.ratioAverage.AddValueToRateList(currentAverage);
+                    }
+                    if ((currentDestinationNodeRecord.ratioAverage.exponentialMovingAverage > 2.3 || currentDestinationNodeRecord.ratioAverage.exponentialMovingAverage < 0.3)
+                        && currentDestinationNodeRecord.ratioAverage.exponentialMovingAverage > 0)
+                    {
+                        Debug.WriteLine("Destination " + packet.SourceAddress.ToString() + " " + packet.DestinationAddress.ToString() + " " + currentDestinationNodeRecord.ratioAverage.exponentialMovingAverage);
+                    }
+                    //Debug.WriteLine(currentDestinationNodeRecord.ratioAverage.exponentialMovingAverage);
+                    if (currentDestinationNodeRecord.child == null)
+                    {
+                        DestinationComplete = true;
+                    }else
+                    {
+                        currentBase = currentDestinationNodeRecord.child;
+                        deepestDestinationLevel++;
+                    }
+                }
+                if(DestinationComplete && SourceComplete)
+                {
                     break;
                 }
             }
-            if (host == -1)
+            if(currentDestinationNodeRecord.toRate.exponentialMovingAverage >= expansionThreshhold && deepestDestinationLevel < 3) 
             {
-                Host addingHost = new Host(sourceAddress);
-                addingHost.packets.Add(packet);
-                addingHost.packetCount++;
-                //Debug.WriteLine(packet.packetSize + " " + sourceAddress.ToString());
-                addingHost.trafficContributed += packet.packetSize;
-                hosts.Add(addingHost);
-            }else
+                //Debug.WriteLine("Destination Node Increase");
+                currentDestinationNodeRecord.child = new Node();
+                currentDestinationNodeRecord.child.parentRecord = currentDestinationNodeRecord;
+            }
+            if(currentSourceNodeRecord.fromRate.exponentialMovingAverage >= expansionThreshhold && deepestSourceLevel < 3)
             {
-                Host modifyingHost = hosts[host];
-                modifyingHost.packets.Add(packet);
-                modifyingHost.packetCount++;
-                //Debug.WriteLine(packet.packetSize);
-                modifyingHost.trafficContributed += packet.packetSize;
-                hosts[host] = modifyingHost;
+                //Debug.WriteLine("Source Node Increase");
+                currentSourceNodeRecord.child = new Node();
+                currentSourceNodeRecord.child.parentRecord = currentSourceNodeRecord;
             }
         }
 
-        public static void lifeExpiration()
+        public static void fold()
         {
-            TimeSpan packetLife = new TimeSpan(0, 0, 30);
-            TimeSpan trafficContributedLife = new TimeSpan(0, 10, 0);
-            //if(hosts.Count > 0)
-            //{
-                
-            //}
-            Parallel.ForEach(hosts, host =>
+            Node currentRoot = _rootNode;
+            for(int i = 0; i < 0; i++)
             {
-                if (host.packets.Count <= 0)
+
+            }
+        }
+    }
+    class ExponentiallyWeightedMovingAverage
+    {
+        private float _alpha { get; set; }
+
+        // packets/millisecond
+        private ConcurrentList<float> RateList = new ConcurrentList<float>();
+        private long _packetCount = 0;
+        private long _someTimeInThePast = DateTimeOffset.Now.ToUnixTimeMilliseconds();
+        private DateTime lastReset = DateTime.Now;
+        private TimeSpan timeToReset = new TimeSpan(0, 0, 30);
+
+        public double exponentialMovingAverage { get
+            {
+                if (DateTime.Now > lastReset.Add(timeToReset))
                 {
-                    hosts.Remove(host);
-                    return;
-                }
-                if(DateTime.Now >= host.trafficContributedReset.Add(trafficContributedLife))
-                {
-                    //Debug.WriteLine(hosts.Max(m => m.trafficContributed));
-                    host.trafficContributedReset = DateTime.Now;
-                    host.trafficContributed = 0;
-                }
-                List<Packet> packetsCopy = host.packets;
-                for (int i = 0; i < host.packets.Count - 1; i++)
-                {
-                    //Debug.WriteLine(DateTime.Now <= packets.Value[i].arrivalTime.Add(TTL));
-                    //Debug.WriteLine(DateTime.Now >= packets.Value[i].arrivalTime.Add(TTL));
-                    if (DateTime.Now >= host.packets[i].arrivalTime.Add(packetLife))
+                    //Debug.WriteLine("Something");
+                    for (int i = RateList.Count / 2; i < RateList.Count - 1; i++)
                     {
-                        //Debug.WriteLine(hosts.Max(m => m.packetCount));
-                        packetsCopy.RemoveAt(i);
-                        host.packetCount--;
-                        //Debug.WriteLine("Removed");
-                        continue;
+                        try
+                        {
+                            RateList.RemoveAt(i);
+                        }catch(IndexOutOfRangeException)
+                        {
+                            break;
+                        }
                     }
                 }
-                host.packets = packetsCopy;
-            });
+                return RateList
+                    .DefaultIfEmpty()
+                    .Aggregate(RateList.FirstOrDefault(),
+                    (ema, nextRate) => _alpha * nextRate + (1 - _alpha) * ema);
+            } }
+
+        public ExponentiallyWeightedMovingAverage(float alpha)
+        {
+            _alpha = alpha;
+            //new Task(Clean).Start();
+        }
+
+        public void AddPacketToRateList()
+        {
+            try
+            {
+                _packetCount++;
+                long now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+                float value = _packetCount / (now / _someTimeInThePast);
+                RateList.Add(value);
+            }catch(DivideByZeroException) 
+            {
+                return;
+            }
+        }
+
+        public void AddValueToRateList(float value)
+        {
+            RateList.Add(value);
         }
     }
 }
