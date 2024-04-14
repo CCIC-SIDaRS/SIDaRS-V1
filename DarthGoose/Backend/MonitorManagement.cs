@@ -33,6 +33,7 @@ namespace Backend.MonitorManager
         public ExponentiallyWeightedMovingAverage toRate { get; set; }
         public ExponentiallyWeightedMovingAverage ratioAverage { get; set; }
         public Node? child { get; set; }
+        public int offenseCount = 0;
         public NodeRecord(float alpha)
         {
             fromRate = new ExponentiallyWeightedMovingAverage(alpha);
@@ -98,9 +99,10 @@ namespace Backend.MonitorManager
                 if(ip != null)
                 {
                     
-                    if (ip.DestinationAddress.AddressFamily != System.Net.Sockets.AddressFamily.InterNetworkV6 && ip.SourceAddress.AddressFamily != System.Net.Sockets.AddressFamily.InterNetworkV6) 
+                    if (ip.DestinationAddress.AddressFamily != System.Net.Sockets.AddressFamily.InterNetworkV6 && ip.SourceAddress.AddressFamily != System.Net.Sockets.AddressFamily.InterNetworkV6 &&
+                    ip.DestinationAddress.ToString() != "224.0.0.251" && ip.SourceAddress.ToString() != "224.0.0.251") 
                     {
-                        PacketAnalysis.addPacket(ip);
+                        PacketAnalysis.analyzePacket(ip);
                         //Debug.WriteLine("source " + ip.SourceAddress + " destination: " + ip.DestinationAddress + " protocol: " + ip.Protocol);
                     }
                 }
@@ -133,6 +135,12 @@ namespace Backend.MonitorManager
             _sniffingDevice.Capture();
         }
     }
+
+    // Values that need new input fields
+    // offense threshold
+    // expansion threshold
+    // EWMA weight (alpha)
+    // Rate in/Rate out minimum and maximum
     static class PacketAnalysis
     {
         //public static ConcurrentList<Host> hosts = new ConcurrentList<Host>();
@@ -141,13 +149,15 @@ namespace Backend.MonitorManager
         // Will be reset after x amount of time
         public static DateTime sniffingStart;
         private static TimeSpan _stabilizationPeriod = new TimeSpan(0, 0, 30);
+        private static DateTime _lastOffenseReset = DateTime.Now;
 
         // This represents entries for all addresses
         private static Node _rootNode = new Node();
 
         private static int expansionThreshhold = 300; // Packets per Millisecond
+        private static int offenseThreshold = 50; // Offenses per _stabilizationPeriod
 
-        public static void addPacket(IPPacket packet)
+        public static void analyzePacket(IPPacket packet)
         {
             
             byte[] sourceAddress = packet.SourceAddress.GetAddressBytes();
@@ -159,6 +169,7 @@ namespace Backend.MonitorManager
             bool DestinationComplete = false;
             int deepestSourceLevel = 0;
             int deepestDestinationLevel = 0;
+            bool resetOffsense = DateTime.Now > _lastOffenseReset.Add(_stabilizationPeriod);
             for (int i = 0; i < 4; i++)
             {
                 if(!SourceComplete)
@@ -177,12 +188,20 @@ namespace Backend.MonitorManager
                     {
                         currentSourceNodeRecord.ratioAverage.AddValueToRateList(currentAverage);
                     }
+                    if(resetOffsense)
+                    {
+                        currentSourceNodeRecord.offenseCount = 0;
+                        _lastOffenseReset = DateTime.Now;
+                    }
                     if((currentSourceNodeRecord.ratioAverage.exponentialMovingAverage > 2.3 || currentSourceNodeRecord.ratioAverage.exponentialMovingAverage < 0.3) 
                         && currentSourceNodeRecord.ratioAverage.exponentialMovingAverage > 0 && DateTime.Now > sniffingStart.Add(_stabilizationPeriod))
                     {
+                        currentSourceNodeRecord.offenseCount++;
+                    }
+                    if(currentSourceNodeRecord.offenseCount > offenseThreshold)
+                    {
                         Debug.WriteLine("Source " + packet.SourceAddress.ToString() + " " + packet.DestinationAddress.ToString() + " " + currentSourceNodeRecord.ratioAverage.exponentialMovingAverage);
                     }
-                    
                     if (currentSourceNodeRecord.child == null)
                     {
                         SourceComplete = true;
@@ -207,8 +226,18 @@ namespace Backend.MonitorManager
                     {
                         currentDestinationNodeRecord.ratioAverage.AddValueToRateList(currentAverage);
                     }
+                    if(resetOffsense)
+                    {
+                        currentDestinationNodeRecord.offenseCount = 0;
+                        _lastOffenseReset = DateTime.Now;
+                    }
                     if ((currentDestinationNodeRecord.ratioAverage.exponentialMovingAverage > 2.3 || currentDestinationNodeRecord.ratioAverage.exponentialMovingAverage < 0.3)
                         && currentDestinationNodeRecord.ratioAverage.exponentialMovingAverage > 0 && DateTime.Now > sniffingStart.Add(_stabilizationPeriod))
+                    {
+                        //Debug.WriteLine("Added Offense");
+                        currentDestinationNodeRecord.offenseCount++;
+                    }
+                    if(currentDestinationNodeRecord.offenseCount > offenseThreshold)
                     {
                         Debug.WriteLine("Destination " + packet.SourceAddress.ToString() + " " + packet.DestinationAddress.ToString() + " " + currentDestinationNodeRecord.ratioAverage.exponentialMovingAverage);
                     }
@@ -263,11 +292,15 @@ namespace Backend.MonitorManager
 
         public double exponentialMovingAverage { get
             {
-                if (DateTime.Now > lastReset.Add(timeToReset))
+                if (DateTime.Now > lastReset.Add(timeToReset) && RateList.Count > 0)
                 {
                     //Debug.WriteLine("Something");
-                    for (int i = 0; i < (RateList.Count - 1) / 2; i++)
+                    for (int i = 0; i < Math.Floor((float)(RateList.Count - 1) / 2); i++)
                     {
+                        if(i >= RateList.Count - 1 || i < 0 || RateList.Count <= 0)
+                        {
+                            break;
+                        }
                         try
                         {
                             RateList.RemoveAt(i);
@@ -280,10 +313,17 @@ namespace Backend.MonitorManager
                         }
                     }
                 }
-                return RateList
-                    .DefaultIfEmpty()
-                    .Aggregate(RateList.FirstOrDefault(),
-                    (ema, nextRate) => _alpha * nextRate + (1 - _alpha) * ema);
+                try
+                {
+
+                    return RateList
+                        .DefaultIfEmpty()
+                        .Aggregate(RateList.FirstOrDefault(),
+                        (ema, nextRate) => _alpha * nextRate + (1 - _alpha) * ema);
+                }catch(ArgumentOutOfRangeException)
+                {
+                    return 0;
+                }
             } }
 
         public ExponentiallyWeightedMovingAverage(float alpha)

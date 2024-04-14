@@ -2,6 +2,7 @@
 using System.CodeDom;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Text;
@@ -25,7 +26,15 @@ namespace Backend.ThreadSafety
             {
                 lock (_lock)
                 {
-                    return _internalList[index];
+                    try
+                    {
+                        return _internalList[index];
+                    }catch (ArgumentOutOfRangeException)
+                    {
+                        //Debug.WriteLine(index);
+                        throw new ArgumentOutOfRangeException();
+                    }
+                    
                 }
             }
             set
