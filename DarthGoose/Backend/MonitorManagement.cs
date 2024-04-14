@@ -67,8 +67,10 @@ namespace Backend.MonitorManager
             Thread sniffing = new Thread(new ThreadStart(sniffing_Proccess));
             sniffing.IsBackground = true;
             sniffing.Start();
+            PacketAnalysis.sniffingStart = DateTime.Now;
             //_packetClean.Start();
             _captureRunning = true;
+            MessageBox.Show("Capture has started");
         }
 
         public void StopCapture()
@@ -80,6 +82,7 @@ namespace Backend.MonitorManager
             _stopClean = true;
             _sniffingDevice.StopCapture();
             _captureRunning = false;
+            MessageBox.Show("Capture has stopped");
         }
 
         private void device_OnPacketArrival(object sender, PacketCapture e)
@@ -94,6 +97,7 @@ namespace Backend.MonitorManager
                 IPPacket ip = packet.Extract<IPPacket>();
                 if(ip != null)
                 {
+                    
                     if (ip.DestinationAddress.AddressFamily != System.Net.Sockets.AddressFamily.InterNetworkV6 && ip.SourceAddress.AddressFamily != System.Net.Sockets.AddressFamily.InterNetworkV6) 
                     {
                         PacketAnalysis.addPacket(ip);
@@ -135,12 +139,13 @@ namespace Backend.MonitorManager
         // This will be reset whenever we clear the packet counter
 
         // Will be reset after x amount of time
-        private static int _foldTime = 30000;
+        public static DateTime sniffingStart;
+        private static TimeSpan _stabilizationPeriod = new TimeSpan(0, 0, 30);
 
         // This represents entries for all addresses
         private static Node _rootNode = new Node();
 
-        private static int expansionThreshhold = 10; // Packets per Millisecond
+        private static int expansionThreshhold = 300; // Packets per Millisecond
 
         public static void addPacket(IPPacket packet)
         {
@@ -173,7 +178,7 @@ namespace Backend.MonitorManager
                         currentSourceNodeRecord.ratioAverage.AddValueToRateList(currentAverage);
                     }
                     if((currentSourceNodeRecord.ratioAverage.exponentialMovingAverage > 2.3 || currentSourceNodeRecord.ratioAverage.exponentialMovingAverage < 0.3) 
-                        && currentSourceNodeRecord.ratioAverage.exponentialMovingAverage > 0)
+                        && currentSourceNodeRecord.ratioAverage.exponentialMovingAverage > 0 && DateTime.Now > sniffingStart.Add(_stabilizationPeriod))
                     {
                         Debug.WriteLine("Source " + packet.SourceAddress.ToString() + " " + packet.DestinationAddress.ToString() + " " + currentSourceNodeRecord.ratioAverage.exponentialMovingAverage);
                     }
@@ -203,7 +208,7 @@ namespace Backend.MonitorManager
                         currentDestinationNodeRecord.ratioAverage.AddValueToRateList(currentAverage);
                     }
                     if ((currentDestinationNodeRecord.ratioAverage.exponentialMovingAverage > 2.3 || currentDestinationNodeRecord.ratioAverage.exponentialMovingAverage < 0.3)
-                        && currentDestinationNodeRecord.ratioAverage.exponentialMovingAverage > 0)
+                        && currentDestinationNodeRecord.ratioAverage.exponentialMovingAverage > 0 && DateTime.Now > sniffingStart.Add(_stabilizationPeriod))
                     {
                         Debug.WriteLine("Destination " + packet.SourceAddress.ToString() + " " + packet.DestinationAddress.ToString() + " " + currentDestinationNodeRecord.ratioAverage.exponentialMovingAverage);
                     }
@@ -261,12 +266,15 @@ namespace Backend.MonitorManager
                 if (DateTime.Now > lastReset.Add(timeToReset))
                 {
                     //Debug.WriteLine("Something");
-                    for (int i = RateList.Count / 2; i < RateList.Count - 1; i++)
+                    for (int i = 0; i < (RateList.Count - 1) / 2; i++)
                     {
                         try
                         {
                             RateList.RemoveAt(i);
                         }catch(IndexOutOfRangeException)
+                        {
+                            break;
+                        }catch(ArgumentOutOfRangeException)
                         {
                             break;
                         }
