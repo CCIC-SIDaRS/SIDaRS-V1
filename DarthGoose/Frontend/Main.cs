@@ -520,6 +520,8 @@ namespace DarthGoose.Frontend
             networkMap.SidePanelToggle.Visibility = Visibility.Hidden;
             networkMap.DragBorder.SetValue(Grid.ColumnSpanProperty, 1);
             networkMap.DragBorder.SetValue(Grid.ColumnProperty, 1);
+            networkMap.ConnectionCanvas.SetValue(Grid.ColumnProperty, 1);
+            networkMap.ConnectionCanvas.SetValue(Grid.ColumnSpanProperty, 1);
             networkMap.SideMenuBorder.Visibility = Visibility.Visible;
         }
 
@@ -535,6 +537,8 @@ namespace DarthGoose.Frontend
             networkMap.SidePanelToggle.Visibility = Visibility.Visible;
             networkMap.DragBorder.SetValue(Grid.ColumnSpanProperty, 2);
             networkMap.DragBorder.SetValue(Grid.ColumnProperty, 0);
+            networkMap.ConnectionCanvas.SetValue(Grid.ColumnProperty, 0);
+            networkMap.ConnectionCanvas.SetValue(Grid.ColumnSpanProperty, 2);
             networkMap.SideMenuBorder.Visibility = Visibility.Hidden;
         }
 

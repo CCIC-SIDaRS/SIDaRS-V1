@@ -94,10 +94,16 @@ namespace Backend.CredentialManager
             return [_username, _password];
         }
     }
+    /// <summary>
+    /// Uses AES to encrypt things 
+    /// </summary>
     static class SymmetricEncryption
     {
         internal static byte[] master;
 
+    /// <summary>
+    /// Produces salted SHA512 hash.
+    /// </summary>
         public static byte[] Hash(string source, string saltStr)
         {
             byte[] salt = Encoding.UTF8.GetBytes(saltStr);
