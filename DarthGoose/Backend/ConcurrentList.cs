@@ -29,7 +29,8 @@ namespace Backend.ThreadSafety
                     try
                     {
                         return _internalList[index];
-                    }catch (ArgumentOutOfRangeException)
+                    }
+                    catch (ArgumentOutOfRangeException)
                     {
                         //Debug.WriteLine(index);
                         throw new ArgumentOutOfRangeException();

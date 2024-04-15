@@ -3,24 +3,15 @@ using System;
 using SharpPcap;
 using SharpPcap.LibPcap;
 using System.Windows;
-using System.Windows.Controls;
-using System.Text;
-using System.Net;
 using Backend.ThreadSafety;
-using System.Security;
-using System.CodeDom.Compiler;
 using PacketDotNet;
-using System.Text.Json.Serialization;
-using System.Diagnostics.Eventing.Reader;
-using System.Printing;
-using System.Windows.Data;
-using System.ComponentModel.Design.Serialization;
-using System.Runtime.CompilerServices;
 namespace Backend.MonitorManager
 {
+    /// <summary>
+    /// Does monitoring
+    /// </summary>
     class MonitorSystem
     {
-        public IPAddress gateway = IPAddress.Parse("192.168.1.1");
         private ILiveDevice _sniffingDevice { get; set; }
         private Task _packetClean { get; set; }
         private bool _stopClean = false;
@@ -118,6 +109,10 @@ namespace Backend.MonitorManager
     // expansion threshold
     // EWMA weight (alpha)
     // Rate in/Rate out minimum and maximum
+
+    /// <summary>
+    /// Does Intrusion detection
+    /// </summary>
     static class PacketAnalysis
     {
         class ExponentiallyWeightedMovingAverage
@@ -206,6 +201,7 @@ namespace Backend.MonitorManager
             public Node? nextNode { get; set; }
 
             public NodeRecord[] records = new NodeRecord[256];
+            public ExponentiallyWeightedMovingAverage nodeRatioAverage = new ExponentiallyWeightedMovingAverage(0.01f);
 
         }
         class NodeRecord
@@ -230,7 +226,7 @@ namespace Backend.MonitorManager
         private static Node _rootNode = new Node();
 
         // IDS Settings
-        public static int expansionThreshhold = 300; // Packets per Millisecond
+        public static int expansionThreshhold = 100; // Packets per Millisecond
         public static int offenseThreshold = 50; // Offenses per _stabilizationPeriod
         public static TimeSpan _stabilizationPeriod = new TimeSpan(0, 0, 30);
         public static float ratioLimitMin = 0.3f; // IncomingPacketRate / OutgoingPacketRate lower limit
@@ -267,20 +263,22 @@ namespace Backend.MonitorManager
                     if(currentAverage > 0 && currentAverage != float.PositiveInfinity)
                     {
                         currentSourceNodeRecord.ratioAverage.AddValueToRateList(currentAverage);
+                        currentBase.nodeRatioAverage.AddValueToRateList(Convert.ToSingle(currentSourceNodeRecord.ratioAverage.exponentialMovingAverage));
                     }
                     if(resetOffsense)
                     {
                         currentSourceNodeRecord.offenseCount = 0;
                         _lastOffenseReset = DateTime.Now;
                     }
-                    if((currentSourceNodeRecord.ratioAverage.exponentialMovingAverage > ratioLimitMax || currentSourceNodeRecord.ratioAverage.exponentialMovingAverage < ratioLimitMin) 
+                    if((currentBase.nodeRatioAverage.exponentialMovingAverage > ratioLimitMax || currentBase.nodeRatioAverage.exponentialMovingAverage < ratioLimitMin) 
                         && currentSourceNodeRecord.ratioAverage.exponentialMovingAverage > 0 && DateTime.Now > sniffingStart.Add(_stabilizationPeriod))
                     {
                         currentSourceNodeRecord.offenseCount++;
                     }
-                    if(currentSourceNodeRecord.offenseCount > offenseThreshold)
+                    if(currentSourceNodeRecord.offenseCount > offenseThreshold && currentBase.nodeRatioAverage.exponentialMovingAverage > 0 && deepestSourceLevel == 4)
                     {
-                        Debug.WriteLine("Source " + packet.SourceAddress.ToString() + " " + packet.DestinationAddress.ToString() + " " + currentSourceNodeRecord.ratioAverage.exponentialMovingAverage);
+                        //Debug.WriteLine("Source " + packet.SourceAddress.ToString() + " " + packet.DestinationAddress.ToString() + " " + currentSourceNodeRecord.ratioAverage.exponentialMovingAverage);
+                        MessageBox.Show(packet.SourceAddress.ToString() + " was flagged as being malicous");
                     }
                     if (currentSourceNodeRecord.child == null)
                     {
@@ -305,21 +303,23 @@ namespace Backend.MonitorManager
                     if(currentAverage > 0 && currentAverage != float.PositiveInfinity)
                     {
                         currentDestinationNodeRecord.ratioAverage.AddValueToRateList(currentAverage);
+                        currentBase.nodeRatioAverage.AddValueToRateList(Convert.ToSingle(currentDestinationNodeRecord.ratioAverage.exponentialMovingAverage));
                     }
                     if(resetOffsense)
                     {
                         currentDestinationNodeRecord.offenseCount = 0;
                         _lastOffenseReset = DateTime.Now;
                     }
-                    if ((currentDestinationNodeRecord.ratioAverage.exponentialMovingAverage > ratioLimitMax || currentDestinationNodeRecord.ratioAverage.exponentialMovingAverage < ratioLimitMin)
-                        && currentDestinationNodeRecord.ratioAverage.exponentialMovingAverage > 0 && DateTime.Now > sniffingStart.Add(_stabilizationPeriod))
+                    if ((currentBase.nodeRatioAverage.exponentialMovingAverage > ratioLimitMax || currentBase.nodeRatioAverage.exponentialMovingAverage < ratioLimitMin)
+                        && currentBase.nodeRatioAverage.exponentialMovingAverage > 0 && DateTime.Now > sniffingStart.Add(_stabilizationPeriod))
                     {
                         //Debug.WriteLine("Added Offense");
                         currentDestinationNodeRecord.offenseCount++;
                     }
-                    if(currentDestinationNodeRecord.offenseCount > offenseThreshold)
+                    if(currentDestinationNodeRecord.offenseCount > offenseThreshold && currentBase.nodeRatioAverage.exponentialMovingAverage > 0 && deepestDestinationLevel == 4)
                     {
-                        Debug.WriteLine("Destination " + packet.SourceAddress.ToString() + " " + packet.DestinationAddress.ToString() + " " + currentDestinationNodeRecord.ratioAverage.exponentialMovingAverage);
+                        //Debug.WriteLine("Destination " + packet.SourceAddress.ToString() + " " + packet.DestinationAddress.ToString() + " " + currentDestinationNodeRecord.ratioAverage.exponentialMovingAverage);
+                        MessageBox.Show(packet.DestinationAddress.ToString() + " was flagged as being malicous");
                     }
                     //Debug.WriteLine(currentDestinationNodeRecord.ratioAverage.exponentialMovingAverage);
                     if (currentDestinationNodeRecord.child == null)
@@ -347,15 +347,6 @@ namespace Backend.MonitorManager
                 //Debug.WriteLine("Source Node Increase");
                 currentSourceNodeRecord.child = new Node();
                 currentSourceNodeRecord.child.parentRecord = currentSourceNodeRecord;
-            }
-        }
-
-        public static void fold()
-        {
-            Node currentRoot = _rootNode;
-            for(int i = 0; i < 0; i++)
-            {
-                // TODO
             }
         }
     }

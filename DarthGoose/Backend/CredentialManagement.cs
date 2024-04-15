@@ -9,6 +9,10 @@ using System.Windows;
 
 namespace Backend.CredentialManager
 {
+    /// <summary>
+    /// Checks if a password is hashed or not; if hashed, assigned as the password
+    /// if not, hash the password and assign it as the password. Retrieve username and password 
+    /// </summary>
     class Users
     {
         [JsonInclude]
@@ -44,6 +48,9 @@ namespace Backend.CredentialManager
             return username;
         }
     }
+        /// <summary>
+        /// Encrypts the password if its not already, uses encyrpted password, returns encrypted username and password. 
+        /// </summary>
     class Credentials
     {
         [JsonInclude]

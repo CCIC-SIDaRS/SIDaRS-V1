@@ -14,7 +14,6 @@ using Backend.MonitorManager;
 using SharpPcap;
 using Microsoft.Win32;
 using System.Windows.Input;
-using System.Diagnostics.Metrics;
 
 namespace DarthGoose.Frontend
 {
@@ -564,8 +563,8 @@ namespace DarthGoose.Frontend
         /// Executes when the user selects the start capture button
         /// Starts the packet capture (and IDS) process(s)
         /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
+        /// <param name="sender" Type="object"></param>
+        /// <param name="e" Type="RoutedEventArgs"></param>
         private static void OnStartCaptureClick(object sender, RoutedEventArgs e)
         {
             if(networkMap.CaptureDeviceDropDown.SelectedIndex == -1 || packetCapture == null)
@@ -581,8 +580,8 @@ namespace DarthGoose.Frontend
         /// Executes when the user selecrs the stop capture button
         /// Stops the packet capture (and IDS) process(s)
         /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
+        /// <param name="sender" Type="object"></param>
+        /// <param name="e" Type="RoutedEventArgs"></param>
         private static void OnStopCaptureClick(object sender, RoutedEventArgs e)
         {
             if (networkMap.CaptureDeviceDropDown.SelectedIndex == -1 || packetCapture == null)
@@ -598,8 +597,8 @@ namespace DarthGoose.Frontend
         /// Executes when the user presses the Update IDS settings button
         /// Attempts to update all IDS setting and sends a message to the user if a bad value is supplied
         /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
+        /// <param name="sender" Type="object"></param>
+        /// <param name="e" Type="RoutedEventArgs"></param>
         private static void OnUpdateIDSSettingsClick(object sender, RoutedEventArgs e)
         {
             if(int.TryParse(networkMap.ExpansionThesholdTextBox.Text, out var valueI))
