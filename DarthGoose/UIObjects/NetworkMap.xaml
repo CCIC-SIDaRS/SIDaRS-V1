@@ -59,15 +59,41 @@
                     <RowDefinition Height="1*"/>
                     <RowDefinition Height="1*"/>
                     <RowDefinition Height="1*"/>
-                    <RowDefinition Height="10*"/>
+                    <RowDefinition Height="1*"/>
+                    <RowDefinition Height="1*"/>
+                    <RowDefinition Height="1*"/>
+                    <RowDefinition Height="1*"/>
+                    <RowDefinition Height="6*"/>
                 </Grid.RowDefinitions>
-                <TextBlock Text="Network Details" Foreground="White" FontSize="24" HorizontalAlignment="Center" Margin="0,8,0,0"/>
-                <Button x:Name="SidePanelCloseButton" Content="X" Height="40" Width="40" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,3,0,10"/>
-                <TextBlock Text="Capture Devices" Foreground="White" FontSize="18" HorizontalAlignment="Center" Margin="0,10,0,0" Grid.Row="1"/>
-                <ComboBox x:Name="CaptureDeviceDropDown" Height="20" Margin="0,10" VerticalAlignment="Top" Grid.Row="2" Background="#2a2c30"/>
-                <Button x:Name="StartCaptureButton" Content="Start Packet Capture" VerticalAlignment="Top" Height="45" Grid.Row="3"/>
-                <Button x:Name="StopCaptureButton" Content="Stop Packet Capture" VerticalAlignment="Top" Height="45" Grid.Row="4"/>
-                <Button x:Name="TakeBaselineButton" Content="Take Network Baseline" VerticalAlignment="Top" Height="45" Grid.Row="5"/>
+                
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="1*"/>
+                    <ColumnDefinition Width="1*"/>
+                </Grid.ColumnDefinitions>
+                
+                <TextBlock Text="Network Details" Foreground="White" FontSize="24" HorizontalAlignment="Center" Margin="0,8,0,0" Grid.ColumnSpan="2"/>
+                <Button x:Name="SidePanelCloseButton" Content="X" Height="40" Width="40" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,3,0,10" Grid.Column="1"/>
+                <TextBlock Text="Capture Settings" Foreground="White" FontSize="18" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0,10,0,0" Grid.Row="1" Grid.ColumnSpan="2"/>
+                <Button x:Name="CaptureSettingsInfoButton" VerticalAlignment="Center" HorizontalAlignment="Left" Grid.Column="0" Grid.Row="1" Width="40" Height="40" Margin="0,10,0,0">
+                    <Button.Content>
+                        <Image Source="\Images\InformationIcon.png" Stretch="Fill" RenderOptions.BitmapScalingMode="Fant" Width="20" Height="20"/>
+                    </Button.Content>
+                </Button>
+                <ComboBox x:Name="CaptureDeviceDropDown" Height="20" Margin="0,10" VerticalAlignment="Top" Grid.Row="2" Background="#2a2c30" Grid.ColumnSpan="2"/>
+                <Button x:Name="StartCaptureButton" Content="Start Packet Capture" VerticalAlignment="Top" Height="45" Grid.Row="3" Grid.ColumnSpan="2"/>
+                <Button x:Name="StopCaptureButton" Content="Stop Packet Capture" VerticalAlignment="Top" Height="45" Grid.Row="4" Grid.ColumnSpan="2"/>
+                <TextBlock Text="IDS Settings" VerticalAlignment="Center" Foreground="White" FontSize="18" HorizontalAlignment="Center" Grid.ColumnSpan="2" Grid.Row="5"/>
+                <Button x:Name="IDSSettingsInfoButton" VerticalAlignment="Center" HorizontalAlignment="Left" Grid.Column="0" Grid.Row="5" Width="40" Height="40">
+                    <Button.Content>
+                        <Image Source="\Images\InformationIcon.png" Stretch="Fill" RenderOptions.BitmapScalingMode="Fant" Width="20" Height="20"/>
+                    </Button.Content>
+                </Button>
+                <TextBox x:Name="ViolationThresholdTextBox" Text="Violation Threshold" VerticalAlignment="Top" Grid.Row="6" Height="35" Margin="2,0"/>
+                <TextBox x:Name="ExpansionThesholdTextBox" Text="Expansion Threshold" VerticalAlignment="Top" Grid.Row="6" Grid.Column="1" Height="35" Margin="2,0"/>
+                <TextBox x:Name="EWMAWeightBox" Text="EWMA Weight" VerticalAlignment="Top" Grid.Row="7" Height="35" Margin="2,0"/>
+                <TextBox x:Name="RateRatioMaxTextBox" Text="Rate Ratio Max" VerticalAlignment="Top" Grid.Row="7" Grid.Column="1" Height="35" Margin="2,0"/>
+                <TextBox x:Name="RateRatioMinTextBox" Text="Rate Ratio Min" VerticalAlignment="Top" Grid.Row="8" Grid.ColumnSpan="2" Height="35" Margin="2,0"/>
+                <Button x:Name="UpdateIDSSettingsButton" Content="Update IDS Settings" VerticalAlignment="Top" Height="45" Grid.Row="9" Grid.ColumnSpan="2"/>
             </Grid>
         </Border>
         <Canvas x:Name="ConnectionCanvas" Panel.ZIndex="0"/>

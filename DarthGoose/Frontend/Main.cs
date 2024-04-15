@@ -14,6 +14,7 @@ using Backend.MonitorManager;
 using SharpPcap;
 using Microsoft.Win32;
 using System.Windows.Input;
+using System.Diagnostics.Metrics;
 
 namespace DarthGoose.Frontend
 {
@@ -122,7 +123,7 @@ namespace DarthGoose.Frontend
             networkMap.SidePanelCloseButton.Click += new RoutedEventHandler(OnSidePanelCloseClick);
             networkMap.StartCaptureButton.Click += new RoutedEventHandler(OnStartCaptureClick);
             networkMap.StopCaptureButton.Click += new RoutedEventHandler(OnStopCaptureClick);
-            networkMap.TakeBaselineButton.Click += new RoutedEventHandler(OnTakeBaselineClick);
+            networkMap.UpdateIDSSettingsButton.Click += new RoutedEventHandler(OnUpdateIDSSettingsClick);
             _deviceSetupWindow.FinishedSetup.Click += new RoutedEventHandler(OnFinishedSetup);
             networkMap.CaptureDeviceDropDown.SelectionChanged += new SelectionChangedEventHandler(OnCaptureDeviceSelectionChanged);
 
@@ -559,6 +560,12 @@ namespace DarthGoose.Frontend
             }
         }
 
+        /// <summary>
+        /// Executes when the user selects the start capture button
+        /// Starts the packet capture (and IDS) process(s)
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private static void OnStartCaptureClick(object sender, RoutedEventArgs e)
         {
             if(networkMap.CaptureDeviceDropDown.SelectedIndex == -1 || packetCapture == null)
@@ -570,6 +577,12 @@ namespace DarthGoose.Frontend
             }
         }
 
+        /// <summary>
+        /// Executes when the user selecrs the stop capture button
+        /// Stops the packet capture (and IDS) process(s)
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private static void OnStopCaptureClick(object sender, RoutedEventArgs e)
         {
             if (networkMap.CaptureDeviceDropDown.SelectedIndex == -1 || packetCapture == null)
@@ -581,11 +594,56 @@ namespace DarthGoose.Frontend
             }
         }
 
-        private static void OnTakeBaselineClick(object sender, RoutedEventArgs e)
+        /// <summary>
+        /// Executes when the user presses the Update IDS settings button
+        /// Attempts to update all IDS setting and sends a message to the user if a bad value is supplied
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private static void OnUpdateIDSSettingsClick(object sender, RoutedEventArgs e)
         {
-            // TODO
+            if(int.TryParse(networkMap.ExpansionThesholdTextBox.Text, out var valueI))
+            {
+                PacketAnalysis.expansionThreshhold = valueI;
+            }else
+            {
+                MessageBox.Show("The Expansion Threshold value was not updated due to an improper value being supplied");
+            }
+            if(int.TryParse(networkMap.ViolationThresholdTextBox.Text, out valueI))
+            {
+                PacketAnalysis.offenseThreshold = valueI;
+            }else
+            {
+                MessageBox.Show("The Violation Threshold value was not updated due to an improper value being supplied");
+            }
+            if(float.TryParse(networkMap.EWMAWeightBox.Text, out var valueF))
+            {
+                PacketAnalysis.alpha = valueF;
+            }else
+            {
+                MessageBox.Show("The Exponentially Weighted Moving Average Weight value was not updated due to an improper value being supplied");
+            }
+            if(float.TryParse(networkMap.RateRatioMaxTextBox.Text, out valueF))
+            {
+                PacketAnalysis.ratioLimitMax = valueF;
+            }else
+            {
+                MessageBox.Show("The Rate Ratio Max value was not updated due to an improper value being supplied");
+            }
+            if(float.TryParse(networkMap.RateRatioMinTextBox.Text, out valueF))
+            {
+                PacketAnalysis.ratioLimitMin = valueF;
+            }else
+            {
+                MessageBox.Show("The Rate Ratio Max value was not updated due to an improper value being supplied");
+            }
         }
 
+        /// <summary>
+        /// Makes sure a text box is focuses when a user presses their mouse down on the area it occupies
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private static void OnTextBoxSelected(object sender, MouseButtonEventArgs e)
         {
             TextBox? box = sender as TextBox;

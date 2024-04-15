@@ -143,19 +143,19 @@ namespace Backend.MonitorManager
     // Rate in/Rate out minimum and maximum
     static class PacketAnalysis
     {
-        //public static ConcurrentList<Host> hosts = new ConcurrentList<Host>();
-        // This will be reset whenever we clear the packet counter
-
-        // Will be reset after x amount of time
         public static DateTime sniffingStart;
-        private static TimeSpan _stabilizationPeriod = new TimeSpan(0, 0, 30);
         private static DateTime _lastOffenseReset = DateTime.Now;
 
-        // This represents entries for all addresses
+        // The bottom of the tree
         private static Node _rootNode = new Node();
 
-        private static int expansionThreshhold = 300; // Packets per Millisecond
-        private static int offenseThreshold = 50; // Offenses per _stabilizationPeriod
+        // IDS Settings
+        public static int expansionThreshhold = 300; // Packets per Millisecond
+        public static int offenseThreshold = 50; // Offenses per _stabilizationPeriod
+        public static TimeSpan _stabilizationPeriod = new TimeSpan(0, 0, 30);
+        public static float ratioLimitMin = 0.3f; // IncomingPacketRate / OutgoingPacketRate lower limit
+        public static float ratioLimitMax = 2.3f; // IncomingPacketRate / OutgoingPacketRate upper limit
+        public static float alpha = 0.01f;
 
         public static void analyzePacket(IPPacket packet)
         {
@@ -179,7 +179,7 @@ namespace Backend.MonitorManager
 
                     if (currentSourceNodeRecord == null)
                     {
-                        currentSourceNodeRecord = new NodeRecord(0.01f);
+                        currentSourceNodeRecord = new NodeRecord(alpha);
                         currentBase.records[currentSourceByte] = currentSourceNodeRecord;
                     }
                     currentSourceNodeRecord.fromRate.AddPacketToRateList();
@@ -193,7 +193,7 @@ namespace Backend.MonitorManager
                         currentSourceNodeRecord.offenseCount = 0;
                         _lastOffenseReset = DateTime.Now;
                     }
-                    if((currentSourceNodeRecord.ratioAverage.exponentialMovingAverage > 2.3 || currentSourceNodeRecord.ratioAverage.exponentialMovingAverage < 0.3) 
+                    if((currentSourceNodeRecord.ratioAverage.exponentialMovingAverage > ratioLimitMax || currentSourceNodeRecord.ratioAverage.exponentialMovingAverage < ratioLimitMin) 
                         && currentSourceNodeRecord.ratioAverage.exponentialMovingAverage > 0 && DateTime.Now > sniffingStart.Add(_stabilizationPeriod))
                     {
                         currentSourceNodeRecord.offenseCount++;
@@ -217,7 +217,7 @@ namespace Backend.MonitorManager
                     currentDestinationNodeRecord = _rootNode.records[currentDestinationByte];
                     if (currentDestinationNodeRecord == null && !DestinationComplete)
                     {
-                        currentDestinationNodeRecord = new NodeRecord(0.01f);
+                        currentDestinationNodeRecord = new NodeRecord(alpha);
                         currentBase.records[currentDestinationByte] = currentDestinationNodeRecord;
                     }
                     currentDestinationNodeRecord.toRate.AddPacketToRateList();
@@ -231,7 +231,7 @@ namespace Backend.MonitorManager
                         currentDestinationNodeRecord.offenseCount = 0;
                         _lastOffenseReset = DateTime.Now;
                     }
-                    if ((currentDestinationNodeRecord.ratioAverage.exponentialMovingAverage > 2.3 || currentDestinationNodeRecord.ratioAverage.exponentialMovingAverage < 0.3)
+                    if ((currentDestinationNodeRecord.ratioAverage.exponentialMovingAverage > ratioLimitMax || currentDestinationNodeRecord.ratioAverage.exponentialMovingAverage < ratioLimitMin)
                         && currentDestinationNodeRecord.ratioAverage.exponentialMovingAverage > 0 && DateTime.Now > sniffingStart.Add(_stabilizationPeriod))
                     {
                         //Debug.WriteLine("Added Offense");
