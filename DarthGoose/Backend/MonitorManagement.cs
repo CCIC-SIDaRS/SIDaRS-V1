@@ -18,29 +18,6 @@ using System.ComponentModel.Design.Serialization;
 using System.Runtime.CompilerServices;
 namespace Backend.MonitorManager
 {
-    class Node
-    {
-        public NodeRecord? parentRecord { get; set; }
-        public Node? previousNode { get; set; }
-        public Node? nextNode { get; set; }
-
-        public NodeRecord[] records = new NodeRecord[256];
-
-    }
-    class NodeRecord
-    {
-        public ExponentiallyWeightedMovingAverage fromRate { get; set; }
-        public ExponentiallyWeightedMovingAverage toRate { get; set; }
-        public ExponentiallyWeightedMovingAverage ratioAverage { get; set; }
-        public Node? child { get; set; }
-        public int offenseCount = 0;
-        public NodeRecord(float alpha)
-        {
-            fromRate = new ExponentiallyWeightedMovingAverage(alpha);
-            toRate = new ExponentiallyWeightedMovingAverage(alpha);
-            ratioAverage = new ExponentiallyWeightedMovingAverage(alpha);
-        }
-    }
     class MonitorSystem
     {
         public IPAddress gateway = IPAddress.Parse("192.168.1.1");
@@ -143,6 +120,109 @@ namespace Backend.MonitorManager
     // Rate in/Rate out minimum and maximum
     static class PacketAnalysis
     {
+        class ExponentiallyWeightedMovingAverage
+        {
+            private float _alpha { get; set; }
+
+            // packets/millisecond
+            private ConcurrentList<float> RateList = new ConcurrentList<float>();
+            private long _packetCount = 0;
+            private long _someTimeInThePast = DateTimeOffset.Now.ToUnixTimeMilliseconds();
+            private DateTime lastReset = DateTime.Now;
+            private TimeSpan timeToReset = new TimeSpan(0, 0, 30);
+
+            public double exponentialMovingAverage
+            {
+                get
+                {
+                    if (DateTime.Now > lastReset.Add(timeToReset) && RateList.Count > 0)
+                    {
+                        //Debug.WriteLine("Something");
+                        for (int i = 0; i < Math.Floor((float)(RateList.Count - 1) / 2); i++)
+                        {
+                            if (i >= RateList.Count - 1 || i < 0 || RateList.Count <= 0)
+                            {
+                                break;
+                            }
+                            try
+                            {
+                                RateList.RemoveAt(i);
+                            }
+                            catch (IndexOutOfRangeException)
+                            {
+                                break;
+                            }
+                            catch (ArgumentOutOfRangeException)
+                            {
+                                break;
+                            }
+                        }
+                    }
+                    try
+                    {
+
+                        return RateList
+                            .DefaultIfEmpty()
+                            .Aggregate(RateList.FirstOrDefault(),
+                            (ema, nextRate) => _alpha * nextRate + (1 - _alpha) * ema);
+                    }
+                    catch (ArgumentOutOfRangeException)
+                    {
+                        return 0;
+                    }
+                }
+            }
+
+            public ExponentiallyWeightedMovingAverage(float alpha)
+            {
+                _alpha = alpha;
+                //new Task(Clean).Start();
+            }
+
+            public void AddPacketToRateList()
+            {
+                try
+                {
+                    _packetCount++;
+                    long now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+                    float value = _packetCount / (now / _someTimeInThePast);
+                    RateList.Add(value);
+                }
+                catch (DivideByZeroException)
+                {
+                    return;
+                }
+            }
+
+            public void AddValueToRateList(float value)
+            {
+                RateList.Add(value);
+            }
+        }
+        class Node
+        {
+            public NodeRecord? parentRecord { get; set; }
+            public Node? previousNode { get; set; }
+            public Node? nextNode { get; set; }
+
+            public NodeRecord[] records = new NodeRecord[256];
+
+        }
+        class NodeRecord
+        {
+            public ExponentiallyWeightedMovingAverage fromRate { get; set; }
+            public ExponentiallyWeightedMovingAverage toRate { get; set; }
+            public ExponentiallyWeightedMovingAverage ratioAverage { get; set; }
+            public Node? child { get; set; }
+            public int offenseCount = 0;
+            public NodeRecord(float alpha)
+            {
+                fromRate = new ExponentiallyWeightedMovingAverage(alpha);
+                toRate = new ExponentiallyWeightedMovingAverage(alpha);
+                ratioAverage = new ExponentiallyWeightedMovingAverage(alpha);
+            }
+        }
+
         public static DateTime sniffingStart;
         private static DateTime _lastOffenseReset = DateTime.Now;
 
@@ -277,78 +357,6 @@ namespace Backend.MonitorManager
             {
                 // TODO
             }
-        }
-    }
-    class ExponentiallyWeightedMovingAverage
-    {
-        private float _alpha { get; set; }
-
-        // packets/millisecond
-        private ConcurrentList<float> RateList = new ConcurrentList<float>();
-        private long _packetCount = 0;
-        private long _someTimeInThePast = DateTimeOffset.Now.ToUnixTimeMilliseconds();
-        private DateTime lastReset = DateTime.Now;
-        private TimeSpan timeToReset = new TimeSpan(0, 0, 30);
-
-        public double exponentialMovingAverage { get
-            {
-                if (DateTime.Now > lastReset.Add(timeToReset) && RateList.Count > 0)
-                {
-                    //Debug.WriteLine("Something");
-                    for (int i = 0; i < Math.Floor((float)(RateList.Count - 1) / 2); i++)
-                    {
-                        if(i >= RateList.Count - 1 || i < 0 || RateList.Count <= 0)
-                        {
-                            break;
-                        }
-                        try
-                        {
-                            RateList.RemoveAt(i);
-                        }catch(IndexOutOfRangeException)
-                        {
-                            break;
-                        }catch(ArgumentOutOfRangeException)
-                        {
-                            break;
-                        }
-                    }
-                }
-                try
-                {
-
-                    return RateList
-                        .DefaultIfEmpty()
-                        .Aggregate(RateList.FirstOrDefault(),
-                        (ema, nextRate) => _alpha * nextRate + (1 - _alpha) * ema);
-                }catch(ArgumentOutOfRangeException)
-                {
-                    return 0;
-                }
-            } }
-
-        public ExponentiallyWeightedMovingAverage(float alpha)
-        {
-            _alpha = alpha;
-            //new Task(Clean).Start();
-        }
-
-        public void AddPacketToRateList()
-        {
-            try
-            {
-                _packetCount++;
-                long now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
-                float value = _packetCount / (now / _someTimeInThePast);
-                RateList.Add(value);
-            }catch(DivideByZeroException) 
-            {
-                return;
-            }
-        }
-
-        public void AddValueToRateList(float value)
-        {
-            RateList.Add(value);
         }
     }
 }
