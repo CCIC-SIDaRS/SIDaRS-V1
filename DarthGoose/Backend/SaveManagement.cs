@@ -10,6 +10,7 @@ using Microsoft.Win32;
 using PacketDotNet.Lldp;
 using SharpPcap;
 using System.Linq;
+using System.Windows;
 
 
 namespace Backend.SaveManager
@@ -42,11 +43,11 @@ namespace Backend.SaveManager
        /// <summary>
        /// Organizes devices into a dictionary, dictionary is saved as a JSON file
        /// </summary>
-        public static void Save(string saveFile, UINetDevice[] netDevices, EndpointDevice[] endpointDevices)
+        public static void Save(string saveFile, UINetDevice[] netDevices, EndpointDevice[] endpointDevices, PacketAnalysis packetAnalyzer)
         {
             Dictionary<string, object> saveDict = new();
-            
 
+            saveDict["AuthHash"] = SymmetricEncryption.Encrypt(FrontendManager.masterCredentials.GetUsername(), SymmetricEncryption.master);
             List<string> serializedNetDevices = new();
             foreach (UINetDevice netDevice in netDevices)
             {
@@ -59,15 +60,28 @@ namespace Backend.SaveManager
             }
 
             saveDict["NetworkDevices"] = serializedNetDevices;
-            saveDict["EndpointDevices"] = serializedEndpointDevices;   
+            saveDict["EndpointDevices"] = serializedEndpointDevices;
+            saveDict["packetAnalyzer"] = JsonSerializer.Serialize(packetAnalyzer);
             // Debug.WriteLine(JsonSerializer.Serialize(saveDict));
             File.WriteAllText(saveFile, JsonSerializer.Serialize(saveDict));
         }
         public static void Load(string saveFile)
         {
-            Dictionary<string, object> saveDict = JsonSerializer.Deserialize<Dictionary<string, object>>(File.ReadAllText(saveFile));
+            Dictionary<string, object>? saveDict = JsonSerializer.Deserialize<Dictionary<string, object>>(File.ReadAllText(saveFile));
 
-            // FrontendManager.masterCredentials = JsonSerializer.Deserialize<Credentials>(saveDict["MasterCredentials"].ToString());
+            if(saveDict == null)
+            {
+                MessageBox.Show("Save file was unreadable");
+                return;
+            }
+
+            string? authHash = saveDict["AuthHash"].ToString();
+            if(authHash == null || SymmetricEncryption.Decrypt(authHash, SymmetricEncryption.master) != FrontendManager.masterCredentials.GetUsername())
+            {
+                MessageBox.Show("Cannot load this save file either because it does not belong to the account that is currently authenticated or it does not the correct authentication format");
+                saveDict = null;
+                return;
+            }
 
             foreach (string device in JsonSerializer.Deserialize<List<string>>(saveDict["NetworkDevices"].ToString()))
             {
@@ -99,6 +113,7 @@ namespace Backend.SaveManager
                     catch (KeyNotFoundException) { }
                 }
             }
+            FrontendManager.packetAnalyzer = JsonSerializer.Deserialize<PacketAnalysis>(saveDict["packetAnalyzer"].ToString());
 
             connected = null;
         }

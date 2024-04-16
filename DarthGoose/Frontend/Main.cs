@@ -34,6 +34,7 @@ namespace DarthGoose.Frontend
         public static Users masterCredentials;
         public static MonitorSystem? packetCapture = null;
         public static CaptureDeviceList captureDevices = CaptureDeviceList.Instance;
+        public static PacketAnalysis packetAnalyzer = new();
 
         /// <summary>
         /// decalres private variables for use in local processes
@@ -136,7 +137,6 @@ namespace DarthGoose.Frontend
                     networkMap.CaptureDeviceDropDown.Items.Add(dev.Description);
                 }
             }
-
             mainWindow.MainFrame.Navigate(networkMap);
         }
 
@@ -453,7 +453,7 @@ namespace DarthGoose.Frontend
                     }
                 }
 
-                SaveSystem.Save(_saveFile, netDevices.ToArray(), endDevices.ToArray());
+                SaveSystem.Save(_saveFile, netDevices.ToArray(), endDevices.ToArray(), packetAnalyzer);
             }
         }
 
@@ -503,7 +503,7 @@ namespace DarthGoose.Frontend
                         endDevices.Add(device as EndpointDevice);
                     }
                 }
-                SaveSystem.Save(saveFileDialog.FileName, netDevices.ToArray(), endDevices.ToArray());
+                SaveSystem.Save(saveFileDialog.FileName, netDevices.ToArray(), endDevices.ToArray(), packetAnalyzer);
                 _saveFile = saveFileDialog.FileName;
             }
         }
@@ -607,35 +607,35 @@ namespace DarthGoose.Frontend
         {
             if(int.TryParse(networkMap.ExpansionThesholdTextBox.Text, out var valueI))
             {
-                PacketAnalysis.expansionThreshhold = valueI;
+                packetAnalyzer.expansionTreshold = valueI;
             }else
             {
                 MessageBox.Show("The Expansion Threshold value was not updated due to an improper value being supplied");
             }
             if(int.TryParse(networkMap.ViolationThresholdTextBox.Text, out valueI))
             {
-                PacketAnalysis.offenseThreshold = valueI;
+                packetAnalyzer.offenseThreshold = valueI;
             }else
             {
                 MessageBox.Show("The Violation Threshold value was not updated due to an improper value being supplied");
             }
             if(float.TryParse(networkMap.EWMAWeightBox.Text, out var valueF))
             {
-                PacketAnalysis.alpha = valueF;
+                packetAnalyzer.alpha = valueF;
             }else
             {
                 MessageBox.Show("The Exponentially Weighted Moving Average Weight value was not updated due to an improper value being supplied");
             }
             if(float.TryParse(networkMap.RateRatioMaxTextBox.Text, out valueF))
             {
-                PacketAnalysis.ratioLimitMax = valueF;
+                packetAnalyzer.ratioLimitMax = valueF;
             }else
             {
                 MessageBox.Show("The Rate Ratio Max value was not updated due to an improper value being supplied");
             }
             if(float.TryParse(networkMap.RateRatioMinTextBox.Text, out valueF))
             {
-                PacketAnalysis.ratioLimitMin = valueF;
+                packetAnalyzer.ratioLimitMin = valueF;
             }else
             {
                 MessageBox.Show("The Rate Ratio Max value was not updated due to an improper value being supplied");

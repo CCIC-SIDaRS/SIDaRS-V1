@@ -63,7 +63,8 @@
                     <RowDefinition Height="1*"/>
                     <RowDefinition Height="1*"/>
                     <RowDefinition Height="1*"/>
-                    <RowDefinition Height="6*"/>
+                    <RowDefinition Height="1*"/>
+                    <RowDefinition Height="5*"/>
                 </Grid.RowDefinitions>
                 
                 <Grid.ColumnDefinitions>
@@ -94,6 +95,11 @@
                 <TextBox x:Name="RateRatioMaxTextBox" Text="Rate Ratio Max" VerticalAlignment="Top" Grid.Row="7" Grid.Column="1" Height="35" Margin="2,0"/>
                 <TextBox x:Name="RateRatioMinTextBox" Text="Rate Ratio Min" VerticalAlignment="Top" Grid.Row="8" Grid.ColumnSpan="2" Height="35" Margin="2,0"/>
                 <Button x:Name="UpdateIDSSettingsButton" Content="Update IDS Settings" VerticalAlignment="Top" Height="45" Grid.Row="9" Grid.ColumnSpan="2"/>
+                <StackPanel Grid.Row="10" Grid.ColumnSpan="2" Background="Black">
+                    <Polyline x:Name="IDSGraph" Stroke="White" StrokeThickness="4"/>
+                    <Polyline x:Name="Mingraph" Stroke="Red" StrokeThickness="4"/>
+                    <Polyline x:Name="MaxGraph" Stroke="Red" StrokeThickness="4"/>
+                </StackPanel>
             </Grid>
         </Border>
         <Canvas x:Name="ConnectionCanvas" Panel.ZIndex="0"/>
