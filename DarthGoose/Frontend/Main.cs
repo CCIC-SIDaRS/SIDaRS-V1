@@ -124,6 +124,8 @@ namespace DarthGoose.Frontend
             networkMap.StartCaptureButton.Click += new RoutedEventHandler(OnStartCaptureClick);
             networkMap.StopCaptureButton.Click += new RoutedEventHandler(OnStopCaptureClick);
             networkMap.UpdateIDSSettingsButton.Click += new RoutedEventHandler(OnUpdateIDSSettingsClick);
+            networkMap.CaptureSettingsInfoButton.Click += new RoutedEventHandler(GetGooseSupport);
+            networkMap.IDSSettingsInfoButton.Click += new RoutedEventHandler(GetGooseSupport);
             _deviceSetupWindow.FinishedSetup.Click += new RoutedEventHandler(OnFinishedSetup);
             networkMap.CaptureDeviceDropDown.SelectionChanged += new SelectionChangedEventHandler(OnCaptureDeviceSelectionChanged);
 
