@@ -275,7 +275,7 @@ namespace Backend.MonitorManager
                     {
                         currentSourceNodeRecord.offenseCount++;
                     }
-                    if(currentSourceNodeRecord.offenseCount > offenseThreshold && currentBase.nodeRatioAverage.exponentialMovingAverage > 0 && deepestSourceLevel == 4)
+                    if(currentSourceNodeRecord.offenseCount > offenseThreshold && currentBase.nodeRatioAverage.exponentialMovingAverage > 0 && deepestSourceLevel == 3)
                     {
                         //Debug.WriteLine("Source " + packet.SourceAddress.ToString() + " " + packet.DestinationAddress.ToString() + " " + currentSourceNodeRecord.ratioAverage.exponentialMovingAverage);
                         MessageBox.Show(packet.SourceAddress.ToString() + " was flagged as being malicous");
@@ -316,7 +316,7 @@ namespace Backend.MonitorManager
                         //Debug.WriteLine("Added Offense");
                         currentDestinationNodeRecord.offenseCount++;
                     }
-                    if(currentDestinationNodeRecord.offenseCount > offenseThreshold && currentBase.nodeRatioAverage.exponentialMovingAverage > 0 && deepestDestinationLevel == 4)
+                    if(currentDestinationNodeRecord.offenseCount > offenseThreshold && currentBase.nodeRatioAverage.exponentialMovingAverage > 0 && deepestDestinationLevel == 3)
                     {
                         //Debug.WriteLine("Destination " + packet.SourceAddress.ToString() + " " + packet.DestinationAddress.ToString() + " " + currentDestinationNodeRecord.ratioAverage.exponentialMovingAverage);
                         MessageBox.Show(packet.DestinationAddress.ToString() + " was flagged as being malicous");
@@ -335,6 +335,7 @@ namespace Backend.MonitorManager
                 {
                     break;
                 }
+                //if (i == 4) Debug.WriteLine("i is 4");
             }
             if(currentDestinationNodeRecord.toRate.exponentialMovingAverage >= expansionThreshhold && deepestDestinationLevel < 3) 
             {
