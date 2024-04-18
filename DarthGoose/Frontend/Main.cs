@@ -124,8 +124,8 @@ namespace DarthGoose.Frontend
             networkMap.StartCaptureButton.Click += new RoutedEventHandler(OnStartCaptureClick);
             networkMap.StopCaptureButton.Click += new RoutedEventHandler(OnStopCaptureClick);
             networkMap.UpdateIDSSettingsButton.Click += new RoutedEventHandler(OnUpdateIDSSettingsClick);
-            networkMap.CaptureSettingsInfoButton.Click += new RoutedEventHandler(GetGooseSupport);
-            networkMap.IDSSettingsInfoButton.Click += new RoutedEventHandler(GetGooseSupport);
+            networkMap.CaptureSettingsInfoButton.Click += new RoutedEventHandler(GetInformation);
+            networkMap.IDSSettingsInfoButton.Click += new RoutedEventHandler(GetInformation);
             _deviceSetupWindow.FinishedSetup.Click += new RoutedEventHandler(OnFinishedSetup);
             networkMap.CaptureDeviceDropDown.SelectionChanged += new SelectionChangedEventHandler(OnCaptureDeviceSelectionChanged);
 
@@ -255,6 +255,19 @@ namespace DarthGoose.Frontend
             });
         }
 
+        /// <summary>
+        /// Takes you to our documentation website
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private static void GetInformation(object sender, RoutedEventArgs e)
+        {
+            Process.Start(new ProcessStartInfo
+            {
+                FileName = "https://ihasabucket.com/",
+                UseShellExecute = true
+            });
+        }
         /// <summary>
         /// Defines a flag to determine whether the user is still setting up a device or or has finished
         /// </summary>

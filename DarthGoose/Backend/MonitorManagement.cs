@@ -16,7 +16,7 @@ namespace Backend.MonitorManager
     {
         private ILiveDevice _sniffingDevice { get; set; }
         private Task _packetClean { get; set; }
-        private bool _stopClean = false;
+        //private bool _stopClean = false;
         private bool _captureRunning = false;
         public MonitorSystem(ILiveDevice sniffingDevice)
         {
@@ -50,7 +50,7 @@ namespace Backend.MonitorManager
             {
                 return;
             }
-            _stopClean = true;
+            //_stopClean = true;
             _sniffingDevice.StopCapture();
             _captureRunning = false;
             MessageBox.Show("Capture has stopped");
@@ -222,6 +222,9 @@ namespace Backend.MonitorManager
         public float ratioLimitMax = 2.3f; // IncomingPacketRate / OutgoingPacketRate upper limit
         public float alpha = 0.01f;
 
+        [JsonIgnore]
+        public double lastPacketRatio = 1;
+
         public PacketAnalysis() { }
 
         public PacketAnalysis(int expansionTreshold , int offenseThreshold, TimeSpan stabilizationPeriod, float ratioLimitMin, float ratioLimitMax, float alpha)
@@ -247,6 +250,7 @@ namespace Backend.MonitorManager
             int deepestSourceLevel = 0;
             int deepestDestinationLevel = 0;
             bool resetOffsense = DateTime.Now > _lastOffenseReset.Add(stabilizationPeriod);
+            lastPacketRatio = _rootNode.nodeRatioAverage.exponentialMovingAverage;
             for (int i = 0; i < 4; i++)
             {
                 if(!SourceComplete)
