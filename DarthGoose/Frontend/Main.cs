@@ -14,6 +14,8 @@ using Backend.MonitorManager;
 using SharpPcap;
 using Microsoft.Win32;
 using System.Windows.Input;
+using System.Windows.Threading;
+using System.Printing;
 
 namespace DarthGoose.Frontend
 {
@@ -35,6 +37,7 @@ namespace DarthGoose.Frontend
         public static MonitorSystem? packetCapture = null;
         public static CaptureDeviceList captureDevices = CaptureDeviceList.Instance;
         public static PacketAnalysis packetAnalyzer = new();
+        public static List<Graph> activeGraphs = new();
 
         /// <summary>
         /// decalres private variables for use in local processes
@@ -42,6 +45,8 @@ namespace DarthGoose.Frontend
         private static LoginPage _loginPage = new();
         private static CreateAccountPage _createAccPage = new();
         private static DeviceSetup _deviceSetupWindow = new();
+        private static int _deltaTimeSeconds = 0;
+        private static DispatcherTimer _timer = new DispatcherTimer();
         private static string? _saveFile = null;
 
         /// <summary>
@@ -128,6 +133,12 @@ namespace DarthGoose.Frontend
             networkMap.IDSSettingsInfoButton.Click += new RoutedEventHandler(GetInformation);
             _deviceSetupWindow.FinishedSetup.Click += new RoutedEventHandler(OnFinishedSetup);
             networkMap.CaptureDeviceDropDown.SelectionChanged += new SelectionChangedEventHandler(OnCaptureDeviceSelectionChanged);
+
+            _timer.Tick += new EventHandler(TimerTick);
+            _timer.Interval = TimeSpan.FromMilliseconds(500);
+            _timer.Start();
+
+            activeGraphs.Add(new Graph(networkMap.IDSGraph,packetAnalyzer.dataBinding, 5, 10, networkMap.GraphViewer));
 
             if (captureDevices.Count < 1)
             {
@@ -671,6 +682,16 @@ namespace DarthGoose.Frontend
             }
         }
 
+        private static void TimerTick(object sender, EventArgs e)
+        {
+            _deltaTimeSeconds++;
+            //Debug.WriteLine(_deltaTimeSeconds);
+            foreach(Graph graph in activeGraphs)
+            {
+                graph.AddPoint(_deltaTimeSeconds, 1);
+            }
+        }
+
         /// <summary>
         /// Collects the uids of the devices to be connected
         /// Adds the keys of the device being connected to to each devices UIDevice object if 2 devices have been selected
@@ -748,6 +769,42 @@ namespace DarthGoose.Frontend
                 devices[connectedUids[0]].cables.Add(line);
                 devices[connectedUids[1]].cables.Add(line);
             }
+        }
+    }
+
+    class Graph
+    {
+        public delegate double dataBinding();
+        private PointCollection _points = new PointCollection();
+        private int _xMultiplier { get; set; }
+        private int _yMultiplier { get; set; }
+        private dataBinding _binding { get; set; }
+        private ScrollViewer? _viewer { get; set; }
+
+        public Graph(Polyline graphLine, dataBinding binding, int xMultiplier = 1, int yMultiplier = 1, ScrollViewer? viewer = null)
+        {
+            graphLine.Points = _points;
+            _xMultiplier = xMultiplier;
+            _yMultiplier = yMultiplier;
+            _binding = binding;
+            _viewer = viewer;
+        }
+
+        public void AddPoint(double x, double y = 1)
+        {
+            if(y == 1)
+            {
+                y = _binding();
+            }
+            if(_viewer != null && x >= (_viewer.ActualWidth / _xMultiplier))
+            {
+                _points.RemoveAt(0);
+                for(int i = 0; i < _points.Count; i++)
+                {
+                    _points[i] = new Point(_points[i].X - _xMultiplier, _points[i].Y);
+                }
+            }
+            _points.Add(new Point(x * _xMultiplier, y * _yMultiplier));
         }
     }
 }

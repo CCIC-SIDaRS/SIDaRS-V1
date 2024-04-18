@@ -222,8 +222,8 @@ namespace Backend.MonitorManager
         public float ratioLimitMax = 2.3f; // IncomingPacketRate / OutgoingPacketRate upper limit
         public float alpha = 0.01f;
 
-        [JsonIgnore]
-        public double lastPacketRatio = 1;
+        
+        private double lastPacketRatio = 1;
 
         public PacketAnalysis() { }
 
@@ -354,6 +354,11 @@ namespace Backend.MonitorManager
                 currentSourceNodeRecord.child = new Node();
                 currentSourceNodeRecord.child.parentRecord = currentSourceNodeRecord;
             }
+        }
+
+        public double dataBinding()
+        {
+            return lastPacketRatio;
         }
     }
 }
