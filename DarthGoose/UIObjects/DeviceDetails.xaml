@@ -11,11 +11,7 @@
         <TabControl x:Name="DeviceDetailsTabs">
             <TabItem x:Name="Statistics" Header="Statistics">
                 <Grid x:Name="StatsGrid" Background="Black">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="149*"/>
-                        <ColumnDefinition Width="248*"/>
-                    </Grid.ColumnDefinitions>
-
+                    <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" Text="No Statistics Available For This Device" FontSize="16"/>
                 </Grid>
             </TabItem>
             <TabItem x:Name="Settings" Header="Settings">

@@ -5,6 +5,8 @@ using SharpPcap.LibPcap;
 using System.Windows;
 using Backend.ThreadSafety;
 using PacketDotNet;
+using System.Text.Json.Serialization;
+using DarthGoose.Frontend;
 namespace Backend.MonitorManager
 {
     /// <summary>
@@ -14,13 +16,13 @@ namespace Backend.MonitorManager
     {
         private ILiveDevice _sniffingDevice { get; set; }
         private Task _packetClean { get; set; }
-        private bool _stopClean = false;
+        //private bool _stopClean = false;
         private bool _captureRunning = false;
         public MonitorSystem(ILiveDevice sniffingDevice)
         {
             _sniffingDevice = sniffingDevice;
             _sniffingDevice.OnPacketArrival += new PacketArrivalEventHandler(device_OnPacketArrival);
-            _packetClean = new Task(PacketClean);
+            // _packetClean = new Task(PacketClean);
         }
 
         public void ChangeCaptureDevice(ILiveDevice device)
@@ -36,7 +38,7 @@ namespace Backend.MonitorManager
             Thread sniffing = new Thread(new ThreadStart(sniffing_Proccess));
             sniffing.IsBackground = true;
             sniffing.Start();
-            PacketAnalysis.sniffingStart = DateTime.Now;
+            FrontendManager.packetAnalyzer.sniffingStart = DateTime.Now;
             //_packetClean.Start();
             _captureRunning = true;
             MessageBox.Show("Capture has started");
@@ -48,7 +50,7 @@ namespace Backend.MonitorManager
             {
                 return;
             }
-            _stopClean = true;
+            //_stopClean = true;
             _sniffingDevice.StopCapture();
             _captureRunning = false;
             MessageBox.Show("Capture has stopped");
@@ -70,23 +72,11 @@ namespace Backend.MonitorManager
                     if (ip.DestinationAddress.AddressFamily != System.Net.Sockets.AddressFamily.InterNetworkV6 && ip.SourceAddress.AddressFamily != System.Net.Sockets.AddressFamily.InterNetworkV6 &&
                     ip.DestinationAddress.ToString() != "224.0.0.251" && ip.SourceAddress.ToString() != "224.0.0.251") 
                     {
-                        PacketAnalysis.analyzePacket(ip);
+                        FrontendManager.packetAnalyzer.analyzePacket(ip);
                         //Debug.WriteLine("source " + ip.SourceAddress + " destination: " + ip.DestinationAddress + " protocol: " + ip.Protocol);
                     }
                 }
-                //PacketAnalysis.lifeExpiration();
             });
-        }
-
-        private void PacketClean()
-        {
-            //while (!_stopClean)
-            //{
-            //    Task task = new Task(PacketAnalysis.lifeExpiration);
-            //    task.Start();
-            //    task.Wait();
-            //    //Debug.WriteLine(PacketAnalysis.packetDict.Count());
-            //}
         }
 
         private void sniffing_Proccess()
@@ -104,7 +94,6 @@ namespace Backend.MonitorManager
         }
     }
 
-    // Values that need new input fields
     // offense threshold
     // expansion threshold
     // EWMA weight (alpha)
@@ -113,7 +102,7 @@ namespace Backend.MonitorManager
     /// <summary>
     /// Does Intrusion detection
     /// </summary>
-    static class PacketAnalysis
+    class PacketAnalysis
     {
         class ExponentiallyWeightedMovingAverage
         {
@@ -219,21 +208,36 @@ namespace Backend.MonitorManager
             }
         }
 
-        public static DateTime sniffingStart;
-        private static DateTime _lastOffenseReset = DateTime.Now;
+        public DateTime sniffingStart;
+        private DateTime _lastOffenseReset = DateTime.Now;
 
         // The bottom of the tree
         private static Node _rootNode = new Node();
 
         // IDS Settings
-        public static int expansionThreshhold = 100; // Packets per Millisecond
-        public static int offenseThreshold = 50; // Offenses per _stabilizationPeriod
-        public static TimeSpan _stabilizationPeriod = new TimeSpan(0, 0, 30);
-        public static float ratioLimitMin = 0.3f; // IncomingPacketRate / OutgoingPacketRate lower limit
-        public static float ratioLimitMax = 2.3f; // IncomingPacketRate / OutgoingPacketRate upper limit
-        public static float alpha = 0.01f;
+        public int expansionTreshold = 100; // Packets per Millisecond
+        public int offenseThreshold = 50; // Offenses per _stabilizationPeriod
+        public TimeSpan stabilizationPeriod = new TimeSpan(0, 0, 30);
+        public float ratioLimitMin = 0.3f; // IncomingPacketRate / OutgoingPacketRate lower limit
+        public float ratioLimitMax = 2.3f; // IncomingPacketRate / OutgoingPacketRate upper limit
+        public float alpha = 0.01f;
 
-        public static void analyzePacket(IPPacket packet)
+        [JsonIgnore]
+        public double lastPacketRatio = 1;
+
+        public PacketAnalysis() { }
+
+        public PacketAnalysis(int expansionTreshold , int offenseThreshold, TimeSpan stabilizationPeriod, float ratioLimitMin, float ratioLimitMax, float alpha)
+        {
+            this.expansionTreshold = expansionTreshold;
+            this.offenseThreshold = offenseThreshold;
+            this.stabilizationPeriod = stabilizationPeriod;
+            this.ratioLimitMin = ratioLimitMin;
+            this.ratioLimitMax = ratioLimitMax;
+            this.alpha = alpha;
+        }
+
+        public void analyzePacket(IPPacket packet)
         {
             
             byte[] sourceAddress = packet.SourceAddress.GetAddressBytes();
@@ -245,7 +249,8 @@ namespace Backend.MonitorManager
             bool DestinationComplete = false;
             int deepestSourceLevel = 0;
             int deepestDestinationLevel = 0;
-            bool resetOffsense = DateTime.Now > _lastOffenseReset.Add(_stabilizationPeriod);
+            bool resetOffsense = DateTime.Now > _lastOffenseReset.Add(stabilizationPeriod);
+            lastPacketRatio = _rootNode.nodeRatioAverage.exponentialMovingAverage;
             for (int i = 0; i < 4; i++)
             {
                 if(!SourceComplete)
@@ -271,7 +276,7 @@ namespace Backend.MonitorManager
                         _lastOffenseReset = DateTime.Now;
                     }
                     if((currentBase.nodeRatioAverage.exponentialMovingAverage > ratioLimitMax || currentBase.nodeRatioAverage.exponentialMovingAverage < ratioLimitMin) 
-                        && currentSourceNodeRecord.ratioAverage.exponentialMovingAverage > 0 && DateTime.Now > sniffingStart.Add(_stabilizationPeriod))
+                        && currentSourceNodeRecord.ratioAverage.exponentialMovingAverage > 0 && DateTime.Now > sniffingStart.Add(stabilizationPeriod))
                     {
                         currentSourceNodeRecord.offenseCount++;
                     }
@@ -311,7 +316,7 @@ namespace Backend.MonitorManager
                         _lastOffenseReset = DateTime.Now;
                     }
                     if ((currentBase.nodeRatioAverage.exponentialMovingAverage > ratioLimitMax || currentBase.nodeRatioAverage.exponentialMovingAverage < ratioLimitMin)
-                        && currentBase.nodeRatioAverage.exponentialMovingAverage > 0 && DateTime.Now > sniffingStart.Add(_stabilizationPeriod))
+                        && currentBase.nodeRatioAverage.exponentialMovingAverage > 0 && DateTime.Now > sniffingStart.Add(stabilizationPeriod))
                     {
                         //Debug.WriteLine("Added Offense");
                         currentDestinationNodeRecord.offenseCount++;
@@ -337,13 +342,13 @@ namespace Backend.MonitorManager
                 }
                 //if (i == 4) Debug.WriteLine("i is 4");
             }
-            if(currentDestinationNodeRecord.toRate.exponentialMovingAverage >= expansionThreshhold && deepestDestinationLevel < 3) 
+            if(currentDestinationNodeRecord.toRate.exponentialMovingAverage >= expansionTreshold && deepestDestinationLevel < 3) 
             {
                 //Debug.WriteLine("Destination Node Increase");
                 currentDestinationNodeRecord.child = new Node();
                 currentDestinationNodeRecord.child.parentRecord = currentDestinationNodeRecord;
             }
-            if(currentSourceNodeRecord.fromRate.exponentialMovingAverage >= expansionThreshhold && deepestSourceLevel < 3)
+            if(currentSourceNodeRecord.fromRate.exponentialMovingAverage >= expansionTreshold && deepestSourceLevel < 3)
             {
                 //Debug.WriteLine("Source Node Increase");
                 currentSourceNodeRecord.child = new Node();
