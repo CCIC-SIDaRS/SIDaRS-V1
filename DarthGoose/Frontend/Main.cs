@@ -135,7 +135,7 @@ namespace DarthGoose.Frontend
             networkMap.CaptureDeviceDropDown.SelectionChanged += new SelectionChangedEventHandler(OnCaptureDeviceSelectionChanged);
 
             _timer.Tick += new EventHandler(TimerTick);
-            _timer.Interval = TimeSpan.FromMilliseconds(500);
+            _timer.Interval = TimeSpan.FromMilliseconds(1000);
             _timer.Start();
 
             activeGraphs.Add(new Graph(networkMap.IDSGraph,packetAnalyzer.dataBinding, 5, 10, networkMap.GraphViewer));
@@ -779,9 +779,9 @@ namespace DarthGoose.Frontend
         private int _xMultiplier { get; set; }
         private int _yMultiplier { get; set; }
         private dataBinding _binding { get; set; }
-        private ScrollViewer? _viewer { get; set; }
+        private Border? _viewer { get; set; }
 
-        public Graph(Polyline graphLine, dataBinding binding, int xMultiplier = 1, int yMultiplier = 1, ScrollViewer? viewer = null)
+        public Graph(Polyline graphLine, dataBinding binding, int xMultiplier = 1, int yMultiplier = 1, Border? viewer = null)
         {
             graphLine.Points = _points;
             _xMultiplier = xMultiplier;
@@ -799,12 +799,13 @@ namespace DarthGoose.Frontend
             if(_viewer != null && x >= (_viewer.ActualWidth / _xMultiplier))
             {
                 _points.RemoveAt(0);
+                Debug.WriteLine(_points.Count);
                 for(int i = 0; i < _points.Count; i++)
                 {
                     _points[i] = new Point(_points[i].X - _xMultiplier, _points[i].Y);
                 }
             }
-            _points.Add(new Point(x * _xMultiplier, y * _yMultiplier));
+            _points.Add(new Point(x * _xMultiplier, -(y * _yMultiplier)));
         }
     }
 }
