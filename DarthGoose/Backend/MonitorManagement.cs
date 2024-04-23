@@ -7,6 +7,7 @@ using Backend.ThreadSafety;
 using PacketDotNet;
 using System.Text.Json.Serialization;
 using DarthGoose.Frontend;
+using System.Net;
 namespace Backend.MonitorManager
 {
     /// <summary>
@@ -15,7 +16,7 @@ namespace Backend.MonitorManager
     class MonitorSystem
     {
         private ILiveDevice _sniffingDevice { get; set; }
-        private Task _packetClean { get; set; }
+        //private Task _packetClean { get; set; }
         //private bool _stopClean = false;
         private bool _captureRunning = false;
         public MonitorSystem(ILiveDevice sniffingDevice)
@@ -224,6 +225,7 @@ namespace Backend.MonitorManager
 
         
         private double lastPacketRatio = 1;
+        private List<byte[]> previouslyFlagged = new();
 
         public PacketAnalysis() { }
 
@@ -280,9 +282,10 @@ namespace Backend.MonitorManager
                     {
                         currentSourceNodeRecord.offenseCount++;
                     }
-                    if(currentSourceNodeRecord.offenseCount > offenseThreshold && currentBase.nodeRatioAverage.exponentialMovingAverage > 0 && deepestSourceLevel == 3)
+                    if(currentSourceNodeRecord.offenseCount > offenseThreshold && currentBase.nodeRatioAverage.exponentialMovingAverage > 0 && deepestSourceLevel == 3 && !previouslyFlagged.Contains(sourceAddress))
                     {
                         //Debug.WriteLine("Source " + packet.SourceAddress.ToString() + " " + packet.DestinationAddress.ToString() + " " + currentSourceNodeRecord.ratioAverage.exponentialMovingAverage);
+                        previouslyFlagged.Add(sourceAddress);
                         MessageBox.Show(packet.SourceAddress.ToString() + " was flagged as being malicous");
                     }
                     if (currentSourceNodeRecord.child == null)
@@ -321,9 +324,10 @@ namespace Backend.MonitorManager
                         //Debug.WriteLine("Added Offense");
                         currentDestinationNodeRecord.offenseCount++;
                     }
-                    if(currentDestinationNodeRecord.offenseCount > offenseThreshold && currentBase.nodeRatioAverage.exponentialMovingAverage > 0 && deepestDestinationLevel == 3)
+                    if(currentDestinationNodeRecord.offenseCount > offenseThreshold && currentBase.nodeRatioAverage.exponentialMovingAverage > 0 && deepestDestinationLevel == 3 && !previouslyFlagged.Contains(destinationAddress))
                     {
                         //Debug.WriteLine("Destination " + packet.SourceAddress.ToString() + " " + packet.DestinationAddress.ToString() + " " + currentDestinationNodeRecord.ratioAverage.exponentialMovingAverage);
+                        previouslyFlagged.Add(destinationAddress);
                         MessageBox.Show(packet.DestinationAddress.ToString() + " was flagged as being malicous");
                     }
                     //Debug.WriteLine(currentDestinationNodeRecord.ratioAverage.exponentialMovingAverage);
