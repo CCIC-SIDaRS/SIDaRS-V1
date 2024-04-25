@@ -135,7 +135,7 @@ namespace DarthGoose.Frontend
             networkMap.CaptureDeviceDropDown.SelectionChanged += new SelectionChangedEventHandler(OnCaptureDeviceSelectionChanged);
 
             _timer.Tick += new EventHandler(TimerTick);
-            _timer.Interval = TimeSpan.FromMilliseconds(750);
+            _timer.Interval = TimeSpan.FromMilliseconds(1000);
             _timer.Start();
 
             activeGraphs.Add(new Graph(networkMap.IDSGraph,packetAnalyzer.dataBinding, 5, 10, networkMap.GraphViewer));
@@ -799,7 +799,7 @@ namespace DarthGoose.Frontend
             if(_viewer != null && x >= (_viewer.ActualWidth / _xMultiplier))
             {
                 _points.RemoveAt(0);
-                Debug.WriteLine(_points.Count);
+                //Debug.WriteLine(_points.Count);
                 for(int i = 0; i < _points.Count; i++)
                 {
                     _points[i] = new Point(_points[i].X - _xMultiplier, _points[i].Y);
