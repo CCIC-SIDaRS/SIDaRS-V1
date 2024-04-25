@@ -135,7 +135,7 @@ namespace DarthGoose.Frontend
             networkMap.CaptureDeviceDropDown.SelectionChanged += new SelectionChangedEventHandler(OnCaptureDeviceSelectionChanged);
 
             _timer.Tick += new EventHandler(TimerTick);
-            _timer.Interval = TimeSpan.FromMilliseconds(1000);
+            _timer.Interval = TimeSpan.FromMilliseconds(750);
             _timer.Start();
 
             activeGraphs.Add(new Graph(networkMap.IDSGraph,packetAnalyzer.dataBinding, 5, 10, networkMap.GraphViewer));
