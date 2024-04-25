@@ -465,8 +465,8 @@ namespace DarthGoose.Frontend
                 MessageBox.Show("Please load a file or save as before trying to save");
             }else
             {
-                var netDevices = new List<UINetDevice>();
-                var endDevices = new List<EndpointDevice>();
+                List<UINetDevice> netDevices = new List<UINetDevice>();
+                List<EndpointDevice> endDevices = new List<EndpointDevice>();
                 foreach (UIDevice device in devices.Values)
                 {
                     if (device.GetType() == typeof(UINetDevice))
