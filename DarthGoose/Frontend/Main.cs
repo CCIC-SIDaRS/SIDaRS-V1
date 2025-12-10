@@ -149,6 +149,7 @@ namespace DarthGoose.Frontend
                 {
                     networkMap.CaptureDeviceDropDown.Items.Add(dev.Description);
                 }
+                networkMap.CaptureDeviceDropDown.Items.Add("Demo Device");
             }
             mainWindow.MainFrame.Navigate(networkMap);
         }
@@ -579,11 +580,17 @@ namespace DarthGoose.Frontend
             if (selectedIndex == -1)
             {
                 MessageBox.Show("Please select a network device");
-            }
-            else if (packetCapture == null)
+            } else if (networkMap.CaptureDeviceDropDown.Items[selectedIndex] == "Demo Device")
+            {
+                if(packetCapture != null)
+                {
+                    MessageBox.Show("Please restart the application to enter demo mode");
+                }
+                packetCapture = new MonitorSystem(null, true);
+            } else if (packetCapture == null)
             {
                 packetCapture = new MonitorSystem(captureDevices[selectedIndex]);
-            }else
+            } else
             {
                 packetCapture.ChangeCaptureDevice(captureDevices[selectedIndex]);
             }

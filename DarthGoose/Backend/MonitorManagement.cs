@@ -8,6 +8,7 @@ using PacketDotNet;
 using System.Text.Json.Serialization;
 using DarthGoose.Frontend;
 using System.Net;
+using System.Xml.Serialization;
 namespace Backend.MonitorManager
 {
     /// <summary>
@@ -19,10 +20,19 @@ namespace Backend.MonitorManager
         //private Task _packetClean { get; set; }
         //private bool _stopClean = false;
         private bool _captureRunning = false;
-        public MonitorSystem(ILiveDevice sniffingDevice)
+
+        private bool _demo;
+        public MonitorSystem(ILiveDevice sniffingDevice, bool demo = false)
         {
-            _sniffingDevice = sniffingDevice;
-            _sniffingDevice.OnPacketArrival += new PacketArrivalEventHandler(device_OnPacketArrival);
+            _demo = demo;
+            if (!demo)
+            {
+                _sniffingDevice = sniffingDevice;
+                _sniffingDevice.OnPacketArrival += new PacketArrivalEventHandler(device_OnPacketArrival);
+            }else
+            {
+                _sniffingDevice = sniffingDevice;
+            }
             // _packetClean = new Task(PacketClean);
         }
 
@@ -36,7 +46,14 @@ namespace Backend.MonitorManager
         public void StartCapture()
         {
             // Open the device for capturing
-            Thread sniffing = new Thread(new ThreadStart(sniffing_Proccess));
+            Thread sniffing;
+            if (!_demo)
+            {
+                sniffing = new Thread(new ThreadStart(sniffing_Proccess));
+            }else
+            {
+                sniffing = new Thread(new ThreadStart(demo_packet_flood));
+            }
             sniffing.IsBackground = true;
             sniffing.Start();
             FrontendManager.packetAnalyzer.sniffingStart = DateTime.Now;
@@ -52,7 +69,10 @@ namespace Backend.MonitorManager
                 return;
             }
             //_stopClean = true;
-            _sniffingDevice.StopCapture();
+            if (!_demo)
+            {
+                _sniffingDevice.StopCapture();
+            }
             _captureRunning = false;
             MessageBox.Show("Capture has stopped");
         }
@@ -92,6 +112,21 @@ namespace Backend.MonitorManager
             }
             //Debug.WriteLine(_sniffingDevice);
             _sniffingDevice.Capture();
+        }
+
+        private void demo_packet_flood()
+        {
+            Task.Run(() =>
+            {
+                while(_captureRunning)
+                {
+                    // 192.168.0.1 source
+                    // 192.168.0.5 destination
+                    FrontendManager.packetAnalyzer.analyzePacket(null, new IPAddress(19216801), new IPAddress(19216805));
+                    Debug.WriteLine("Demo packet sent");
+                    Thread.Sleep(5);
+                }
+            });
         }
     }
 
@@ -239,11 +274,19 @@ namespace Backend.MonitorManager
             this.alpha = alpha;
         }
 
-        public void analyzePacket(IPPacket packet)
+        public void analyzePacket(IPPacket packet, IPAddress incoming = null, IPAddress outgoing = null)
         {
-            
-            byte[] sourceAddress = packet.SourceAddress.GetAddressBytes();
-            byte[] destinationAddress = packet.DestinationAddress.GetAddressBytes();
+            byte[] sourceAddress;
+            byte[] destinationAddress;
+            if(packet != null)
+            {
+                sourceAddress = packet.SourceAddress.GetAddressBytes();
+                destinationAddress = packet.DestinationAddress.GetAddressBytes();
+            } else
+            {
+                sourceAddress = incoming.GetAddressBytes();
+                destinationAddress = outgoing.GetAddressBytes();
+            }
             Node currentBase = _rootNode;
             NodeRecord? currentSourceNodeRecord = null;
             NodeRecord? currentDestinationNodeRecord = null;
